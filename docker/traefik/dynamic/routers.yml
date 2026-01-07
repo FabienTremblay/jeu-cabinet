@@ -1,0 +1,3 @@
+# Exemples de routers/services statiques si tu ne veux pas d’étiquettes
+# (les labels dans docker-compose sont déjà proposés en commentaires).
+# Ici on ne définit rien : on laisse Docker provider faire le job via labels.

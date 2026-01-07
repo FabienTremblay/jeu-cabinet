@@ -1,0 +1,10 @@
+node_modules/
+.env
+dist/
+.idea/
+.vscode/
+.zip
+__pycache__/
+archives/
+Archives/
+mon_env/

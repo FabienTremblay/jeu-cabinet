@@ -1,0 +1,13 @@
+log:
+  level: DEBUG
+
+entryPoints:
+  web:
+    address: ":80"
+
+api:
+  dashboard: true      # dashboard sur /dashboard
+  insecure: true       # génère api@internal et dashboard@internal
+
+ping: {}
+

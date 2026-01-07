@@ -1,0 +1,81 @@
+Titre conversation : UI-Web - Continuer l'amélioration
+Objectif : Compléter les améliorations à l'UI-Web.
+
+Mon kit applicatif est :
+   Le react sur ma machine hôte
+   Tout l'assemblage est dans un container de ma machine hôte.
+   Mais je roule une version de l'application web sur ma machine hôte pour faciliter le développement.
+
+Voici la structure de l'application : tree services/...
+
+services/ui2-web/src
+├── api
+│   ├── actions.ts
+│   ├── apiClient.ts
+│   ├── lobbyApi.ts
+│   ├── moteurApi.test.ts
+│   ├── moteurApi.ts
+│   ├── __tests__
+│   │   └── actions.test.ts
+│   └── uiEtatJoueur.ts
+├── App.tsx
+├── assets
+│   └── carte-mesure.png
+├── components
+│   ├── game
+│   │   ├── ActionsPanel.tsx
+│   │   ├── GameBanner.tsx~
+│   │   ├── HandView.tsx
+│   │   ├── JournalView.tsx
+│   │   ├── PlayerStatusPanel.tsx
+│   │   ├── ProgrammeView.tsx
+│   │   └── __tests__
+│   │       └── ActionsPanel.test.tsx
+│   ├── layout
+│   │   ├── GameLayout.tsx
+│   │   └── PageLayout.tsx
+│   └── shared
+│       ├── Button.tsx
+│       ├── Loading.tsx
+│       └── TabBar.tsx
+├── context
+│   ├── GameContext.tsx
+│   └── SessionContext.tsx
+├── hooks
+│   ├── useBreakpoint.ts
+│   ├── useEtatPartie.ts
+│   ├── usePolling.ts
+│   ├── useSituationPolling.test.tsx
+│   └── useSituationPolling.ts
+├── index.css
+├── main.tsx
+├── pages
+│   ├── AppShell.tsx
+│   ├── AuthPage.tsx
+│   ├── FinPartiePage.tsx
+│   ├── GamePage.tsx
+│   ├── HomePage.tsx
+│   ├── LobbyPage.tsx
+│   ├── TableWaitingPage.tsx
+│   └── __tests__
+│       └── TableWaitingPage.test.tsx
+├── router.tsx
+├── test
+│   └── setupTests.ts
+├── types
+│   ├── api.ts
+│   ├── common.ts
+│   ├── game.ts
+│   ├── lobby.ts
+│   └── uiEtat.ts
+└── utils
+    ├── mapEtat.ts
+    └── __tests__
+        ├── mapEtat.indicateurs.test.ts
+        ├── mapEtat.main.test.ts
+        ├── mapEtat.programme.test.ts
+        ├── mapEtat.termine.test.ts
+        └── mapEtat.verysimple.test.ts
+
+
+Voici le devis fonctionnel requis (WEb-UI Devis.odt) Peux-tu faire le bilan du code fournit dans le .zip et indiquer ce qui est fait, ce qui manque et faire un plan.

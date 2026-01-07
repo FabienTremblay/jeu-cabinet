@@ -1,0 +1,10 @@
+source mon_env/bin/activate
+
+export TUI_LOBBY_URL="http://lobby.cabinet.localhost"
+export TUI_LOBBY_PREFIX="/api"
+export TUI_KAFKA_BOOTSTRAP="localhost:9092"
+export TUI_JOUEUR_ALIAS="Jean"
+export TUI_JOUEUR_EMAIL="Jean@example.com"
+
+python -m services.tui_lobby.main
+

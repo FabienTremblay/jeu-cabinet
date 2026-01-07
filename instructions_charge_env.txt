@@ -1,0 +1,3 @@
+set -a
+source <(grep -v '^\s*#' .env)
+set +a

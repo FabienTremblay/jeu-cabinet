@@ -1,0 +1,11 @@
+# Port injecté par l'env (defaut 8081)
+quarkus.http.port=${QUARKUS_HTTP_PORT:8081}
+quarkus.http.host=0.0.0.0  
+
+# Health est exposé par quarkus-smallrye-health sur /q/health (readiness/liveness)
+# Pas de config requise pour le moment.
+quarkus.smallrye-health.root-path=/q/health
+quarkus.log.level=INFO
+quarkus.log.category."cabinet.rules".level=DEBUG
+cab.rules.engine=mock
+cab.rules.default-version=debut_mandat.v1

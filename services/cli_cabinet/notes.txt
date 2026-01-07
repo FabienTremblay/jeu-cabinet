@@ -1,0 +1,37 @@
+# 1) inscription joueur 1
+python -m services.cli_cabinet.cabinet_cli inscrire joueur3 \
+    --email joueur3@example.com \
+    --nom "Joueur Un" \
+    --mot-de-passe "secret1" \
+    --alias "Alias1"
+
+# 2) auth joueur 1 → récupérer id_joueur_1
+python -m services.cli_cabinet.cabinet_cli auth joueur3@example.com \
+    --mot-de-passe "secret1"
+
+# 3) créer table avec joueur 1 comme hôte
+python -m services.cli_cabinet.cabinet_cli creer-table J000003 \
+    --nom "Table test multi" \
+    --nb-sieges 2 \
+    --skin "minimal"
+
+# 4) inscription + auth joueur 2
+python -m services.cli_cabinet.cabinet_cli inscrire joueur4 \
+    --email joueur4@example.com \
+    --nom "Joueur Deux" \
+    --mot-de-passe "secret2" \
+    --alias "Alias2"
+
+python -m services.cli_cabinet.cabinet_cli auth joueur4@example.com \
+    --mot-de-passe "secret2"
+
+# 5) joueur 2 rejoint la table (commande que tu as si on l’a déjà nommée, sinon on l’ajuste)
+python -m services.cli_cabinet.cabinet_cli joindre-table T000001 J000004
+
+# 6) marquer les deux joueurs prêts
+python -m services.cli_cabinet.cabinet_cli joueur-pret T000001 J000003
+python -m services.cli_cabinet.cabinet_cli joueur-pret T000001 J000004
+
+# 7) lancer la partie par l’hôte
+python -m services.cli_cabinet.cabinet_cli lancer-partie T000001 J000003
+

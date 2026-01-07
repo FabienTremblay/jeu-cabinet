@@ -1,0 +1,245 @@
+services/
+├── adapter-evenements
+│   ├── adapter_evenements
+│   │   ├── __init__.py
+│   │   ├── kafka_consumer.py
+│   │   ├── kafka_producer.py
+│   │   └── worker_adapter.py
+│   ├── Dockerfile
+│   └── requirements.txt
+├── api-gateway
+├── api_moteur
+│   ├── app.py
+│   ├── client-moteur.py
+│   ├── deps.py
+│   ├── Dockerfile
+│   ├── events.py
+│   ├── Makefile
+│   ├── __pycache__
+│   ├── rules_client.py
+│   ├── schemas.py
+│   ├── settings.py
+│   └── tests
+│       ├── __pycache__
+│       └── t8st_api_basique.py
+├── cabinet
+│   ├── app
+│   │   ├── event_consumer.py
+│   │   ├── events.py
+│   │   ├── __pycache__
+│   │   ├── rules_client.py
+│   │   └── usecases.py
+│   ├── __init__.py
+│   ├── moteur
+│   │   ├── config_loader.py
+│   │   ├── etat.py
+│   │   ├── events.py
+│   │   ├── __init__.py
+│   │   ├── manager.py
+│   │   ├── __pycache__
+│   │   └── regles_interfaces.py
+│   ├── __pycache__
+│   ├── skins
+│   │   ├── debut_mandat
+│   │   │   ├── config.py
+│   │   │   ├── __init__.py
+│   │   │   ├── __pycache__
+│   │   │   ├── regles.py
+│   │   │   └── t0est_regles.py
+│   │   ├── Mandat_difficile
+│   │   │   ├── config.py
+│   │   │   ├── documentation.odt
+│   │   │   ├── __init__.py
+│   │   │   ├── __pycache__
+│   │   │   └── regles.py
+│   │   └── minimal
+│   │       ├── config.py
+│   │       ├── __init__.py
+│   │       ├── __pycache__
+│   │       └── regles.py
+│   └── tests
+│       ├── conftest.py
+│       ├── __init__.py
+│       ├── __pycache__
+│       ├── pytest.ini
+│       ├── test_actions_joueurs.py
+│       ├── test_cards_and_deck.py
+│       ├── test_events_domaine.py
+│       ├── test_idempotence.py
+│       ├── test_manager_integration.py
+│       ├── test_ops_d100.py
+│       ├── test_ops_d200.py
+│       ├── test_ops_d300.py
+│       ├── test_ops_d400.py
+│       ├── test_ops_d500.py
+│       ├── test_regles_phases.py
+│       └── test_state_flow.py
+├── cli_cabinet
+│   ├── cabinet_cli.py
+│   ├── clients.py
+│   ├── __init__.py
+│   ├── notes.txt
+│   ├── __pycache__
+│   └── settings.py
+├── commande_moteur
+│   ├── Dockerfile
+│   ├── __pycache__
+│   └── worker_moteur.py
+├── lobby
+│   ├── app.py
+│   ├── deps.py
+│   ├── Dockerfile
+│   ├── domaine.py
+│   ├── events.py
+│   ├── __init__.py
+│   ├── kafka_producteur.py
+│   ├── __pycache__
+│   ├── repositories.py
+│   ├── requirements.txt
+│   ├── schemas.py
+│   ├── services_lobby.py
+│   ├── settings.py
+│   └── tests
+│       ├── conftest.py
+│       ├── __pycache__
+│       ├── test_api_lobby.py
+│       ├── test_domaine_table.py
+│       ├── test_repositories.py
+│       └── test_service_lobby.py
+├── outils_kafka
+│   ├── consumer_test_kafka.py
+│   ├── producer_test_kafka.py
+│   └── __pycache__
+├── __pycache__
+├── tests
+│   ├── __pycache__
+│   ├── test_fin_partie_ui.py
+│   ├── test_joueurs.py
+│   └── test_tables.py
+├── tui_lobby
+│   ├── client_lobby.py
+│   ├── client_moteur.py
+│   ├── config.py
+│   ├── __init__.py
+│   ├── Instructions.txt
+│   ├── kafka_listener.py
+│   ├── main.py
+│   ├── page_accueil.py
+│   ├── page_jeu.py
+│   ├── page_lobby.py
+│   ├── page_table.py
+│   ├── __pycache__
+│   ├── router.py
+│   └── session.py
+├── ui2-web
+│   ├── conversation.txt
+│   ├── Dockerfile
+│   ├── docs
+│   │   ├── flux-auth-lobby-table.md
+│   │   ├── Gestion des alertes-événements-journaux.odt
+│   │   └── UI-Contracts.md
+│   ├── index.html
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── postcss.config.cjs
+│   ├── public
+│   │   ├── ChatGPT Image 6 déc. 2025, 18 h 59 min 56 s.png
+│   │   └── favicon.png
+│   ├── src
+│   │   ├── api
+│   │   │   ├── actions.ts
+│   │   │   ├── apiClient.ts
+│   │   │   ├── lobbyApi.ts
+│   │   │   ├── moteurApi.test.ts
+│   │   │   ├── moteurApi.ts
+│   │   │   ├── __tests__
+│   │   │   │   └── actions.test.ts
+│   │   │   └── uiEtatJoueur.ts
+│   │   ├── App.tsx
+│   │   ├── assets
+│   │   │   └── carte-mesure.png
+│   │   ├── components
+│   │   │   ├── game
+│   │   │   │   ├── ActionsPanel.tsx
+│   │   │   │   ├── GameBanner.tsx~
+│   │   │   │   ├── HandView.tsx
+│   │   │   │   ├── JournalView.tsx
+│   │   │   │   ├── PlayerStatusPanel.tsx
+│   │   │   │   ├── ProgrammeView.tsx
+│   │   │   │   └── __tests__
+│   │   │   │       └── ActionsPanel.test.tsx
+│   │   │   ├── layout
+│   │   │   │   ├── GameLayout.tsx
+│   │   │   │   └── PageLayout.tsx
+│   │   │   └── shared
+│   │   │       ├── Button.tsx
+│   │   │       ├── Loading.tsx
+│   │   │       └── TabBar.tsx
+│   │   ├── context
+│   │   │   ├── DisplayContext.tsx
+│   │   │   ├── GameContext.tsx
+│   │   │   └── SessionContext.tsx
+│   │   ├── hooks
+│   │   │   ├── useBreakpoint.ts
+│   │   │   ├── useEtatPartie.ts
+│   │   │   ├── useJournalRecentPolling.ts
+│   │   │   ├── usePolling.ts
+│   │   │   ├── useSituationPolling.test.tsx
+│   │   │   └── useSituationPolling.ts
+│   │   ├── index.css
+│   │   ├── main.tsx
+│   │   ├── pages
+│   │   │   ├── AppShell.tsx
+│   │   │   ├── AuthPage.tsx
+│   │   │   ├── FinPartiePage.tsx
+│   │   │   ├── GamePage.tsx
+│   │   │   ├── HomePage.tsx
+│   │   │   ├── LobbyPage.tsx
+│   │   │   ├── TableWaitingPage.tsx
+│   │   │   └── __tests__
+│   │   │       └── TableWaitingPage.test.tsx
+│   │   ├── router.tsx
+│   │   ├── test
+│   │   │   └── setupTests.ts
+│   │   ├── types
+│   │   │   ├── api.ts
+│   │   │   ├── common.ts
+│   │   │   ├── game.ts
+│   │   │   ├── lobby.ts
+│   │   │   └── uiEtat.ts
+│   │   └── utils
+│   │       ├── mapEtat.ts
+│   │       ├── mapHistoriqueToUiEvent.ts
+│   │       └── __tests__
+│   │           ├── mapEtat.indicateurs.test.ts
+│   │           ├── mapEtat.main.test.ts
+│   │           ├── mapEtat.programme.test.ts
+│   │           ├── mapEtat.termine.test.ts
+│   │           ├── mapEtat.verysimple.test.ts
+│   │           └── mapHistoriqueToUiEvent.test.ts
+│   ├── tailwind.config.js
+│   ├── tsconfig.json
+│   └── vite.config.mts
+└── ui_etat_joueur
+    ├── app.py
+    ├── Dockerfile
+    ├── domaine.py
+    ├── kafka_consumer.py
+    ├── projection
+    │   ├── attente.py
+    │   ├── autres.py
+    │   ├── __init__.py
+    │   ├── notifications.py
+    │   ├── partie.py
+    │   ├── phase.py
+    │   ├── __pycache__
+    │   ├── regles.py
+    │   ├── tour.py
+    │   └── utils.py
+    ├── __pycache__
+    ├── repository.py
+    ├── requirements.txt
+    ├── schemas.py
+    └── ui_etat_joueur
+        └── app.py
+

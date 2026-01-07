@@ -1,0 +1,417 @@
+# NOTE: toutes les images sont en :latest / :stable
+# TODO (pinning): pinner chaque image (traefik, postgres, bitnami/kafka, provectuslabs/kafka-ui, apicurio)
+# quand tu figeras l’environnement.
+
+services:
+  traefik:
+    restart: unless-stopped
+    image: traefik:3.5.4
+    user: "0:134"
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"        # (1) n'expose rien par défaut
+      - "--providers.docker.network=cabinet_net"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443" 
+      - "--entrypoints.traefik.address=:8080" 
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--ping=true"
+      - "--ping.entryPoint=traefik"
+      - "--log.level=DEBUG"
+    ports:
+      - "${TRAEFIK_HTTP_PORT}:80"
+      - "443:443"                 
+      - "${TRAEFIK_API_PORT}:8080"       # dashboard/ping (optionnel)
+    networks:
+      - stack
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      #- ./docker/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      #- ./docker/traefik/dynamic:/etc/traefik/dynamic:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  postgres:
+    restart: unless-stopped
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # pour les scripts ./sql/config-postgres.sh (docker-entrypoint-initdb.d)
+      JEU_DB: ${JEU_DB}
+      JEU_DB_USER: ${JEU_DB_USER}
+      JEU_DB_PASSWORD: ${JEU_DB_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    networks:
+      - stack
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./sql/00-config-postgres.sh:/docker-entrypoint-initdb.d/00-config-postgres.sh:ro
+      - ./sql/01-init-jeu.sql:/opt/sql/01-init-jeu.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  kafka:
+    restart: unless-stopped
+    image: confluentinc/cp-kafka:7.6.1
+    environment:
+      # rôles KRaft
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_NODE_ID: "${KAFKA_BROKER_ID}"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "${KAFKA_BROKER_ID}@kafka:9093"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+
+      # listeners
+      KAFKA_LISTENERS: "PLAINTEXT://:9092,CONTROLLER://:9093"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+
+      # ✅ CLUSTER_ID attendu par l'image
+      CLUSTER_ID: "${KAFKA_CLUSTER_ID}"
+
+      # autres flags
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "${KAFKA_AUTO_CREATE_TOPICS_ENABLE}"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "${KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR}"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "${KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR}"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "${KAFKA_TRANSACTION_STATE_LOG_MIN_ISR}"
+      KAFKA_LOG_DIRS: "/var/lib/kafka/data"
+
+    ports:
+      - "${KAFKA_PLAINTEXT_PORT}:9092"
+      - "${KAFKA_CONTROLLER_PORT}:9093"
+    networks: [stack]
+    volumes:
+      - kafka_data:/var/lib/kafka
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+    depends_on:
+      - traefik
+
+  kafka-ui:
+    restart: unless-stopped
+    image: provectuslabs/kafka-ui:latest
+    environment:
+      KAFKA_CLUSTERS_0_NAME: cabinet
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      # Actuator health
+      SERVER_PORT: 8080
+      # Optionnel: auth basic — décommente si besoin
+      # KAFKA_UI_LOGIN_ENABLED: "true"
+      # SPRING_SECURITY_USER_NAME: ${KAFKA_UI_USERNAME}
+      # SPRING_SECURITY_USER_PASSWORD: ${KAFKA_UI_PASSWORD}
+    ports:
+      - "${KAFKA_UI_PORT}:8080"
+    networks:
+      - stack
+    depends_on:
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    labels:
+      # --- Traefik (exemple — à adapter et décommenter) ---
+      traefik.enable: "true"
+      traefik.http.routers.kafka-ui.rule: "Host(`kafka.cabinet.localhost`)"
+      traefik.http.routers.kafka-ui.entrypoints: "web"
+      traefik.http.services.kafka-ui.loadbalancer.server.port: "8080"
+      traefik.docker.network: "${STACK_NETWORK}"
+
+  apicurio-registry:
+    restart: unless-stopped
+    image: apicurio/apicurio-registry-kafkasql:2.6.13.Final
+    environment:
+      REGISTRY_LOG_LEVEL: ${REGISTRY_LOG_LEVEL:-INFO}
+      REGISTRY_STORAGE: kafkasql
+      REGISTRY_KAFKASQL_BOOTSTRAP_SERVERS: kafka:9092
+      # 👇 optionnel mais utile si l'auto-création foire
+      REGISTRY_KAFKASQL_TOPIC: apicurio-registry-storage
+      # logs http utiles au débogage
+      QUARKUS_HTTP_ACCESS_LOG_ENABLED: "true"
+      QUARKUS_HTTP_PORT: 8080
+    depends_on:
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health/ready >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+      start_period: 20s
+    ports:
+      - "${REGISTRY_HTTP_PORT}:8080"
+    networks: [stack]
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "${STACK_NETWORK}"
+      traefik.http.routers.apicurio.rule: "Host(`registry.cabinet.localhost`)"
+      traefik.http.routers.apicurio.entrypoints: "web"
+      traefik.http.routers.apicurio.service: "apicurio"
+      traefik.http.services.apicurio.loadbalancer.server.port: "8080"
+
+  rules-service:
+    restart: unless-stopped
+    build:
+      context: ./rules-service
+      dockerfile: Dockerfile
+    environment:
+      QUARKUS_HTTP_HOST: "0.0.0.0"
+      QUARKUS_HTTP_PORT: 8081
+    ports:
+      - "${RULES_HTTP_PORT}:8081"
+    networks: [stack]
+    depends_on:
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8081/q/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 15
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "${STACK_NETWORK}"
+      traefik.http.routers.rules.rule: "Host(`rules.cabinet.localhost`)"
+      traefik.http.routers.rules.entrypoints: "web"
+      traefik.http.routers.rules.service: "rules"
+      traefik.http.services.rules.loadbalancer.server.port: "8081"
+      traefik.http.services.rules.loadbalancer.server.scheme: "http"
+
+  api-moteur:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: services/api_moteur/Dockerfile
+    depends_on:
+      - kafka
+      - apicurio-registry
+      - rules-service     # utile pour démarrer après les règles
+    environment:
+      TOPIC_EVENEMENTS: cab.events
+      CAB_RULES_BRE_URL: pipd   http://rules-service:8081
+      KAFKA_BOOTSTRAP: kafka:9092
+      DISABLE_KAFKA: 0
+      APICURIO_URL: http://apicurio-registry:8080
+      CORS_ORIGINS: "${CORS_ORIGINS}"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:8080/health').read())"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks:
+      - stack
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=cabinet_net"
+
+      - "traefik.http.routers.api-moteur.rule=Host(`api.cabinet.localhost`)"
+      - "traefik.http.routers.api-moteur.entrypoints=web"
+      - "traefik.http.services.api-moteur.loadbalancer.server.port=8080"
+
+      - "traefik.http.routers.api-moteur-path.rule=PathPrefix(`/api/moteur`)"
+      - "traefik.http.routers.api-moteur-path.entrypoints=web"
+      - "traefik.http.routers.api-moteur-path.service=api-moteur"
+      - "traefik.http.routers.api-moteur-path.middlewares=api-moteur-stripprefix"
+      - "traefik.http.middlewares.api-moteur-stripprefix.stripprefix.prefixes=/api/moteur"
+      - "traefik.http.routers.api-moteur-jeu.rule=(Host(`jeu-caucus.com`) || Host(`www.jeu-caucus.com`) || Host(`jeu-caucus.ca`) || Host(`www.jeu-caucus.ca`)) && PathPrefix(`/api/moteur`)"
+      - "traefik.http.routers.api-moteur-jeu.entrypoints=websecure"
+      - "traefik.http.routers.api-moteur-jeu.tls=true"
+      - "traefik.http.routers.api-moteur-jeu.priority=55"
+      - "traefik.http.routers.api-moteur-jeu.service=api-moteur"
+      - "traefik.http.routers.api-moteur-jeu.middlewares=api-moteur-stripprefix"
+
+  lobby:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: services/lobby/Dockerfile
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      - LOBBY_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - LOBBY_NOM_SERVICE=lobby
+      - LOBBY_KAFKA_TOPIC_EVENEMENTS_JOUEURS=cabinet.joueurs.evenements
+      - LOBBY_KAFKA_TOPIC_EVENEMENTS_TABLES=cabinet.tables.evenements
+      - LOBBY_KAFKA_TOPIC_EVENEMENTS_PARTIES=cabinet.parties.evenements
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - LOBBY_PERSISTENCE_BACKEND=${LOBBY_PERSISTENCE_BACKEND:-postgres}
+      - LOBBY_POSTGRES_DSN=${LOBBY_POSTGRES_DSN:-postgresql://${JEU_DB_USER}:${JEU_DB_PASSWORD}@postgres:5432/${JEU_DB}}
+      - LOBBY_ID_MODE=${LOBBY_ID_MODE:-uuid}
+      - LOBBY_KAFKA_ACTIF=${LOBBY_KAFKA_ACTIF:-true}
+    networks:
+      - stack
+    ports:
+      - "8083:8080"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=cabinet_net"
+      - "traefik.http.services.lobby.loadbalancer.server.port=8080"
+
+      - "traefik.http.routers.lobby-host.rule=Host(`lobby.cabinet.localhost`)"
+      - "traefik.http.routers.lobby-host.entrypoints=web"
+      - "traefik.http.routers.lobby-host.service=lobby"
+
+      - "traefik.http.routers.lobby-path.rule=PathPrefix(`/api/lobby`)"
+      - "traefik.http.routers.lobby-path.entrypoints=web"
+      - "traefik.http.routers.lobby-path.priority=50"
+      - "traefik.http.routers.lobby-path.service=lobby"
+      - "traefik.http.routers.lobby-path.middlewares=lobby-stripprefix"
+      - "traefik.http.middlewares.lobby-stripprefix.stripprefix.prefixes=/api/lobby"
+      - "traefik.http.routers.lobby-jeu.rule=(Host(`jeu-caucus.com`) || Host(`www.jeu-caucus.com`) || Host(`jeu-caucus.ca`) || Host(`www.jeu-caucus.ca`)) && PathPrefix(`/api/lobby`)"
+      - "traefik.http.routers.lobby-jeu.entrypoints=websecure"
+      - "traefik.http.routers.lobby-jeu.tls=true"
+      - "traefik.http.routers.lobby-jeu.priority=60"
+      - "traefik.http.routers.lobby-jeu.service=lobby"
+      - "traefik.http.routers.lobby-jeu.middlewares=lobby-stripprefix"
+
+  moteur-commands:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: services/commande_moteur/Dockerfile
+    depends_on:
+      kafka:
+        condition: service_healthy
+      api-moteur:
+        condition: service_started
+    environment:
+      KAFKA_BOOTSTRAP: kafka:9092
+      KAFKA_TOPIC_COMMANDS: cab.commands
+      KAFKA_TOPIC_EVENTS: cab.events
+      KAFKA_GROUP_ID: cabinet-moteur-commands
+      API_MOTEUR_URL: http://api-moteur:8080
+    networks:
+      - stack
+
+  adapter-evenements:
+    restart: unless-stopped
+    build: ./services/adapter-evenements
+    environment:
+      - ADAPTER_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - ADAPTER_TOPIC_ENTREE=cabinet.parties.evenements
+      - ADAPTER_TOPIC_SORTIE=cab.commands
+      - ADAPTER_CONSUMER_GROUP=adapter-evenements
+    networks:
+      - stack
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.6.1
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      "sleep 10 &&
+      /scripts/bootstrap-topics.sh"
+    environment:
+      BOOTSTRAP: kafka:9092
+    volumes:
+      - ./scripts/bootstrap-topics.sh:/scripts/bootstrap-topics.sh:ro
+    networks:
+      - stack
+    restart: "no"
+
+  ui-etat-joueur:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: services/ui_etat_joueur/Dockerfile
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      - UI_ETAT_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - UI_ETAT_KAFKA_GROUP_ID=cabinet-ui-etat-v1 
+      - UI_ETAT_TOPIC_EVENEMENTS_MOTEUR=cab.events
+      - UI_ETAT_TOPICS_LOBBY=cabinet.joueurs.evenements,cabinet.tables.evenements,cabinet.parties.evenements
+      - UI_ETAT_HTTP_PORT=8080
+      - CORS_ORIGINS=${CORS_ORIGINS}
+    networks:
+      - stack
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=cabinet_net"
+      - "traefik.http.services.ui-etat.loadbalancer.server.port=8080"
+
+      - "traefik.http.routers.ui-etat.rule=Host(`ui-etat.cabinet.localhost`)"
+      - "traefik.http.routers.ui-etat.entrypoints=web"
+      - "traefik.http.routers.ui-etat.service=ui-etat"
+
+      - "traefik.http.routers.ui-etat-path.rule=PathPrefix(`/api/ui-etat`)"
+      - "traefik.http.routers.ui-etat-path.entrypoints=web"
+      - "traefik.http.routers.ui-etat-path.priority=50"
+      - "traefik.http.routers.ui-etat-path.service=ui-etat"
+      - "traefik.http.routers.ui-etat-path.middlewares=ui-etat-stripprefix"
+      - "traefik.http.middlewares.ui-etat-stripprefix.stripprefix.prefixes=/api/ui-etat"
+      - "traefik.http.routers.ui-etat-jeu.rule=(Host(`jeu-caucus.com`) || Host(`www.jeu-caucus.com`) || Host(`jeu-caucus.ca`) || Host(`www.jeu-caucus.ca`)) && PathPrefix(`/api/ui-etat`)"
+      - "traefik.http.routers.ui-etat-jeu.entrypoints=websecure"
+      - "traefik.http.routers.ui-etat-jeu.tls=true"
+      - "traefik.http.routers.ui-etat-jeu.priority=55"
+      - "traefik.http.routers.ui-etat-jeu.service=ui-etat"
+      - "traefik.http.routers.ui-etat-jeu.middlewares=ui-etat-stripprefix"
+
+  ui-web:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: services/ui-web/Dockerfile
+    depends_on:
+      - api-moteur
+      - lobby
+      - ui-etat-joueur
+    networks:
+      - stack
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=cabinet_net"
+      - "traefik.http.services.ui-web.loadbalancer.server.port=80"
+      
+      # accès local via IP (déjà existant avant, à garder pour les tests)
+      - "traefik.http.routers.ui-web-local.rule=Host(`192.168.2.11`) && PathPrefix(`/`) && !PathPrefix(`/api`) && !PathPrefix(`//docs#`)"
+      - "traefik.http.routers.ui-web-local.entrypoints=web"
+      # Front servi sur "/"
+      # - "traefik.http.routers.ui-web.rule=PathPrefix(`/`) && !PathPrefix(`/api`) && !PathPrefix(`//docs`)"
+      #- "traefik.http.routers.ui-web.rule=Host(`192.168.2.11`) && PathPrefix(`/`) && !PathPrefix(`/api`) && !PathPrefix(`//docs#`)"
+
+      # Accès via jeu-caucus.com (HTTPS)
+      #- "traefik.http.routers.ui-web-jeu.rule=(Host(`jeu-caucus.com`) || Host(`www.jeu-caucus.com`))"
+      - "traefik.http.routers.ui-web-jeu.rule=(Host(`jeu-caucus.com`) || Host(`www.jeu-caucus.com`) || Host(`jeu-caucus.ca`) || Host(`www.jeu-caucus.ca`)) && PathPrefix(`/`) && !PathPrefix(`/api`)"
+
+      - "traefik.http.routers.ui-web-jeu.entrypoints=websecure"
+      - "traefik.http.routers.ui-web-jeu.tls=true"
+
+networks:
+  stack:
+    external: true
+    name: ${STACK_NETWORK}
+
+volumes:
+  pg_data:
+  kafka_data:
+
