@@ -3,8 +3,12 @@ node_modules/
 dist/
 .idea/
 .vscode/
-.zip
+*.zip
 __pycache__/
 archives/
 Archives/
 mon_env/
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
