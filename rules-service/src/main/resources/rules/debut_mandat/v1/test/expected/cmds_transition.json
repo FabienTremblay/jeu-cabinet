@@ -1,0 +1,25 @@
+{
+  "source_fichier": "rules-service/src/main/resources/rules/debut_mandat/v1/test/expected/cmds_transition.json",
+  "_comment": "rules-service/rules/debut_mandat/v1/test/cmds_transition.json",
+  "commands": [
+    {
+      "op": "attente.terminer"
+    },
+    {
+      "op": "phase.set",
+      "sous_phase": "PHASE_VOTE"
+    },
+    {
+      "op": "attente.joueurs",
+      "type": "VOTE",
+      "joueurs": [
+        "J1",
+        "J2",
+        "J3"
+      ],
+      "procedure": {
+        "code": "VOTE_PROGRAMME"
+      }
+    }
+  ]
+}

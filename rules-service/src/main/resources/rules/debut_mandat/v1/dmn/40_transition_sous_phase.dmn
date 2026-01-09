@@ -1,0 +1,109 @@
+<!-- source_fichier: rules-service/src/main/resources/rules/debut_mandat/v1/dmn/40_transition_sous_phase.dmn -->
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions
+  xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+  xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/"
+  xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
+  xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+  id="defs_transition_sous_phase"
+  name="TransitionSousPhase"
+  namespace="cabinet.rules.debut_mandat.v1">
+
+  <!-- ========================= -->
+  <!-- Inputs                    -->
+  <!-- ========================= -->
+
+  <inputData id="i_phase" name="phase">
+    <variable name="phase" typeRef="string"/>
+  </inputData>
+
+  <inputData id="i_sous_phase" name="sous_phase">
+    <variable name="sous_phase" typeRef="string"/>
+  </inputData>
+
+  <inputData id="i_tour" name="tour">
+    <variable name="tour" typeRef="number"/>
+  </inputData>
+
+  <inputData id="i_attente" name="attente">
+    <variable name="attente" typeRef="context"/>
+  </inputData>
+
+  <!-- ========================= -->
+  <!-- Decision                  -->
+  <!-- ========================= -->
+
+  <decision id="d_transition" name="transition_sous_phase">
+    <decisionTable id="dt_transition" hitPolicy="FIRST">
+
+      <!-- Inputs -->
+      <input id="in_sous_phase">
+        <inputExpression typeRef="string">
+          <text>sous_phase</text>
+        </inputExpression>
+      </input>
+
+      <input id="in_attente_type">
+        <inputExpression typeRef="string">
+          <text>attente.type</text>
+        </inputExpression>
+      </input>
+
+      <input id="in_attente_complete">
+        <inputExpression typeRef="boolean">
+          <text>count(attente.joueurs) = count(attente.recus)</text>
+        </inputExpression>
+      </input>
+
+      <!-- Outputs -->
+      <output id="out_transition" name="do_transition" typeRef="boolean"/>
+      <output id="out_next_sous_phase" name="next_sous_phase" typeRef="string"/>
+      <output id="out_commands" name="commands" typeRef="context"/>
+
+      <!-- ========================= -->
+      <!-- Rules                     -->
+      <!-- ========================= -->
+
+      <!-- R1 : PHASE_PROGRAMME → PHASE_VOTE quand attente ENGAGER_CARTE terminée -->
+      <rule>
+        <inputEntry><text>"PHASE_PROGRAMME"</text></inputEntry>
+        <inputEntry><text>"ENGAGER_CARTE"</text></inputEntry>
+        <inputEntry><text>true</text></inputEntry>
+
+        <outputEntry><text>true</text></outputEntry>
+        <outputEntry><text>"PHASE_VOTE"</text></outputEntry>
+        <outputEntry>
+          <text>
+            {
+              commands: [
+                { op: "attente.terminer" },
+                { op: "phase.set", sous_phase: "PHASE_VOTE" },
+                {
+                  op: "attente.joueurs",
+                  type: "VOTE",
+                  joueurs: attente.joueurs,
+                  procedure: { code: "VOTE_PROGRAMME" }
+                }
+              ]
+            }
+          </text>
+        </outputEntry>
+      </rule>
+
+      <!-- R2 : aucune transition (cas par défaut) -->
+      <rule>
+        <inputEntry><text>-</text></inputEntry>
+        <inputEntry><text>-</text></inputEntry>
+        <inputEntry><text>-</text></inputEntry>
+
+        <outputEntry><text>false</text></outputEntry>
+        <outputEntry><text>null</text></outputEntry>
+        <outputEntry>
+          <text>{ commands: [] }</text>
+        </outputEntry>
+      </rule>
+
+    </decisionTable>
+  </decision>
+
+</definitions>

@@ -3,10 +3,13 @@ from __future__ import annotations
 
 import json
 import logging
+import ssl
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
+
+from .etat_bre_adapter import EtatBreAdapter
 
 from ..moteur.regles_interfaces import ReglesInterface, Command
 
@@ -48,6 +51,8 @@ class BreConfig:
     skin: str
     version_regles: str
     timeout_s: float = 2.0
+    verify_tls: bool = True
+    trace_enabled: bool = False
 
 
 class ReglesBreProxy(ReglesInterface):
@@ -65,6 +70,8 @@ class ReglesBreProxy(ReglesInterface):
         skin: str,
         version_regles: str,
         timeout_s: float = 2.0,
+        verify_tls: bool = True,
+        trace_enabled: bool = False,
         fallback: Optional[ReglesInterface] = None,
         fallback_sur_erreur: bool = False,
     ) -> None:
@@ -73,6 +80,8 @@ class ReglesBreProxy(ReglesInterface):
             skin=skin,
             version_regles=version_regles,
             timeout_s=float(timeout_s),
+            verify_tls=verify_tls,
+            trace_enabled=trace_enabled,
         )
         self.fallback = fallback
         self.fallback_sur_erreur = bool(fallback_sur_erreur)
@@ -95,7 +104,12 @@ class ReglesBreProxy(ReglesInterface):
         payload = self._payload_base(etat)
         payload["type_attente"] = type_attente
         try:
-            log.info("BRE-> regle_attente_terminee skin=%s version=%s type_attente=%s", self._skin, self._version_regles, type_attente)
+            log.info(
+                "BRE-> regle_attente_terminee skin=%s version=%s type_attente=%s",
+                self.cfg.skin,
+                self.cfg.version_regles,
+                type_attente,
+            )
             return self._eval_commands("/rules/eval/attente-terminee", payload)
         except BreErreur as e:
             if self.fallback and self.fallback_sur_erreur:
@@ -121,10 +135,12 @@ class ReglesBreProxy(ReglesInterface):
             raise BreReponseInvalide("BRE: champ 'ok' manquant sur valider-usage-carte")
 
         ok = bool(rep.get("ok"))
-        commandes_cout = rep.get("commandes_cout") or []
-        if not isinstance(commandes_cout, list):
-            raise BreReponseInvalide("BRE: 'commandes_cout' doit être une liste")
-        return ok, commandes_cout
+        cmd_cout = rep.get("cmd_cout")
+        if cmd_cout is None:
+            cmd_cout = []
+        if not isinstance(cmd_cout, list):
+            raise BreReponseInvalide("BRE: 'cmd_cout' doit être une liste")
+        return ok, cmd_cout
 
     # -----------------------------
     # internes
@@ -132,17 +148,13 @@ class ReglesBreProxy(ReglesInterface):
     def _payload_base(self, etat: Any) -> Dict[str, Any]:
         # base stable, extensible (facts minimaux + état complet jsonable pour itérer vite)
         return {
-            "skin": self.cfg.skin,
-            "version_regles": self.cfg.version_regles,
-            "etat_min": {
-                "id": getattr(etat, "id", None),
-                "tour": getattr(etat, "tour", None),
-                "phase": getattr(etat, "phase", None),
-                "sous_phase": getattr(etat, "sous_phase", None),
-                "termine": getattr(etat, "termine", None),
-                "raison_fin": getattr(etat, "raison_fin", None),
-            },
-            "etat": _jsonable(etat),
+            "source_fichier": "services/cabinet/bre/regles_bre_proxy.py",
+            # contrat commun facts_envelope.schema.json
+            "analyse_skin": {"skin": self.cfg.skin, "version": self.cfg.version_regles},
+            "joueurs": {},  # requis par le schéma commun (shape libre)
+            "etat_min": EtatBreAdapter.to_facts(etat),
+            "axes": {},
+            "trace": {},
         }
 
     def _eval_commands(self, path: str, payload: Dict[str, Any]) -> List[Command]:
@@ -169,7 +181,10 @@ class ReglesBreProxy(ReglesInterface):
         )
 
         try:
-            with urlopen(req, timeout=self.cfg.timeout_s) as resp:
+            ctx = None
+            if not self.cfg.verify_tls:
+                ctx = ssl._create_unverified_context()
+            with urlopen(req, timeout=self.cfg.timeout_s, context=ctx) as resp:
                 raw = resp.read().decode("utf-8") or "{}"
         except HTTPError as e:
             # 4xx/5xx explicite: pas un timeout, c'est une réponse d'erreur

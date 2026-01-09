@@ -12,3 +12,4 @@ mon_env/
 Thumbs.db
 *.log
 *.tmp
+*.txt

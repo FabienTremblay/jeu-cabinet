@@ -203,7 +203,7 @@ services:
       - rules-service     # utile pour démarrer après les règles
     environment:
       TOPIC_EVENEMENTS: cab.events
-      CAB_RULES_BRE_URL: pipd   http://rules-service:8081
+      CAB_RULES_BRE_URL: http://rules-service:8081
       KAFKA_BOOTSTRAP: kafka:9092
       DISABLE_KAFKA: 0
       APICURIO_URL: http://apicurio-registry:8080

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Facts envelope (DMN context)",
+  "type": "object",
+  "required": ["cmd", "joueurs", "analyse_skin"],
+  "properties": {
+    "cmd": { "type": "object", "additionalProperties": true },
+    "joueurs": { "type": "object", "additionalProperties": true },
+    "analyse_skin": {
+      "type": "object",
+      "required": ["skin", "version"],
+      "properties": {
+        "skin": { "type": "string" },
+        "version": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+
+    "etat_min": { "type": "object", "additionalProperties": true },
+    "axes": { "type": "object", "additionalProperties": true },
+    "trace": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": true
+ }
+

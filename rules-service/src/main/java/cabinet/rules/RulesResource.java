@@ -1,3 +1,4 @@
+// source_fichier: rules-service/src/main/java/cabinet/rules/RulesResource.java
 package cabinet.rules;
 
 import cabinet.rules.api.dto.*;
@@ -6,6 +7,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import org.jboss.logging.Logger;
+
 
 @Path("/rules")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -41,10 +43,9 @@ public class RulesResource {
     @POST
     @Path("/eval/valider-usage-carte")
     public ValidationResponse validerUsageCarte(ValiderUsageCarteRequest req) {
-        LOG.infof("validerUsageCarte skin=%s version=%s cmd.op=%s",
-                (req != null ? req.skin : null),
-                (req != null ? req.version_regles : null),
-                (req != null && req.cmd != null ? req.cmd.get("op") : null));
+        LOG.infof("validerUsageCarte analyse_skin.skin=%s analyse_skin.version=%s",
+                (req != null && req.analyseSkin != null ? req.analyseSkin.skin : null),
+                (req != null && req.analyseSkin != null ? req.analyseSkin.version : null));
         return engine.validerUsageCarte(req);
     }
 }

@@ -1,0 +1,440 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/facts-contract-v1.schema.json",
+  "title": "FactsContractV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["facts_version", "source", "context", "state", "capabilities", "procedures", "markers"],
+  "properties": {
+    "facts_version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Version du contrat Facts (stable pour le BRE)."
+    },
+
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input_version"],
+      "properties": {
+        "input_version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Version du format d'entrée ayant servi à produire ces facts (ex: input JSON)."
+        }
+      }
+    },
+
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["joueur_id", "anchor"],
+      "properties": {
+        "joueur_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Identifiant du joueur courant."
+        },
+        "anchor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "partie_id", "table_id"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Type d'ancrage (ex: partie)."
+            },
+            "partie_id": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Identifiant de la partie."
+            },
+            "table_id": {
+              "type": ["string", "null"],
+              "description": "Identifiant de table (si applicable), sinon null."
+            }
+          }
+        }
+      }
+    },
+
+    "state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "sous_phase", "tour", "axes", "eco", "joueurs", "programme"],
+      "properties": {
+        "phase": { "type": "string" },
+        "sous_phase": { "type": ["string", "null"] },
+        "tour": { "type": ["integer", "null"] },
+        "axes": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "social": { "$ref": "#/$defs/axe" },
+            "economique": { "$ref": "#/$defs/axe" },
+            "institutionnel": { "$ref": "#/$defs/axe" },
+            "environnement": { "$ref": "#/$defs/axe" }
+          },
+          "joueurs": {
+            "type": "object",
+            "additionalProperties": { "$ref": "#/$defs/joueur" }
+          },
+          "programme": { "$ref": "#/$defs/programme" }
+        },
+        "eco": { "$ref": "#/$defs/economie" }
+        }
+    },
+
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Capacités stables pour le BRE (dérivées des actions disponibles).",
+      "properties": {
+        "programme": { "$ref": "#/$defs/programmeCapabilities" },
+        "vote": { "$ref": "#/$defs/voteCapabilities" },
+        "perturbation": { "$ref": "#/$defs/perturbationCapabilities" }
+      }
+    },
+
+    "procedures": {
+      "type": "array",
+      "minItems": 0,
+      "items": { "$ref": "#/$defs/procedure" },
+      "description": "Procédures disponibles (groupées à partir des actions)."
+    },
+
+    "events": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["recent"],
+      "properties": {
+        "recent": {
+          "type": "array",
+          "minItems": 0,
+          "items": { "$ref": "#/$defs/event" },
+          "description": "Journal récent normalisé (optionnel pour le BRE, utile pour audit/règles avancées)."
+        }
+      }
+    },
+
+    "markers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["partie", "actions", "info_axes", "info_cartes"],
+      "properties": {
+        "partie": { "$ref": "#/$defs/isoDateTimeUtc" },
+        "actions": { "$ref": "#/$defs/isoDateTimeUtc" },
+        "info_axes": { "$ref": "#/$defs/isoDateTimeUtc" },
+        "info_cartes": { "$ref": "#/$defs/isoDateTimeUtc" }
+      },
+      "description": "Marqueurs temporels (issus de la source)."
+    }
+  },
+
+  "$defs": {
+    "voteCapabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["can_vote", "vote_action_code"],
+      "properties": {
+        "can_vote": { "type": "boolean", "description": "Le joueur peut voter." },
+        "vote_action_code": { "type": ["string", "null"], "description": "Code d'action pour voter." }
+      }
+    },
+    "perturbationCapabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["can_perturb", "perturb_action_code"],
+      "properties": {
+        "can_perturb": { "type": "boolean", "description": "Le joueur peut perturber le vote." },
+        "perturb_action_code": { "type": ["string", "null"], "description": "Code d'action pour perturber." }
+      }
+    },
+    "programme": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entrees", "verdict"],
+      "properties": {
+        "entrees": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/entreeProgramme" },
+          "description": "Cartes engagées dans le programme."
+        },
+        "verdict": {
+          "type": ["boolean", "null"],
+          "description": "Résultat du vote sur le programme (true=adopté, false=rejeté, null=non voté)."
+        }
+      }
+    },
+    "entreeProgramme": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["carte_id", "auteur_id", "params"],
+      "properties": {
+        "carte_id": { "type": "string", "description": "Identifiant de la carte engagée." },
+        "auteur_id": { "type": "string", "description": "Identifiant du joueur auteur de l'engagement." },
+        "params": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Paramètres spécifiques à l'engagement de la carte."
+        }
+      }
+    },
+    "joueur": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "role", "capital_politique", "attention", "main"],
+      "properties": {
+        "id": { "type": "string", "description": "Identifiant unique du joueur." },
+        "role": { "type": "string", "description": "Rôle du joueur (ex: hote, invite)." },
+        "capital_politique": { "type": "integer", "description": "Capital politique actuel." },
+        "attention": { "type": "integer", "description": "Points d'attention disponibles." },
+        "main": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Liste des identifiants des cartes en main."
+        }
+      }
+    },
+    "axe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["valeur", "seuil_crise", "poids"],
+      "properties": {
+        "valeur": { "type": "number", "description": "Valeur actuelle de l'axe." },
+        "seuil_crise": { "type": "number", "description": "Seuil de crise pour cet axe." },
+        "poids": { "type": "number", "description": "Poids de l'axe dans les calculs globaux." }
+      }
+    },
+    "economie": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["recettes", "depenses", "dette", "taux_interet"],
+      "properties": {
+        "recettes": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/recetteDepense" }
+        },
+        "depenses": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/recetteDepense" }
+        },
+        "dette": { "type": "number", "description": "Montant total de la dette." },
+        "taux_interet": { "type": "number", "description": "Taux d'intérêt appliqué à la dette." }
+      }
+    },
+    "recetteDepense": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["valeur", "poids_axes"],
+      "properties": {
+        "valeur": { "type": "number", "description": "Montant de la recette/dépense." },
+        "poids_axes": {
+          "type": "object",
+          "additionalProperties": { "type": "number" },
+          "description": "Impact de cette recette/dépense sur les axes."
+        }
+      }
+    },
+    "isoDateTimeUtc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Horodatage ISO 8601 (UTC recommandé, ex: 2026-01-08T13:31:05.631069Z)."
+    },
+
+    "programmeCapabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "can_engage_card",
+        "can_remove_card",
+        "can_confirm_engagements",
+        "confirm_action_code",
+        "engage_action_code",
+        "remove_action_code"
+      ],
+      "properties": {
+        "can_engage_card": {
+          "type": "boolean",
+          "description": "Vrai si une action d'engagement de carte au programme est disponible."
+        },
+        "can_remove_card": {
+          "type": "boolean",
+          "description": "Vrai si une action de retrait d'engagement/carte est disponible."
+        },
+        "can_confirm_engagements": {
+          "type": "boolean",
+          "description": "Vrai si une action de confirmation (joueur_recu) est disponible."
+        },
+        "confirm_action_code": {
+          "type": ["string", "null"],
+          "minLength": 1,
+          "description": "Code d'action utilisé pour confirmer (si applicable), sinon null."
+        },
+        "engage_action_code": {
+          "type": ["string", "null"],
+          "minLength": 1,
+          "description": "Code d'action utilisé pour engager une carte (si applicable), sinon null."
+        },
+        "remove_action_code": {
+          "type": ["string", "null"],
+          "minLength": 1,
+          "description": "Code d'action utilisé pour retirer (si applicable), sinon null."
+        }
+      }
+    },
+
+    "procedure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "title", "description", "screen", "awaiting_type", "actions"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Code de procédure (workflow métier)."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Titre de procédure (orienté UI/explication)."
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Description de procédure (orientée UI/explication)."
+        },
+        "screen": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Écran/UI concerné (ex: programme)."
+        },
+        "awaiting_type": {
+          "type": ["string", "null"],
+          "description": "Type d'attente associé (si applicable)."
+        },
+        "actions": {
+          "type": "array",
+          "minItems": 0,
+          "items": { "$ref": "#/$defs/procedureAction" },
+          "description": "Actions appartenant à la procédure."
+        }
+      }
+    },
+
+    "procedureAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action_code", "op", "requires_confirmation", "fields"],
+      "properties": {
+        "action_code": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Code d'action stable (ex: programme.engager_carte)."
+        },
+        "op": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Opération technique/exécutée (souvent identique au code)."
+        },
+        "requires_confirmation": {
+          "type": "boolean",
+          "description": "Indique si une confirmation supplémentaire est requise."
+        },
+        "fields": {
+          "type": "array",
+          "minItems": 0,
+          "items": { "$ref": "#/$defs/actionField" },
+          "description": "Champs attendus pour exécuter l'action."
+        }
+      }
+    },
+
+    "actionField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "required", "domain"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Nom du champ (ex: joueur_id, carte_id)."
+        },
+        "required": {
+          "type": "boolean",
+          "description": "Champ obligatoire ou non."
+        },
+        "domain": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Domaine/type logique (ex: joueur_id, carte_main, attente_type, uid)."
+        }
+      }
+    },
+
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "occurred_at",
+        "category",
+        "severity",
+        "code",
+        "message",
+        "audience_scope",
+        "audience_joueur_id",
+        "meta"
+      ],
+      "properties": {
+        "occurred_at": { "$ref": "#/$defs/isoDateTimeUtc" },
+
+        "category": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Catégorie d'événement (ex: MESSAGE, ACTION, SYSTEME, DEROULEMENT, TECH)."
+        },
+
+        "severity": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Sévérité (ex: info, warn, error)."
+        },
+
+        "code": {
+          "type": ["string", "null"],
+          "description": "Code d'événement (peut être null en source)."
+        },
+
+        "message": {
+          "type": "string",
+          "minLength": 0,
+          "description": "Message humain."
+        },
+
+        "audience_scope": {
+          "type": ["string", "null"],
+          "description": "Scope d'audience (ex: joueur)."
+        },
+
+        "audience_joueur_id": {
+          "type": ["string", "null"],
+          "description": "Joueur cible si scope=joueur."
+        },
+
+        "meta": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Métadonnées spécifiques à l'événement (structure variable)."
+        }
+      }
+    }
+  },
+
+  "allOf": [
+    {
+      "if": { "required": ["events"] },
+      "then": { "required": ["events"] }
+    }
+  ]
+}

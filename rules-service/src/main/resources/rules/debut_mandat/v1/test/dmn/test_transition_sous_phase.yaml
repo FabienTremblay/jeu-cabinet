@@ -1,0 +1,42 @@
+# source_fichier: rules-service/src/main/resources/rules/debut_mandat/v1/test/dmn/test_transition_sous_phase.yaml
+
+name: "PHASE_PROGRAMME -> PHASE_VOTE quand attente ENGAGER_CARTE complétée"
+
+facts:
+  etat:
+    phase: "PHASE_JEU"
+    sous_phase: "PHASE_PROGRAMME"
+    tour: 1
+
+    attente:
+      statut: "ATTENTE_REPONSE_JOUEUR"
+      type: "ENGAGER_CARTE"
+      joueurs: ["J1", "J2", "J3"]
+      recus: ["J1", "J2", "J3"]
+      procedure:
+        code: "ENGAGER_PROGRAMME"
+
+    joueurs:
+      - id_joueur: "J1"
+        role: "hote"
+        actif: true
+        pret: true
+      - id_joueur: "J2"
+        role: "invite"
+        actif: true
+        pret: true
+      - id_joueur: "J3"
+        role: "invite"
+        actif: true
+        pret: true
+
+expect:
+  commands:
+    - op: "attente.terminer"
+    - op: "phase.set"
+      sous_phase: "PHASE_VOTE"
+    - op: "attente.joueurs"
+      type: "VOTE"
+      joueurs: ["J1", "J2", "J3"]
+      procedure:
+        code: "VOTE_PROGRAMME"

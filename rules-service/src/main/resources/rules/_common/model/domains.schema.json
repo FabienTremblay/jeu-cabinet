@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cabinet://schemas/domains.schema.json",
+  "title": "Domaines CAB - enums et identifiants",
+  "type": "object",
+  "properties": {
+    "op_commande": {
+      "title": "Opération de commande",
+      "type": "string",
+      "enum": [
+
+        /* ---- Phases & partie ---- */
+        "phase.set",
+        "tour.increment",
+        "partie.terminer",
+        "partie.joueur_quitte_definitivement",
+
+        /* ---- Notifications ---- */
+        "notif.broadcast",
+        "notif.joueur",
+
+        /* ---- Axes ---- */
+        "axes.delta",
+        "axes.set",
+        "axes.poids.set",
+
+        /* ---- Économie ---- */
+        "eco.delta_recettes",
+        "eco.delta_depenses",
+        "eco.delta_dette",
+        "eco.set_taux",
+
+        /* ---- Joueurs : capital, attention, cartes ---- */
+        "joueur.capital.delta",
+        "joueur.capital.set",
+        "joueur.attention.delta",
+        "joueur.attention.set",
+        "joueur.reset_attention",
+        "joueur.piocher",
+        "joueur.defausser_choix",
+        "joueur.defausser_hasard",
+        "joueur.jouer_carte",
+
+        /* ---- Votes ---- */
+        "joueur.vote.set",
+        "joueur.vote.retirer",
+        "joueur.vote_poids.delta",
+        "joueur.vote_droit.set",
+
+        /* ---- Attente joueurs ---- */
+        "attente.joueurs",
+        "attente.joueur_recu",
+        "attente.terminer",
+
+        /* ---- Démission / remplacement ---- */
+        "joueur.demission_fracassante",
+        "joueur.remplacant",
+
+        /* ---- Deck ---- */
+        "deck.defausser_main",
+        "deck.melanger",
+        "deck.echanger_joueurs",
+        "deck.echange_carte_hasard",
+        "deck.echange_carte_choix",
+
+        /* ---- Événements mondiaux ---- */
+        "evt.piocher",
+        "evt.executer",
+
+        /* ---- Programme ---- */
+        "programme.engager_carte",
+        "programme.retirer_carte",
+        "programme.rejeter",
+        "programme.reset",
+        "programme.intention.set",
+        "programme.verdict.set",
+
+        /* ---- Analyse / opposition ---- */
+        "capital_collectif.delta",
+        "capital_collectif.set",
+        "opposition.capital.delta",
+        "opposition.capital.set",
+        "analyse.data.set",
+        "analyse.data.delta",
+        "opposition.data.set",
+        "opposition.data.delta",
+
+        /* ---- Journal ---- */
+        "journal"
+      ]
+    }
+  },
+  "required": ["op_commande"],
+  "additionalProperties": false
+}
+

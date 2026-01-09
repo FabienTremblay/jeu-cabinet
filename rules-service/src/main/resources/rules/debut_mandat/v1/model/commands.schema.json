@@ -1,0 +1,54 @@
+{
+  "source_fichier": "rules-service/src/main/resources/rules/debut_mandat/v1/model/commands.schema.json",
+  "_comment": "rules-service/rules/debut_mandat/v1/model/commands.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CommandsResponse",
+  "type": "object",
+  "required": [
+    "commands"
+  ],
+  "properties": {
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "op"
+        ],
+        "properties": {
+          "op": {
+            "type": "string"
+          },
+          "sous_phase": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "type": {
+            "type": "string"
+          },
+          "joueurs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "joueur_id": {
+            "type": "string"
+          },
+          "procedure": {
+            "type": "object"
+          },
+          "payload": {
+            "type": "object"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "trace": {
+      "type": "object"
+    }
+  }
+}

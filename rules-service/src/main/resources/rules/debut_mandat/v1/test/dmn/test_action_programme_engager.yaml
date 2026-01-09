@@ -1,0 +1,25 @@
+# source_fichier: rules-service/src/main/resources/rules/debut_mandat/v1/test/dmn/test_action_programme_engager.yaml
+
+name: "ENGAGER_CARTE -> attente.joueur_recu pendant PHASE_PROGRAMME"
+
+facts:
+  etat:
+    sous_phase: "PHASE_PROGRAMME"
+
+    attente:
+      type: "ENGAGER_CARTE"
+      joueurs: ["J1", "J2"]
+      recus: ["J1"]
+
+  request:
+    kind: "action"
+    op: "programme.engager_carte"
+    joueur_id: "J2"
+    payload:
+      id_carte: "C42"
+
+expect:
+  commands:
+    - op: "attente.joueur_recu"
+      joueur_id: "J2"
+      type: "ENGAGER_CARTE"

@@ -1,3 +1,4 @@
+// source_fichier: rules-service/src/main/java/cabinet/rules/engine/RulesEngineProducer.java
 package cabinet.rules.engine;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -13,8 +14,8 @@ public class RulesEngineProducer {
     @Produces
     @ApplicationScoped
     public RulesEngine rulesEngine() {
-        // Pour l'instant, uniquement mock.
+        if ("mock".equals(engine)) return new MockRulesEngine();
         // Plus tard: if ("drools".equals(engine)) return new DroolsRulesEngine(...);
-        return new MockRulesEngine();
+        throw new IllegalArgumentException("cab.rules.engine invalide: " + engine);
     }
 }

@@ -1,20 +1,28 @@
 package cabinet.rules.api.dto;
 
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.Map;
 
 public class TraceDto {
-    public String mode;                 // "mock" / "drools"
-    public String versionRegles;        // ex: "debut_mandat.v1"
-    public List<String> fired;          // règles déclenchées (drools), vide en mock
-    public Map<String, Object> meta;    // info additionnelle
+    public int journee;
+    public int tour;
+    public String phase;
+    public String sous_phase;
+    public String pivot;
 
-    public static TraceDto mock(String versionRegles) {
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public Map<String, Object> meta;
+
+    public static TraceDto mock(int journee, int tour, String phase, String sousPhase, String pivot) {
         TraceDto t = new TraceDto();
-        t.mode = "mock";
-        t.versionRegles = versionRegles;
-        t.fired = List.of();
-        t.meta = Map.of();
+        t.journee = journee;
+        t.tour = tour;
+        t.phase = phase;
+        t.sous_phase = sousPhase;
+        t.pivot = pivot;
+        t.meta = Map.of("mode", "mock");
         return t;
     }
 }
+

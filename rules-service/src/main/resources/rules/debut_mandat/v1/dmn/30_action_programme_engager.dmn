@@ -1,0 +1,96 @@
+<!-- source_fichier: rules-service/src/main/resources/rules/debut_mandat/v1/dmn/30_action_programme_engager.dmn -->
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions
+  xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+  xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/"
+  xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
+  xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+  id="defs_action_programme_engager"
+  name="ActionProgrammeEngager"
+  namespace="cabinet.rules.debut_mandat.v1">
+
+  <!-- ========================= -->
+  <!-- Inputs                    -->
+  <!-- ========================= -->
+
+  <inputData id="i_sous_phase" name="sous_phase">
+    <variable name="sous_phase" typeRef="string"/>
+  </inputData>
+
+  <inputData id="i_attente" name="attente">
+    <variable name="attente" typeRef="context"/>
+  </inputData>
+
+  <inputData id="i_request" name="request">
+    <variable name="request" typeRef="context"/>
+  </inputData>
+
+  <!-- ========================= -->
+  <!-- Decision                  -->
+  <!-- ========================= -->
+
+  <decision id="d_action" name="action_programme_engager">
+    <decisionTable id="dt_action" hitPolicy="FIRST">
+
+      <!-- Inputs -->
+      <input>
+        <inputExpression typeRef="string">
+          <text>sous_phase</text>
+        </inputExpression>
+      </input>
+
+      <input>
+        <inputExpression typeRef="string">
+          <text>request.op</text>
+        </inputExpression>
+      </input>
+
+      <input>
+        <inputExpression typeRef="string">
+          <text>attente.type</text>
+        </inputExpression>
+      </input>
+
+      <!-- Outputs -->
+      <output name="commands" typeRef="context"/>
+
+      <!-- ========================= -->
+      <!-- Rules                     -->
+      <!-- ========================= -->
+
+      <!-- R1 : engager carte pendant PHASE_PROGRAMME -->
+      <rule>
+        <inputEntry><text>"PHASE_PROGRAMME"</text></inputEntry>
+        <inputEntry><text>"programme.engager_carte"</text></inputEntry>
+        <inputEntry><text>"ENGAGER_CARTE"</text></inputEntry>
+
+        <outputEntry>
+          <text>
+            {
+              commands: [
+                {
+                  op: "attente.joueur_recu",
+                  joueur_id: request.joueur_id,
+                  type: "ENGAGER_CARTE"
+                }
+              ]
+            }
+          </text>
+        </outputEntry>
+      </rule>
+
+      <!-- R2 : défaut (action ignorée) -->
+      <rule>
+        <inputEntry><text>-</text></inputEntry>
+        <inputEntry><text>-</text></inputEntry>
+        <inputEntry><text>-</text></inputEntry>
+
+        <outputEntry>
+          <text>{ commands: [] }</text>
+        </outputEntry>
+      </rule>
+
+    </decisionTable>
+  </decision>
+
+</definitions>

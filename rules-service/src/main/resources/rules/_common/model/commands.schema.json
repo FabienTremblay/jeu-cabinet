@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cabinet://schemas/commands.schema.json",
+  "title": "CommandsResponse",
+  "type": "object",
+  "properties": {
+    "commands": {
+      "type": "array",
+      "items": {
+        "title": "Commande",
+        "type": "object",
+        "properties": {
+          "op": {
+            "$ref": "domains.schema.json#/properties/op_commande"
+          },
+          "payload": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "op"
+        ],
+        "additionalProperties": true
+      }
+    },
+    "trace": {
+      "title": "Trace",
+      "type": "object",
+      "properties": {
+        "journee": {
+          "type": "integer"
+        },
+        "tour": {
+          "type": "integer"
+        },
+        "phase": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sous_phase": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pivot": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "meta": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "journee",
+        "tour"
+      ],
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "commands"
+  ],
+  "additionalProperties": true
+}

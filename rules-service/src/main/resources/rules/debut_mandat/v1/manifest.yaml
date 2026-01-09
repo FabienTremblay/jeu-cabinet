@@ -1,0 +1,24 @@
+# source_fichier: rules-service/src/main/resources/rules/debut_mandat/v1/manifest.yaml
+# rules-service/rules/debut_mandat/v1/manifest.yaml
+pack:
+  skin: debut_mandat
+  version: v1
+  title: "Début de mandat — règles v1"
+  description: "Décisions DMN + règles DRL pour le déroulement du tour."
+  compatibility:
+    moteur_min: "0.3.0"
+  entrypoints:
+    # noms logiques utilisés par l’API Java
+    transition_sous_phase: "40_transition_sous_phase"
+    valider_action: "20_valider_action"
+    appliquer_action:
+      programme.engager_carte: "30_action_programme_engager"
+      programme.retirer_carte: "31_action_programme_retirer"
+      attente.joueur_recu: "32_action_attente_joueur_recu"
+    construire_attente_ui: "50_construire_attente_ui"
+    declencheurs_auto: "60_declencheurs_automatiques"
+  artifacts:
+    dmn_dir: "dmn"
+    drl_dir: "drl"
+    model_dir: "model"
+

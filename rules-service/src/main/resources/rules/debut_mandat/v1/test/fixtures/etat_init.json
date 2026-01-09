@@ -1,0 +1,60 @@
+{
+  "source_fichier": "rules-service/src/main/resources/rules/debut_mandat/v1/test/fixtures/etat_init.json",
+  "id_partie": "P000001",
+  "dh_maintenant": "2026-01-08T08:00:00-05:00",
+  "tour": 1,
+  "phase": "PHASE_JEU",
+  "sous_phase": "PHASE_PROGRAMME",
+  "axes": {
+    "A_ECONOMIE": {
+      "id": "A_ECONOMIE",
+      "valeur": 5,
+      "seuil_crise": 2,
+      "poids": 1.0
+    },
+    "A_POPULARITE": {
+      "id": "A_POPULARITE",
+      "valeur": 5,
+      "seuil_crise": 2,
+      "poids": 1.0
+    }
+  },
+  "economie": {
+    "dette": 0.0,
+    "taux_interet": 0.0,
+    "recettes": {},
+    "depenses": {},
+    "efficience": {}
+  },
+  "joueurs": {
+    "J1": {
+      "id_joueur": "J1",
+      "nom": "Joueur 1",
+      "role": "hote",
+      "pret": true,
+      "actif": true
+    },
+    "J2": {
+      "id_joueur": "J2",
+      "nom": "Joueur 2",
+      "role": "invite",
+      "pret": true,
+      "actif": true
+    }
+  },
+  "attente": {
+    "type": null,
+    "joueurs": [],
+    "recus": [],
+    "meta": null,
+    "statut": "AUCUNE"
+  },
+  "termine": false,
+  "raison_fin": null,
+  "marqueurs": {
+    "partie": null,
+    "actions": null,
+    "info_axes": null,
+    "info_cartes": null
+  }
+}

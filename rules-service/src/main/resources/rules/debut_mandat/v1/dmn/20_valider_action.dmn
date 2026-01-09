@@ -1,0 +1,61 @@
+<!-- source_fichier: rules-service/src/main/resources/rules/debut_mandat/v1/dmn/20_valider_action.dmn -->
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+             xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/"
+             xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+             xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
+             id="defs_valider_usage_carte"
+             name="valider_usage_carte"
+             namespace="https://cabinet/rules/debut_mandat/v1">
+
+  <decision id="decision_valider_usage_carte" name="valider_usage_carte">
+    <variable id="var_resultat" name="resultat" typeRef="Any"/>
+    <literalExpression id="expr_valider_usage_carte">
+      <text><![CDATA[
+/*
+  Entrées attendues (minimales) :
+    - cmd : { op, carte_id, joueur_id, ... }
+    - joueurs : map { "J1": {attention, capital_politique}, ... }
+    - analyse_skin : { cartes_def : map { "C001": {cout_attention, cout_capital}, ... } }
+
+  Sortie :
+    - { ok: boolean, commandes_cout: list<object> }
+*/
+
+if cmd = null or cmd.op = null then
+  { ok: false, commandes_cout: [] }
+else if cmd.op != "programme.engager_carte" then
+  { ok: true, commandes_cout: [] }
+else
+  let
+    def_carte = analyse_skin.cartes_def[cmd.carte_id],
+    j = joueurs[cmd.joueur_id],
+
+    cout_att = if def_carte != null and def_carte.cout_attention != null then number(def_carte.cout_attention) else 0,
+    cout_cp  = if def_carte != null and def_carte.cout_capital  != null then number(def_carte.cout_capital)  else 0,
+
+    att_dispo = if j != null and j.attention != null then number(j.attention) else 0,
+    cp_dispo  = if j != null and j.capital_politique != null then number(j.capital_politique) else 0,
+
+    manque_att = att_dispo < cout_att,
+    manque_cp  = cp_dispo < cout_cp,
+
+    cmds_att = if cout_att > 0 then
+      [ { op: "joueur.attention.delta", joueur_id: cmd.joueur_id, delta: -cout_att } ]
+      else [],
+    cmds_cp = if cout_cp > 0 then
+      [ { op: "joueur.capital.delta", joueur_id: cmd.joueur_id, delta: -cout_cp } ]
+      else []
+  in
+    if def_carte = null then
+      { ok: false, commandes_cout: [] }
+    else if j = null then
+      { ok: false, commandes_cout: [] }
+    else if manque_att or manque_cp then
+      { ok: false, commandes_cout: [] }
+    else
+      { ok: true, commandes_cout: cmds_att + cmds_cp }
+      ]]></text>
+    </literalExpression>
+  </decision>
+
+</definitions>

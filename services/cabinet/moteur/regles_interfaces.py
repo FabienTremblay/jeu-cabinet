@@ -41,20 +41,3 @@ class ReglesInterface(Protocol):
         """
         return True, []
 
-    def valider_usage_carte(self, etat: "Etat", cmd: Command) -> tuple[bool, List[Command]]:
-        """
-        CAB.D510 – Validation de l'usage d'une carte.
-
-        cmd contient au minimum:
-          - "op"
-          - "joueur_id"
-          - "carte_id"
-
-        Retourne:
-          - ok: True si la carte peut être utilisée dans le contexte courant.
-          - commandes_cout: commandes à appliquer pour payer le coût
-            (capital politique, points d'attention, etc.) AVANT l'effet.
-        """
-        return True, []
-
-

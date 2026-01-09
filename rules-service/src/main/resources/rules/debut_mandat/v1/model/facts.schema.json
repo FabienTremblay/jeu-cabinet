@@ -1,0 +1,142 @@
+{
+  "source_fichier": "rules-service/src/main/resources/rules/debut_mandat/v1/model/facts.schema.json",
+  "_comment": "rules-service/rules/debut_mandat/v1/model/facts.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FactsDebutMandatV1",
+  "type": "object",
+  "required": [
+    "meta",
+    "etat",
+    "request"
+  ],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": [
+        "skin",
+        "version",
+        "now",
+        "correlation_id"
+      ],
+      "properties": {
+        "skin": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "now": {
+          "type": "string"
+        },
+        "correlation_id": {
+          "type": "string"
+        }
+      }
+    },
+    "etat": {
+      "type": "object",
+      "required": [
+        "tour",
+        "phase",
+        "sous_phase",
+        "attente",
+        "joueurs"
+      ],
+      "properties": {
+        "tour": {
+          "type": "integer"
+        },
+        "phase": {
+          "type": "string"
+        },
+        "sous_phase": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "attente": {
+          "type": "object",
+          "required": [
+            "statut",
+            "type",
+            "joueurs",
+            "recus"
+          ],
+          "properties": {
+            "statut": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "joueurs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "recus": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "procedure": {
+              "type": "object"
+            }
+          }
+        },
+        "joueurs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "capital_politique",
+              "attention_dispo",
+              "peut_voter"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "capital_politique": {
+                "type": "integer"
+              },
+              "attention_dispo": {
+                "type": "integer"
+              },
+              "peut_voter": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "request": {
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "op": {
+          "type": "string"
+        },
+        "payload": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}
