@@ -14,8 +14,18 @@ public class RulesEngineProducer {
     @Produces
     @ApplicationScoped
     public RulesEngine rulesEngine() {
-        if ("mock".equals(engine)) return new MockRulesEngine();
-        // Plus tard: if ("drools".equals(engine)) return new DroolsRulesEngine(...);
-        throw new IllegalArgumentException("cab.rules.engine invalide: " + engine);
-    }
+        RulesEngine mock = new MockRulesEngine();
+        RulesEngine v1   = new SimpleRulesEngineV1(mock);
+
+        // Stratégie recommandée :
+        // - "routing" : choix par skin via req.version_regles / req.analyseSkin
+        // - "v1"      : force v1 (utile pour tests d’intégration en environnement)
+        // - "mock"    : fallback total
+        return switch (engine) {
+            case "mock"    -> mock;
+            case "v1"      -> v1;
+            case "routing" -> new RoutingRulesEngine(mock, v1);
+            default        -> new RoutingRulesEngine(mock, v1);
+        };
+     }
 }

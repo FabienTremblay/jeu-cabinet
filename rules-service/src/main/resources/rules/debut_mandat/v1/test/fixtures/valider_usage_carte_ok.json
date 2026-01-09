@@ -1,0 +1,18 @@
+{
+  "source_fichier": "test",
+  "analyse_skin": { "skin": "debut_mandat", "version": "v1" },
+  "joueurs": {
+    "J1": { "attention": 3, "capital_politique": 2 }
+  },
+  "etat_min": {
+    "cartes_def": {
+      "C1": { "cout_attention": 2, "cout_capital": 1 }
+    }
+  },
+  "cmd": {
+    "op": "programme.engager_carte",
+    "joueur_id": "J1",
+    "carte_id": "C1"
+  }
+}
+

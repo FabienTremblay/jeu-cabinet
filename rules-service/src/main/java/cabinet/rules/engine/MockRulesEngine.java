@@ -1,5 +1,6 @@
 package cabinet.rules.engine;
 
+import jakarta.enterprise.inject.Vetoed;
 import cabinet.rules.api.dto.CommandsResponse;
 import cabinet.rules.api.dto.EvalAttenteTermineeRequest;
 import cabinet.rules.api.dto.EvalSousPhaseRequest;
@@ -10,6 +11,7 @@ import cabinet.rules.api.dto.ValidationResponse;
 import java.util.List;
 import java.util.Map;
 
+@Vetoed
 public class MockRulesEngine implements RulesEngine {
 
     @Override
