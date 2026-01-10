@@ -1,0 +1,22 @@
+# notice
+
+## périmètre
+Le présent dépôt contient :
+- du **code** (python, java, typescript) ;
+- des **contrats** (avro/jsonschema/openapi) ;
+- des **documents** (odt, eddx, etc.) ;
+- des **assets** (images, gabarits).
+
+## licence du code
+Sauf mention contraire, le code source est sous la licence indiquée dans `LICENSE`.
+
+## documents et assets
+Sauf mention contraire :
+- les documents (ex. `Document/`, `docker/*.odt`) et
+- les assets (ex. gabarits `.xcf`, images `.png`)
+ne sont pas nécessairement couverts par la même licence que le code.
+
+Si tu souhaites réutiliser un document ou un asset, vérifie la licence associée ou contacte le mainteneur.
+
+## marques et noms
+Les noms, logos et éléments d’identité visuelle peuvent être protégés séparément.

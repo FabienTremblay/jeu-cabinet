@@ -1,15 +1,55 @@
+# --- node / web ---
 node_modules/
-.env
 dist/
+
+# --- env / secrets ---
+.env
+.env.*
+!.env.example
+
+# --- python ---
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# --- java / maven ---
+target/
+*.class
+
+# --- ide ---
 .idea/
 .vscode/
-*.zip
-__pycache__/
-archives/
-Archives/
-mon_env/
+
+# --- os ---
 .DS_Store
 Thumbs.db
+
+# --- logs / temp ---
 *.log
 *.tmp
-*.txt
+*~
+*.swp
+
+# --- archives / exports ---
+*.zip
+archives/
+Archives/
+
+# --- venv / local env ---
+mon_env/
+.venv/
+venv/
+
+# --- local data (si jamais) ---
+data/
+storage/
+tmp/
+
+# --- exemples: ignorer certains .txt locaux si tu veux ---
+# (conserve tes .txt importants dans git)
+# *.local.txt
+# *_local.txt

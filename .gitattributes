@@ -1,0 +1,16 @@
+# Normaliser les fins de ligne
+* text=auto eol=lf
+
+# Scripts
+*.sh text eol=lf
+
+# Binaries / documents
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.xcf binary
+*.odt binary
+*.eddx binary
+*.pdf binary
+*.zip binary
