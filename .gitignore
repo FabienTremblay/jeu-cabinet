@@ -53,3 +53,6 @@ tmp/
 # (conserve tes .txt importants dans git)
 # *.local.txt
 # *_local.txt
+
+# LibreOffice locks
+.~lock.*#

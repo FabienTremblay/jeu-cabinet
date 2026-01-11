@@ -25,3 +25,4 @@ mon_env/*
 *.tar.gz
 .DS_Store
 Thumbs.db
+archives/
