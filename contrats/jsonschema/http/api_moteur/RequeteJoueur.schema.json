@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "joueur_id": {
+      "type": "string",
+      "title": "Joueur Id"
+    },
+    "pseudo": {
+      "type": "string",
+      "title": "Pseudo"
+    }
+  },
+  "type": "object",
+  "required": [
+    "joueur_id",
+    "pseudo"
+  ],
+  "title": "RequeteJoueur"
+}

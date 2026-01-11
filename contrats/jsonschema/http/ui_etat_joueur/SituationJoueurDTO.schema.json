@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "version": {
+      "type": "integer",
+      "title": "Version",
+      "default": 1
+    },
+    "joueur_id": {
+      "type": "string",
+      "title": "Joueur Id"
+    },
+    "ancrage": {
+      "$ref": "./AncrageDTO.schema.json"
+    },
+    "etat_partie": {
+      "$ref": "./EtatPartieDTO.schema.json"
+    },
+    "actions_disponibles": {
+      "items": {
+        "$ref": "./ActionDisponibleDTO.schema.json"
+      },
+      "type": "array",
+      "title": "Actions Disponibles"
+    },
+    "journal_recent": {
+      "items": {
+        "$ref": "./EntreeJournalDTO.schema.json"
+      },
+      "type": "array",
+      "title": "Journal Recent"
+    },
+    "marqueurs": {
+      "$ref": "./MarqueursMajDTO.schema.json"
+    }
+  },
+  "type": "object",
+  "required": [
+    "joueur_id",
+    "ancrage",
+    "etat_partie",
+    "actions_disponibles",
+    "journal_recent",
+    "marqueurs"
+  ],
+  "title": "SituationJoueurDTO"
+}

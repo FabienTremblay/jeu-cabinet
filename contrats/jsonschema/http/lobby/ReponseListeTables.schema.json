@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "tables": {
+      "items": {
+        "$ref": "./ReponseTable.schema.json"
+      },
+      "type": "array",
+      "title": "Tables"
+    }
+  },
+  "type": "object",
+  "required": [
+    "tables"
+  ],
+  "title": "ReponseListeTables"
+}

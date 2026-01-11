@@ -1,0 +1,14 @@
+{
+  "service": "api_moteur",
+  "source_openapi": "contrats/openapi/api_moteur.openapi.json",
+  "schemas": [
+    "ReponseEtat",
+    "RequeteAction",
+    "RequeteJoueur",
+    "RequetePartie"
+  ],
+  "common": [
+    "HTTPValidationError",
+    "ValidationError"
+  ]
+}

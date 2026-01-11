@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "id_skin": {
+      "type": "string",
+      "title": "Id Skin"
+    },
+    "nom": {
+      "type": "string",
+      "title": "Nom"
+    },
+    "description": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Description"
+    }
+  },
+  "type": "object",
+  "required": [
+    "id_skin",
+    "nom"
+  ],
+  "title": "SkinInfo"
+}

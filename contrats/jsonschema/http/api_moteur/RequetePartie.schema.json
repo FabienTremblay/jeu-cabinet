@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "partie_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Partie Id"
+    },
+    "nom": {
+      "type": "string",
+      "title": "Nom"
+    },
+    "joueurs": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Joueurs"
+    },
+    "seed": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Seed"
+    },
+    "skin_jeu": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Skin Jeu",
+      "default": "minimal"
+    },
+    "options": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Options"
+    }
+  },
+  "type": "object",
+  "required": [
+    "nom",
+    "joueurs"
+  ],
+  "title": "RequetePartie"
+}

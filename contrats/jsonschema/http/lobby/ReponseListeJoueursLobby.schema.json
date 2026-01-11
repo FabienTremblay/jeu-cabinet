@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "joueurs": {
+      "items": {
+        "$ref": "./ReponseJoueur.schema.json"
+      },
+      "type": "array",
+      "title": "Joueurs"
+    }
+  },
+  "type": "object",
+  "required": [
+    "joueurs"
+  ],
+  "title": "ReponseListeJoueursLobby"
+}

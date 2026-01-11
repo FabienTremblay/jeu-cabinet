@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "event_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Event Id"
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Occurred At"
+    },
+    "category": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Category"
+    },
+    "severity": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Severity"
+    },
+    "message": {
+      "type": "string",
+      "title": "Message"
+    },
+    "code": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Code"
+    },
+    "meta": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Meta"
+    },
+    "audience": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Audience"
+    }
+  },
+  "type": "object",
+  "required": [
+    "occurred_at",
+    "message"
+  ],
+  "title": "EntreeJournalDTO"
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "detail": {
+      "items": {
+        "$ref": "../../_common/http/ValidationError.schema.json"
+      },
+      "type": "array",
+      "title": "Detail"
+    }
+  },
+  "type": "object",
+  "title": "HTTPValidationError"
+}

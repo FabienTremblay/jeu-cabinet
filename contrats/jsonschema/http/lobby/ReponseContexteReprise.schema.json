@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "id_joueur": {
+      "type": "string",
+      "title": "Id Joueur"
+    },
+    "id_table": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Id Table"
+    },
+    "id_partie": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Id Partie"
+    },
+    "statut_table": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Statut Table"
+    },
+    "skin_jeu": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Skin Jeu"
+    }
+  },
+  "type": "object",
+  "required": [
+    "id_joueur"
+  ],
+  "title": "ReponseContexteReprise",
+  "description": "Contexte minimal permettant au front de reprendre une partie si le joueur\nest déjà impliqué dans une table active."
+}

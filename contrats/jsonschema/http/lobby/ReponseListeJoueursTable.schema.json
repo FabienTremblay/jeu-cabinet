@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "id_table": {
+      "type": "string",
+      "title": "Id Table"
+    },
+    "joueurs": {
+      "items": {
+        "$ref": "./ReponseJoueurTable.schema.json"
+      },
+      "type": "array",
+      "title": "Joueurs"
+    }
+  },
+  "type": "object",
+  "required": [
+    "id_table",
+    "joueurs"
+  ],
+  "title": "ReponseListeJoueursTable"
+}

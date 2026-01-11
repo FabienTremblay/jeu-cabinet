@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "nom": {
+      "type": "string",
+      "title": "Nom"
+    },
+    "alias": {
+      "type": "string",
+      "title": "Alias"
+    },
+    "courriel": {
+      "type": "string",
+      "format": "email",
+      "title": "Courriel"
+    },
+    "mot_de_passe": {
+      "type": "string",
+      "title": "Mot De Passe"
+    }
+  },
+  "type": "object",
+  "required": [
+    "nom",
+    "alias",
+    "courriel",
+    "mot_de_passe"
+  ],
+  "title": "DemandeInscription"
+}

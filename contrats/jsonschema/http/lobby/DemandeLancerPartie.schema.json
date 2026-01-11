@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "id_hote": {
+      "type": "string",
+      "title": "Id Hote"
+    }
+  },
+  "type": "object",
+  "required": [
+    "id_hote"
+  ],
+  "title": "DemandeLancerPartie"
+}

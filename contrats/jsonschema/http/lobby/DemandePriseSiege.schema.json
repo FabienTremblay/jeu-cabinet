@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "id_joueur": {
+      "type": "string",
+      "title": "Id Joueur"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "hote",
+        "invite"
+      ],
+      "title": "Role",
+      "default": "invite"
+    }
+  },
+  "type": "object",
+  "required": [
+    "id_joueur"
+  ],
+  "title": "DemandePriseSiege",
+  "description": "Demande pour prendre un siège à une table.\nUtilisée par l'API: POST /api/tables/{id_table}/joueurs"
+}

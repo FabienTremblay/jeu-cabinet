@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "id_partie": {
+      "type": "string",
+      "title": "Id Partie"
+    }
+  },
+  "type": "object",
+  "required": [
+    "id_partie"
+  ],
+  "title": "ReponsePartieLancee"
+}

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "partie_id": {
+      "type": "string",
+      "title": "Partie Id"
+    },
+    "etat": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Etat"
+    }
+  },
+  "type": "object",
+  "required": [
+    "partie_id",
+    "etat"
+  ],
+  "title": "ReponseEtat"
+}

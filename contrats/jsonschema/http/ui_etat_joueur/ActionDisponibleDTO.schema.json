@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "code": {
+      "type": "string",
+      "title": "Code"
+    },
+    "label": {
+      "type": "string",
+      "title": "Label"
+    },
+    "payload": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Payload",
+      "default": {}
+    },
+    "requires_confirmation": {
+      "type": "boolean",
+      "title": "Requires Confirmation",
+      "default": false
+    }
+  },
+  "type": "object",
+  "required": [
+    "code",
+    "label"
+  ],
+  "title": "ActionDisponibleDTO"
+}

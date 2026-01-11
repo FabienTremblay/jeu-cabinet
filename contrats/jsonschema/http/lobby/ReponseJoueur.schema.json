@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "id_joueur": {
+      "type": "string",
+      "title": "Id Joueur"
+    },
+    "nom": {
+      "type": "string",
+      "title": "Nom"
+    },
+    "alias": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Alias"
+    },
+    "courriel": {
+      "type": "string",
+      "format": "email",
+      "title": "Courriel"
+    }
+  },
+  "type": "object",
+  "required": [
+    "id_joueur",
+    "nom",
+    "courriel"
+  ],
+  "title": "ReponseJoueur"
+}

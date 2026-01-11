@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "courriel": {
+      "type": "string",
+      "format": "email",
+      "title": "Courriel"
+    },
+    "mot_de_passe": {
+      "type": "string",
+      "title": "Mot De Passe"
+    }
+  },
+  "type": "object",
+  "required": [
+    "courriel",
+    "mot_de_passe"
+  ],
+  "title": "DemandeConnexion"
+}

@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "id_joueur": {
+      "type": "string",
+      "title": "Id Joueur"
+    },
+    "nom": {
+      "type": "string",
+      "title": "Nom"
+    },
+    "alias": {
+      "type": "string",
+      "title": "Alias"
+    },
+    "courriel": {
+      "type": "string",
+      "format": "email",
+      "title": "Courriel"
+    },
+    "jeton_session": {
+      "type": "string",
+      "title": "Jeton Session"
+    },
+    "id_table": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Id Table"
+    },
+    "id_partie": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Id Partie"
+    },
+    "statut_table": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Statut Table"
+    },
+    "skin_jeu": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Skin Jeu"
+    }
+  },
+  "type": "object",
+  "required": [
+    "id_joueur",
+    "nom",
+    "alias",
+    "courriel",
+    "jeton_session"
+  ],
+  "title": "ReponseConnexion"
+}

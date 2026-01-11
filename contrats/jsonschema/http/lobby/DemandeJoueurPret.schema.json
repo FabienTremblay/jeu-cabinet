@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "id_joueur": {
+      "type": "string",
+      "title": "Id Joueur"
+    }
+  },
+  "type": "object",
+  "required": [
+    "id_joueur"
+  ],
+  "title": "DemandeJoueurPret"
+}

@@ -1,0 +1,16 @@
+{
+  "service": "ui_etat_joueur",
+  "source_openapi": "contrats/openapi/ui_etat_joueur.openapi.json",
+  "schemas": [
+    "ActionDisponibleDTO",
+    "AncrageDTO",
+    "EntreeJournalDTO",
+    "EtatPartieDTO",
+    "MarqueursMajDTO",
+    "SituationJoueurDTO"
+  ],
+  "common": [
+    "HTTPValidationError",
+    "ValidationError"
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "id_table": {
+      "type": "string",
+      "title": "Id Table"
+    },
+    "id_joueur": {
+      "type": "string",
+      "title": "Id Joueur"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "hote",
+        "invite"
+      ],
+      "title": "Role"
+    },
+    "statut_table": {
+      "type": "string",
+      "title": "Statut Table"
+    }
+  },
+  "type": "object",
+  "required": [
+    "id_table",
+    "id_joueur",
+    "role",
+    "statut_table"
+  ],
+  "title": "ReponseJoueurSiege"
+}

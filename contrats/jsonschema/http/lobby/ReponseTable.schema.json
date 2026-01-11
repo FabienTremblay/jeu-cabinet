@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "id_table": {
+      "type": "string",
+      "title": "Id Table"
+    },
+    "nom_table": {
+      "type": "string",
+      "title": "Nom Table"
+    },
+    "nb_sieges": {
+      "type": "integer",
+      "title": "Nb Sieges"
+    },
+    "id_hote": {
+      "type": "string",
+      "title": "Id Hote"
+    },
+    "statut": {
+      "type": "string",
+      "title": "Statut"
+    },
+    "skin_jeu": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Skin Jeu"
+    }
+  },
+  "type": "object",
+  "required": [
+    "id_table",
+    "nom_table",
+    "nb_sieges",
+    "id_hote",
+    "statut"
+  ],
+  "title": "ReponseTable"
+}

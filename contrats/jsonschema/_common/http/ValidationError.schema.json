@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "loc": {
+      "items": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          }
+        ]
+      },
+      "type": "array",
+      "title": "Location"
+    },
+    "msg": {
+      "type": "string",
+      "title": "Message"
+    },
+    "type": {
+      "type": "string",
+      "title": "Error Type"
+    }
+  },
+  "type": "object",
+  "required": [
+    "loc",
+    "msg",
+    "type"
+  ],
+  "title": "ValidationError"
+}

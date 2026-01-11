@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "id_hote": {
+      "type": "string",
+      "title": "Id Hote"
+    },
+    "nom_table": {
+      "type": "string",
+      "title": "Nom Table"
+    },
+    "nb_sieges": {
+      "type": "integer",
+      "title": "Nb Sieges"
+    },
+    "mot_de_passe_table": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Mot De Passe Table"
+    },
+    "skin_jeu": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Skin Jeu"
+    }
+  },
+  "type": "object",
+  "required": [
+    "id_hote",
+    "nom_table",
+    "nb_sieges"
+  ],
+  "title": "DemandeCreationTable"
+}

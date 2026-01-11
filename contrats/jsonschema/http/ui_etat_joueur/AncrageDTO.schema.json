@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "lobby",
+        "table",
+        "partie"
+      ],
+      "title": "Type"
+    },
+    "table_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Table Id"
+    },
+    "partie_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Partie Id"
+    }
+  },
+  "type": "object",
+  "required": [
+    "type"
+  ],
+  "title": "AncrageDTO"
+}

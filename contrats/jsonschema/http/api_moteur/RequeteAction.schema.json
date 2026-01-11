@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "acteur": {
+      "type": "string",
+      "title": "Acteur"
+    },
+    "type_action": {
+      "type": "string",
+      "title": "Type Action"
+    },
+    "donnees": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Donnees"
+    }
+  },
+  "type": "object",
+  "required": [
+    "acteur",
+    "type_action"
+  ],
+  "title": "RequeteAction"
+}

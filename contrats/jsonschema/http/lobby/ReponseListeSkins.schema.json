@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "skins": {
+      "items": {
+        "$ref": "./SkinInfo.schema.json"
+      },
+      "type": "array",
+      "title": "Skins"
+    }
+  },
+  "type": "object",
+  "required": [
+    "skins"
+  ],
+  "title": "ReponseListeSkins"
+}

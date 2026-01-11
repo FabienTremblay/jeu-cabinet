@@ -1,0 +1,29 @@
+{
+  "service": "lobby",
+  "source_openapi": "contrats/openapi/lobby.openapi.json",
+  "schemas": [
+    "DemandeConnexion",
+    "DemandeCreationTable",
+    "DemandeInscription",
+    "DemandeJoueurPret",
+    "DemandeLancerPartie",
+    "DemandePriseSiege",
+    "ReponseConnexion",
+    "ReponseContexteReprise",
+    "ReponseInscription",
+    "ReponseJoueur",
+    "ReponseJoueurSiege",
+    "ReponseJoueurTable",
+    "ReponseListeJoueursLobby",
+    "ReponseListeJoueursTable",
+    "ReponseListeSkins",
+    "ReponseListeTables",
+    "ReponsePartieLancee",
+    "ReponseTable",
+    "SkinInfo"
+  ],
+  "common": [
+    "HTTPValidationError",
+    "ValidationError"
+  ]
+}
