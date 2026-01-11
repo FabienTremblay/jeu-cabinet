@@ -1,4 +1,12 @@
 #!/usr/bin/env bash
+# ------------------------------------------------------------------------------
+# rôle        : initialise les topics kafka nécessaires au jeu
+# usage       : ./scripts/bootstrap-topics.sh
+# contexte    : démarrage d’un environnement local
+# dépendances : docker, docker-compose, kafka en cours d’exécution
+# statut      : actif
+# ------------------------------------------------------------------------------
+
 set -euo pipefail
 
 BOOTSTRAP=${BOOTSTRAP:-"kafka:9092"}

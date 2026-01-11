@@ -1,4 +1,12 @@
 #!/usr/bin/env bash
+# ------------------------------------------------------------------------------
+# rôle        : exécuter des appels d’évaluation rapides sur le moteur
+# usage       : ./eval.sh
+# contexte    : tests exploratoires
+# dépendances : api moteur en cours d’exécution
+# statut      : expérimental
+# ------------------------------------------------------------------------------
+
 
 # Nom du fichier de sortie
 OUTFILE="stats_fichiers.tsv"
