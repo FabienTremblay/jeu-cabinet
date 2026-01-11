@@ -6,6 +6,21 @@ Le projet vise à explorer — de manière ludique mais rigoureuse — la prise 
 
 ---
 
+## en bref (10 minutes pour comprendre)
+
+- moteur de jeu **événementiel**
+- règles **externalisées et versionnées**
+- UI = **projection**, jamais décision
+- architecture proche de systèmes réels distribués
+- objectif : **comprendre**, pas optimiser la victoire
+
+👉 commencez par :
+1. `docs/architecture.md`
+2. `docs/execution-locale.md`
+3. `contrats/README.md`
+
+---
+
 ## objectifs du projet
 
 - simuler un **système politique dynamique** plutôt qu’un simple jeu à règles fixes

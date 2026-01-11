@@ -1,296 +1,210 @@
-# contrat-journal.md (version 1.1)
-
-## changelog
-
-- **1.1 (2025-12-16)** : clarification de **audience** (diffusion) vs **scope/actor** (sens métier) + invariant “journal stocké par joueur”.
-- **1.0** : version initiale.
-
----
+# Contrat Journal — v1.1
 
 ## 1. objectif
 
-Ce document définit le **contrat canonique des messages de journal** produits par le moteur du jeu *Conseil des ministres*.
+Ce document définit le **contrat canonique des entrées de journal métier** produites par le moteur du jeu *Conseil des ministres*.
 
-Il vise à garantir que :
-- les messages sont interprétés correctement par l’UI (journal, bandeau critique, flash),
-- les intentions métier (information, alerte, narration, technique) sont respectées,
-- les comportements UI restent stables malgré l’évolution du moteur.
+Il décrit :
+- le **sens** des événements,
+- leur **structure minimale stable**,
+- et les règles garantissant leur **exploitation fiable** par les projections et l’UI.
 
-Le moteur **ne décide pas de l’affichage**, mais **exprime clairement l’intention**.
-
----
-
-## 2. principe fondamental
-
-> **un message = une intention explicite**
-
-Le moteur doit toujours produire des messages :
-- auto-suffisants,
-- idempotents,
-- classifiables sans heuristique UI.
-
-L’UI applique ensuite des règles simples et déterministes.
+Ce contrat est **moteur‑centric** et **indépendant de toute interface utilisateur**.
 
 ---
 
-## 3. structure canonique d’un JournalEntry
+## 2. principes fondateurs
 
-```json
-{
-  "event_id": "evt-uuid",
-  "timestamp": "2025-12-16T14:32:10Z",
-  "tour": 3,
-  "message": "Points d’attention insuffisants pour engager la carte.",
-  "severity": "warn",
-  "kind": "action",
-  "category": "programme",
-  "scope": "joueur",
-  "actor": {
-    "joueur_id": "J000001",
-    "opposition": false
-  },
-  "refs": {
-    "carte_id": "MES-004",
-    "op": "programme.engager_carte",
-    "evenement_id": null,
-    "procedure_code": "ENGAGER_PROGRAMME",
-    "aggregate_id": "P000001"
-  },
-  "payload": {
-    "payload_version": 1
-  },
-  "ui": {
-    "persist": true,
-    "toast": true,
-    "flash": false
-  }
-}
-```
+- le moteur **exprime l’intention**
+- les projections **traduisent**
+- l’UI **met en scène**
+
+Aucune logique d’affichage, de déduction visuelle ou de comportement UI ne doit apparaître dans ce contrat.
+
+---
+
+## 3. structure générale
+
+Une entrée de journal est un objet structuré, immuable, identifié de manière unique, et destiné à être projeté sans interprétation implicite.
 
 ---
 
 ## 4. champs obligatoires
 
-### 4.1 event_id (obligatoire)
+### 4.1 `event_id`
 
-- identifiant unique **stable**
-- ne doit pas changer lors d’un retry ou d’une rediffusion
-- utilisé par l’UI pour la déduplication (toast / flash)
+Identifiant globalement unique.
 
----
-
-### 4.2 timestamp
-
-- ISO 8601
-- horodatage du **commit métier**, pas du transport
+**Règles**
+- invariant en cas de retry
+- utilisé pour :
+  - idempotence
+  - corrélation
+  - déduplication
 
 ---
 
-### 4.3 tour
+### 4.2 `occurred_at`
 
-- numéro du tour concerné
-- `null` si hors-tour (lobby, technique, système)
+Date ISO‑8601.
 
----
-
-### 4.4 message
-
-- texte court, lisible par un humain
-- jamais de message technique brut
-- pas de formatage HTML
+**Sens**
+- moment effectif de l’événement métier
+- pas un horodatage technique différé
 
 ---
 
-## 5. severity (niveau de gravité)
+### 4.3 `message`
 
-Valeurs autorisées uniquement :
+Texte lisible par un humain.
 
-| valeur | sens |
-|------|------|
-| debug | diagnostic technique |
-| info  | information / narration |
-| warn  | action refusée attendue / contrainte métier |
-| error | invariant brisé / bug / incohérence grave |
-
-### règles
-- `warn` et `error` déclenchent un **bandeau critique (toast)**
-- `info` ne déclenche jamais d’alerte
-- ne jamais utiliser `warn/error` pour créer du « drama narratif »
-- **interdit** : `warning`, `critical`, `success`, etc. (à normaliser côté adapter si nécessaire)
+**Règles**
+- porte le **sens principal**
+- jamais technique brut
+- jamais dépendant du contexte UI
 
 ---
 
-## 6. kind (nature du message)
+## 5. `severity`
 
-| kind | usage |
-|-----|------|
-| story | narration politique, événements, conséquences |
-| action | actions joueurs (acceptées ou refusées) |
-| phase | début/fin de tour, transitions |
-| system | messages système ou règles |
-| hand | information sur la main du joueur |
+Niveau de gravité métier.
 
-> le `kind` détermine **l’onglet du journal UI**
+**Valeurs autorisées**
+- `debug`
+- `info`
+- `warn`
+- `error`
 
----
-
-## 7. category (classification fine)
-
-Libre mais recommandée.
-
-Exemples :
-- programme
-- carte
-- vote
-- opposition
-- axe
-- eco
-- regle
-- reseau
-
-Utilisée pour filtrage futur et analyse.
+**Règles**
+- `warn` et `error` signalent une anomalie fonctionnelle
+- aucune règle d’affichage n’est définie ici
 
 ---
 
-## 8. scope (portée métier)
+## 6. `category`
 
-| scope | signification |
-|------|--------------|
-| joueur | concerne un joueur précis |
-| partie | concerne l’ensemble de la partie |
-| table | concerne la table (lobby) |
+Catégorie fonctionnelle de l’événement.
 
-> `scope` décrit **le sens métier** (à qui cela s’applique), pas la stratégie de stockage.
+**Exemples**
+- `story` – narration
+- `action` – action joueur ou système
+- `phase` – transition d’état
+- `system` – événement technique métier
+- `hand` – cartes / main
 
----
-
-## 9. actor (acteur/sujet)
-
-Indique **qui agit ou subit**.
-
-```json
-{
-  "joueur_id": "J000002",
-  "opposition": false
-}
-```
-
-- `joueur_id` optionnel
-- `opposition=true` si l’acteur est l’opposition
+**Usages**
+- filtrage
+- regroupement
+- analytics
 
 ---
 
-## 10. refs (références métier)
+## 7. `scope`
 
-Permet à l’UI de contextualiser.
+Portée conceptuelle de l’événement.
 
-Champs usuels :
-- `carte_id`
-- `evenement_id`
-- `op`
-- `procedure_code`
-- `aggregate_id`
-
-### règle critique
-
-> **un message avec `evenement_id` est éligible au Flash Une**
-
----
-
-## 11. payload
-
-- données complémentaires
-- toujours versionnées (`payload_version`)
-- jamais interprétées par défaut par l’UI
-
----
-
-## 12. ui (directives explicites UI)
-
-Optionnel mais fortement recommandé.
-
-```json
-"ui": {
-  "persist": true,
-  "toast": false,
-  "flash": true
-}
-```
-
-| champ | effet |
-|------|------|
-| persist | écrit dans l’historique de partie |
-| toast | autorise affichage bandeau |
-| flash | autorise affichage Flash Une |
-
-> à défaut, l’UI applique ses règles par `severity` et `evenement_id`
-
----
-
-## 13. audience (diffusion)
-
-### 13.1 définition
-
-`audience` n’est **pas** un champ du JournalEntry canonique.  
-C’est un **champ interne/projection** (ex. `journal_recent` côté UI-état-joueur) qui indique **à qui le message a été diffusé**.
-
-- `scope/actor` = **sens métier**
-- `audience` = **ciblage de diffusion** (transport / notifications / duplication)
-
-### 13.2 forme recommandée
-
-```json
-"audience": { "scope": "joueur", "joueur_id": "J000002" }
-```
-
-Scopes possibles (projection) :
+**Valeurs typiques**
 - `joueur`
-- `all`
-- `liste` (si tu gardes cette variante)
+- `table`
+- `partie`
+- `systeme`
 
-### 13.3 invariant (important)
-
-Si l’architecture stocke le journal **par joueur** (ex. `EtatJoueurUI.journal_recent`) :
-
-- entrée stockée avec `joueur_id = J` ⇒ `audience` doit être `null` ou `{ "scope":"joueur", "joueur_id": J }`
-- une audience globale (`all`) doit être **convertie** lors de la duplication (une entrée par joueur)
-
-Objectif : éviter les incohérences du type “entrée du journal de J mais audience=all”.
+⚠️ Le `scope` **n’est pas** la diffusion.
 
 ---
 
-## 14. règles de publication (résumé)
+## 8. `actor`
 
-| cas | persist | toast | flash |
-|----|---------|-------|-------|
-| action refusée | oui | oui | non |
-| action acceptée | oui | non | non |
-| événement mondial | oui | selon gravité | oui |
-| changement de phase | oui | non | non |
-| message technique | non | non | non |
+Décrit l’origine de l’événement.
 
----
+**Exemples**
+```json
+{ "type": "joueur", "joueur_id": "J000002" }
+{ "type": "systeme" }
+```
 
-## 15. idempotence et retries
-
-- un même événement métier doit conserver le même `event_id`
-- les workers doivent être tolérants aux rediffusions
-- aucun effet UI ne doit se répéter si `event_id` déjà vu
+**Règles**
+- optionnel
+- informatif
+- ne porte jamais le sens principal
 
 ---
 
-## 16. tests d’acceptation obligatoires
+## 9. `audience`
 
-1. action refusée → journal + toast, pas de flash
-2. événement mondial → journal + flash
-3. fin de tour → journal uniquement
-4. retry technique → aucun duplicat UI
-5. diagnostic → visible uniquement en temps réel
+Décrit explicitement à qui l’événement est destiné.
+
+**Exemples**
+```json
+{ "scope": "tous" }
+{ "scope": "joueur", "joueur_id": "J000003" }
+{ "scope": "table", "table_id": "T000001" }
+```
+
+**Règles**
+- la diffusion est **explicite**
+- aucune déduction implicite côté projection
 
 ---
 
-## 17. règle d’or
+## 10. `refs`
 
-> **le moteur exprime l’intention, l’UI met en scène**
+Références métier liées à l’événement.
 
-Toute ambiguïté non résolue dans le moteur deviendra une incohérence UI.
+**Exemples**
+- `joueur_id`
+- `carte_id`
+- `programme_id`
+- `partie_id`
+
+**Usages**
+- navigation
+- enrichissement UI
+- corrélation analytique
+
+---
+
+## 11. `meta`
+
+Données additionnelles **non porteuses du sens principal**.
+
+**Exemples**
+- phase courante
+- sous‑phase
+- indicateurs techniques
+- flags de debug
+
+**Règles**
+- jamais nécessaires pour comprendre le message
+- peuvent évoluer sans casser le contrat
+
+---
+
+## 12. idempotence & stabilité
+
+Une entrée de journal doit être :
+- reproductible sans duplication visible
+- stable face aux retries
+- identifiable uniquement par `event_id`
+
+---
+
+## 13. règle d’or
+
+> Le moteur exprime l’intention.  
+> Les projections traduisent.  
+> L’UI met en scène.
+
+Toute tentative de logique d’affichage ou de comportement UI dans ce contrat constitue une **violation**.
+
+---
+
+## 14. relation avec l’UI
+
+Ce contrat est projeté vers :
+- `EntreeJournalDTO`
+- `journal_recent[]` dans `SituationJoueurDTO`
+
+Toute simplification UI est une **projection**, jamais une perte d’intention moteur.
+
+---
