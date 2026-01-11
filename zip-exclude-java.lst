@@ -1,9 +1,0 @@
-*/target/*
-*/build/*
-*/.idea/*
-*/.gradle/*
-*.class
-*.jar
-*.war
-*.zip
-*.log
