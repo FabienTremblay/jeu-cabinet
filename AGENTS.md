@@ -40,8 +40,9 @@ Avant toute modification d’API, DTO, événement, structure JSON, échange Kaf
 - `contrats/openapi/`
 - `contrats/jsonschema/`
 - `contrats/README.md`
-- `Document/ui-contracts.md`
-- `services/ui-web/docs/UI-Contracts.md`
+- `docs/ui/contracts.md`
+- `docs/ui/flux-auth-lobby-table.md`
+- `docs/ui/journal.md`
 
 Les contrats sont la source de vérité. Toute rupture doit être explicitée avec impacts et proposition de migration.
 

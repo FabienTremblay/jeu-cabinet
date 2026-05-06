@@ -6,6 +6,7 @@ Sources de vérité contractuelles :
 - OpenAPI API Moteur : `contrats/openapi/api_moteur.openapi.json`
 - OpenAPI UI État Joueur : `contrats/openapi/ui_etat_joueur.openapi.json`
 - JSON Schema UI : `contrats/jsonschema/http/ui_etat_joueur/`
+- Contrats UI transverses : `docs/ui/contracts.md`
 
 ## 1. Introduction
 
@@ -41,13 +42,13 @@ Après login :
 {
   "version": 1,
   "joueur_id": "J000001",
-  "ancrage": { "type": "libre" },
+  "ancrage": { "type": "lobby" },
   "etat_partie": null,
   "actions_disponibles": []
 }
 ```
 
-L’UI se base uniquement sur `ancrage.type === "lobby"` pour afficher l’écran Lobby.
+L’UI se base sur `ancrage.type === "lobby"` pour afficher l’écran Lobby.
 
 ---
 
@@ -326,4 +327,3 @@ Ce flux est la spécification officielle pour :
 - le développement d’extensions (mobile, TUI, multi-plateforme).
 
 Ce document doit être utilisé comme référence centrale pour toute évolution du jeu Cabinet.
-

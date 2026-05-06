@@ -21,6 +21,18 @@ Le projet vise à explorer — de manière ludique mais rigoureuse — la prise 
 
 ---
 
+## organisation documentaire
+
+Pour éviter les doublons, le dépôt distingue trois niveaux de documentation :
+
+- `docs/` contient la documentation active du projet : architecture, exécution locale, flux UI et notes maintenues ;
+- `contrats/` contient les sources contractuelles normatives : snapshots OpenAPI et schémas JSON Schema ;
+- `Document/` contient le fonds de conception et les documents historiques ou sources de travail (`.odt`, gabarits, diagrammes).
+
+En cas de divergence, les contrats dans `contrats/` priment pour les interfaces, puis les documents actifs dans `docs/` pour l’architecture et les usages courants. Les documents dans `Document/` doivent être traités comme contexte ou archives tant qu’ils n’ont pas été synchronisés vers `docs/` ou `contrats/`.
+
+---
+
 ## objectifs du projet
 
 - simuler un **système politique dynamique** plutôt qu’un simple jeu à règles fixes
@@ -84,17 +96,23 @@ Le projet vise à explorer — de manière ludique mais rigoureuse — la prise 
 ├── services/
 │   ├── cabinet/              # noyau de jeu (python)
 │   │   ├── moteur/
-│   │   ├── domaine/
-│   │   ├── evenements/
-│   │   └── projections/
+│   │   ├── bre/
+│   │   ├── skins/
+│   │   └── tests/
 │   ├── lobby/                # gestion des tables et joueurs
-│   ├── api-moteur/            # exposition HTTP du moteur
-│   ├── ui-etat-joueur/        # projection dédiée à l’UI
-│   ├── rules-service/         # moteur de règles (java / BRE)
-│   └── ui2-web/               # interface web (react / ts)
+│   ├── api_moteur/            # exposition HTTP du moteur
+│   ├── ui_etat_joueur/        # projection dédiée à l’UI
+│   ├── commande_moteur/       # worker de commandes Kafka
+│   ├── adapter-evenements/    # adaptation événements Kafka
+│   ├── ui-web/                # interface web (react / ts)
+│   ├── tui_lobby/             # interface terminal lobby
+│   └── cli_cabinet/           # client CLI
 │
+├── rules-service/             # moteur de règles (java / BRE)
+├── contrats/                  # OpenAPI et JSON Schema contractuels
 ├── docker-compose.yml         # stack locale
 ├── docs/                      # documents d’architecture
+├── Document/                  # fonds de conception et archives
 └── README.md
 ```
 
@@ -142,15 +160,15 @@ Chaque événement contient :
 
 ### prérequis
 
-- docker + docker-compose
+- docker + plugin Docker Compose v2 (`docker compose`)
 - python 3.11+
 - node 18+
-- java 17+
+- java 21+ pour `rules-service`
 
 ### démarrage
 
 ```
-docker-compose up --build
+docker compose up --build
 ```
 
 Les services sont alors accessibles localement (ports définis dans le compose).
@@ -193,5 +211,3 @@ y compris via un service réseau, doit conserver le caractère libre et ouvert d
 
 L’objectif est de préserver l’intégrité conceptuelle du jeu et d’éviter toute
 appropriation fermée de ses mécanismes.
-
-

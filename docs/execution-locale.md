@@ -1,6 +1,6 @@
 # exécution locale — environnement de développement
 
-Ce document décrit comment lancer et utiliser le projet **jeu Cabinet** en environnement local à l’aide de `docker-compose`.
+Ce document décrit comment lancer et utiliser le projet **jeu Cabinet** en environnement local à l’aide de `docker compose`.
 
 L’objectif est de fournir un environnement reproductible incluant :
 - le noyau applicatif,
@@ -15,7 +15,7 @@ L’objectif est de fournir un environnement reproductible incluant :
 ## prérequis
 
 - docker (20+ recommandé)
-- docker-compose v2
+- plugin Docker Compose v2 (`docker compose`)
 - make (optionnel mais recommandé)
 - ports locaux disponibles (voir plus bas)
 
@@ -25,7 +25,7 @@ L’objectif est de fournir un environnement reproductible incluant :
 
 ### fichier `.env`
 
-Le projet utilise un fichier `.env` chargé par `docker-compose`.
+Le projet utilise un fichier `.env` chargé par Docker Compose.
 
 1. copier le fichier d’exemple :
 
@@ -47,13 +47,13 @@ cp .env.example .env
 À la racine du dépôt :
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 ou en arrière-plan :
 
 ```bash
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 Les services démarrent dans l’ordre défini par les dépendances Docker.
@@ -69,9 +69,10 @@ Les services démarrent dans l’ordre défini par les dépendances Docker.
   - HTTP : `${TRAEFIK_HTTP_PORT}` (ex. 80)
   - API Traefik : `${TRAEFIK_API_PORT}`
 
-Les routes sont définies dans :
-- `docker/traefik/traefik.yml`
-- `docker/traefik/dynamic/routers.yml`
+Traefik est configuré par `docker-compose.yml` :
+- le provider Docker est activé (`--providers.docker=true`) ;
+- les routes applicatives sont déclarées par les labels `traefik.*` des services ;
+- les fichiers `docker/traefik/` restent des exemples ou supports de configuration statique, mais ne sont pas la source active du routage courant.
 
 ---
 
@@ -192,13 +193,13 @@ Chaque service dispose de son propre `Dockerfile` et de tests unitaires.
 Arrêt simple :
 
 ```bash
-docker-compose down
+docker compose down
 ```
 
 Arrêt avec suppression des volumes :
 
 ```bash
-docker-compose down -v
+docker compose down -v
 ```
 
 > ⚠️ supprime les données postgres et kafka.
@@ -210,13 +211,13 @@ docker-compose down -v
 ### logs
 
 ```bash
-docker-compose logs -f
+docker compose logs -f
 ```
 
 Ou par service :
 
 ```bash
-docker-compose logs -f rules-service
+docker compose logs -f rules-service
 ```
 
 ---
@@ -224,7 +225,7 @@ docker-compose logs -f rules-service
 ### état des conteneurs
 
 ```bash
-docker-compose ps
+docker compose ps
 ```
 
 ---
@@ -239,7 +240,6 @@ docker-compose ps
 
 ## prochaines extensions possibles
 
-- profils docker-compose (dev / test / minimal)
+- profils Docker Compose (dev / test / minimal)
 - scripts de smoke tests automatisés
 - documentation e2e (flux lobby → partie → fin)
-
