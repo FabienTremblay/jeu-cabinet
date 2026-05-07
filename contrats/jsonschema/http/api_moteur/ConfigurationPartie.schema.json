@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "politique_timeout_partie": {
+      "anyOf": [
+        {
+          "$ref": "./PolitiqueTimeoutPartie.schema.json"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "type": "object",
+  "title": "ConfigurationPartie"
+}

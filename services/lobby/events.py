@@ -1,10 +1,16 @@
 # services/lobby/events.py
+# rôle        : définit les événements métier publiés par le lobby
+# usage       : sérialisation des événements joueurs, tables et parties
+# contexte    : échanges Kafka depuis le service lobby
+# statut      : actif
 from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Literal, List, Optional
 
 from pydantic import BaseModel, EmailStr
+
+from .domaine import PolitiqueTimeoutPartie
 
 
 def maintenant_iso() -> str:
@@ -78,5 +84,5 @@ class EvenementPartieLancee(Evenement):
     id_partie: str
     joueurs: List[JoueurPartie]
     skin_jeu: Optional[str] = None
-
+    politique_timeout_partie: Optional[PolitiqueTimeoutPartie] = None
 

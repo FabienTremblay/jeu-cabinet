@@ -1,4 +1,8 @@
 # services/api_moteur/app.py
+# rôle        : expose la façade HTTP du moteur de jeu
+# usage       : API FastAPI pour parties, état et actions
+# contexte    : point d'entrée HTTP du noyau cabinet
+# statut      : actif
 
 from fastapi import FastAPI, APIRouter, Depends, Header, HTTPException, Response
 from fastapi.encoders import jsonable_encoder
@@ -89,6 +93,7 @@ def creer_partie(req: RequetePartie, manager=Depends(get_manager), correlation_i
         partie_id=partie_id,
         joueurs=req.joueurs,
         seed=req.seed,
+        configuration_partie=jsonable_encoder(req.configuration_partie, exclude_none=True),
     )
     # 1) ancien événement simple
     publier_evenement(
@@ -144,4 +149,3 @@ def soumettre_action(partie_id: str, req: RequeteAction, manager=Depends(get_man
 
 
 app.include_router(api)
-

@@ -1,4 +1,8 @@
 # services/commande_moteur/worker_moteur.py
+# rôle        : exécute les commandes Kafka à destination du moteur
+# usage       : worker cab.commands vers API moteur et synchronisation lobby
+# contexte    : création de partie et événements de fin de partie
+# statut      : actif
 from __future__ import annotations
 
 import json
@@ -87,6 +91,7 @@ def traiter_partie_creer(
     id_partie = commande.get("id_partie")
     joueurs_liste = commande.get("joueurs") or []
     skin_jeu = commande.get("skin_jeu")
+    politique_timeout_partie = commande.get("politique_timeout_partie")
     nom = commande.get("nom") or f"Partie {id_partie or table_id}"
 
     url = f"{API_MOTEUR_URL}/parties"
@@ -118,6 +123,10 @@ def traiter_partie_creer(
     }
     if skin_jeu is not None:
         body["skin_jeu"] = skin_jeu
+    if politique_timeout_partie is not None:
+        body["configuration_partie"] = {
+            "politique_timeout_partie": politique_timeout_partie,
+        }
 
     logger.info("POST moteur %s body=%r", url, body)
 
@@ -252,4 +261,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

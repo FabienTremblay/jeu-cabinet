@@ -553,6 +553,7 @@ class ServiceLobby:
             id_partie=id_partie,
             joueurs=joueurs_evt,
             skin_jeu=table.skin_jeu,
+            politique_timeout_partie=table.politique_timeout_partie,
         )
         await self.producteur.publier(self.settings.kafka_topic_evenements_parties, evt)
 

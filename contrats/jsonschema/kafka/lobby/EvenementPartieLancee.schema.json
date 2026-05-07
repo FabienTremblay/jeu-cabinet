@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EvenementPartieLancee",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "type": {
+      "const": "PartieLancee"
+    },
+    "horodatage": {
+      "type": "string"
+    },
+    "id_table": {
+      "type": "string"
+    },
+    "id_partie": {
+      "type": "string"
+    },
+    "skin_jeu": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "joueurs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "id_joueur",
+          "nom",
+          "alias",
+          "courriel",
+          "role"
+        ],
+        "properties": {
+          "id_joueur": {
+            "type": "string"
+          },
+          "nom": {
+            "type": "string"
+          },
+          "alias": {
+            "type": "string"
+          },
+          "courriel": {
+            "type": "string",
+            "format": "email"
+          },
+          "role": {
+            "enum": [
+              "hote",
+              "invite"
+            ]
+          }
+        }
+      }
+    },
+    "politique_timeout_partie": {
+      "anyOf": [
+        {
+          "$ref": "../../http/lobby/PolitiqueTimeoutPartie.schema.json"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "type",
+    "id_table",
+    "id_partie",
+    "joueurs"
+  ]
+}

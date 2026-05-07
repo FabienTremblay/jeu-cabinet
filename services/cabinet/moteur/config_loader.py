@@ -1,4 +1,8 @@
 # services/cabinet/moteur/config_loader.py
+# rôle        : construit l'état initial depuis une skin
+# usage       : chargement des configurations et règles de partie
+# contexte    : initialisation du noyau cabinet
+# statut      : actif
 from __future__ import annotations
 from typing import Dict, Callable, Any, Deque, List
 from collections import deque
@@ -98,6 +102,7 @@ def construire_etat(
     joueurs: Dict[str, Any],
     seed: int | None = None,
     regles: ReglesInterface | None = None,
+    configuration_partie: Dict[str, Any] | None = None,
 ) -> Etat:
     """Construit un Etat initial à partir d'un skin (défini par un package Python)."""
     if seed is not None:
@@ -154,6 +159,7 @@ def construire_etat(
         axes=axes,
         eco=eco,
         joueurs=joueurs_map,
+        configuration_partie=dict(configuration_partie or {}),
         programme=None,
         regles=regles_impl,
         capital_collectif=cfg.get("capital_collectif_init", 0),
@@ -185,4 +191,3 @@ def construire_etat(
         ),
     )
     return etat
-

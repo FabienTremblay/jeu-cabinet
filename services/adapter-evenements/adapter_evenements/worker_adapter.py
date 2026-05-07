@@ -1,4 +1,8 @@
 from __future__ import annotations
+# rôle        : transforme les événements lobby en commandes moteur
+# usage       : worker Kafka adapter-evenements
+# contexte    : pont cabinet.parties.evenements vers cab.commands
+# statut      : actif
 
 import logging
 from datetime import datetime, timezone
@@ -48,6 +52,7 @@ def transformer_evenement_en_commande(evt: dict) -> dict:
     id_partie = evt["id_partie"]
     joueurs_src = evt.get("joueurs", [])
     skin_jeu = evt.get("skin_jeu")
+    politique_timeout_partie = evt.get("politique_timeout_partie")
 
     # On reconstruit une *liste* d’objets joueur pour le moteur.
     # Format minimal : { id_joueur, role }
@@ -78,6 +83,8 @@ def transformer_evenement_en_commande(evt: dict) -> dict:
         "joueurs": joueurs_commande,
         "skin_jeu": skin_jeu,
     }
+    if politique_timeout_partie is not None:
+        commande["politique_timeout_partie"] = politique_timeout_partie
 
     enveloppe = {
         "table_id": table_id,
@@ -116,4 +123,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

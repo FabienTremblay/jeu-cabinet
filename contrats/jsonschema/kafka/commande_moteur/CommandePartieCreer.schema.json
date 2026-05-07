@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CommandePartieCreer",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "table_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "commande": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "op": {
+          "const": "partie.creer"
+        },
+        "id_partie": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "skin_jeu": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "joueurs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+              "id_joueur": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              },
+              "nom": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "alias": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "courriel": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "email"
+              }
+            },
+            "required": [
+              "id_joueur"
+            ]
+          }
+        },
+        "politique_timeout_partie": {
+          "anyOf": [
+            {
+              "$ref": "../../http/api_moteur/PolitiqueTimeoutPartie.schema.json"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "op",
+        "joueurs"
+      ]
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "table_id",
+    "commande",
+    "meta"
+  ]
+}

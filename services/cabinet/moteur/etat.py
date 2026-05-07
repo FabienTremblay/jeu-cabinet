@@ -1,4 +1,8 @@
 # services/cabinet/moteur/etat.py
+# rôle        : définit l'état et les règles locales du noyau de jeu
+# usage       : modèle principal manipulé par le moteur cabinet
+# contexte    : phases, joueurs, ressources, decks et configuration de partie
+# statut      : actif
 from __future__ import annotations
 from dataclasses import dataclass, field, asdict
 from typing import TypedDict, Dict, List, Literal, Optional, Any, Deque, Tuple, Set, Mapping
@@ -366,6 +370,7 @@ class Etat:
     eco: Economie
 
     joueurs: Dict[JoueurId, Joueur]
+    configuration_partie: Dict[str, Any] = field(default_factory=dict)
     attente: AttenteJoueurs = field(default_factory=AttenteJoueurs)
     capital_collectif: int = 0
     opposition: EtatOpposition = field(default_factory=EtatOpposition)
@@ -1620,4 +1625,3 @@ class Etat:
         evts = list(self.evenements)
         self.evenements.clear()
         return evts
-

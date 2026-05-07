@@ -29,10 +29,13 @@ contrats/
 └── jsonschema/
     ├── _common/           # schémas partagés
     │   └── http/          # erreurs et structures communes HTTP
-    └── http/              # schémas JSON extraits des OpenAPI
+    ├── http/              # schémas JSON extraits des OpenAPI
+    │   ├── lobby/
+    │   ├── api_moteur/
+    │   └── ui_etat_joueur/
+    └── kafka/             # schémas JSON des événements et commandes Kafka
         ├── lobby/
-        ├── api_moteur/
-        └── ui_etat_joueur/
+        └── commande_moteur/
 ```
 
 ---
@@ -114,10 +117,13 @@ Ce script :
 
 À ce stade, ce répertoire couvre :
 - les contrats HTTP des services (lobby, moteur, UI état joueur)
+- les premiers contrats Kafka liés au lancement de partie :
+  - `jsonschema/kafka/lobby/EvenementPartieLancee.schema.json`
+  - `jsonschema/kafka/commande_moteur/CommandePartieCreer.schema.json`
 
 Les contrats internes suivants seront ajoutés progressivement :
 - contrats BRE (moteur de règles)
-- contrats commandes / événements (Kafka)
+- autres contrats commandes / événements (Kafka)
 
 ---
 

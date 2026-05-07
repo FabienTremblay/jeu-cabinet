@@ -59,8 +59,13 @@ cp .env.example .env
 > ⚠️ le fichier `.env` **ne doit pas** être versionné.
 
 Ces valeurs sont appliquées à chaque nouvelle table. La partie recevra plus tard
-une copie effective de cette configuration au lancement ; le worker de
-surveillance ne doit pas coder de délai en dur.
+une copie effective de cette configuration au lancement via :
+- l'événement Kafka `PartieLancee` sur `cabinet.parties.evenements` ;
+- la commande Kafka `partie.creer` sur `cab.commands` ;
+- le champ HTTP `configuration_partie` de `POST /parties`.
+
+Le noyau conserve cette copie dans `Etat.configuration_partie`. Le worker de
+surveillance n'est pas encore implanté et ne doit pas coder de délai en dur.
 
 ---
 
@@ -181,6 +186,15 @@ Les principaux services Python sont :
 - `ui_etat_joueur` : projections dédiées à l’UI
 - `adapter-evenements` : pont Kafka
 - `commande_moteur` : exécution des commandes
+
+Pour le lancement d'une partie, le flux local attendu est :
+
+1. le lobby publie `PartieLancee` avec `politique_timeout_partie` si la table en porte une ;
+2. `adapter-evenements` copie cette politique dans la commande `partie.creer` ;
+3. `commande_moteur` appelle `POST /parties` avec `configuration_partie.politique_timeout_partie` ;
+4. `api_moteur` transmet cette configuration au noyau, qui la conserve dans `Etat.configuration_partie`.
+
+Cette propagation ne termine aucune partie par timeout à ce stade.
 
 Chaque service dispose de son propre `Dockerfile` et de tests unitaires.
 

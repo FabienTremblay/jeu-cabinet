@@ -249,6 +249,10 @@ def test_scenario_complet_lancer_partie(
         assert EvenementJoueurARejointTable in types
         assert EvenementJoueurPret in types
         assert EvenementPartieLancee in types
+        evt_partie = next(evt for _, evt in producteur.evenements if isinstance(evt, EvenementPartieLancee))
+        assert evt_partie.politique_timeout_partie is not None
+        assert evt_partie.politique_timeout_partie.active is True
+        assert evt_partie.politique_timeout_partie.delai_inactivite_secondes == 3600
 
     asyncio.run(scenario())
 
