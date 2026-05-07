@@ -12,6 +12,21 @@ L’objectif est de fournir un environnement reproductible incluant :
 
 ---
 
+## postes de travail
+
+Le développement courant se fait depuis **MaisonNeuve**. Cette machine sert à
+éditer le code, lancer les tests unitaires et générer les contrats lorsque les
+dépendances Python/Node/Java sont disponibles localement.
+
+L’hôte Docker cible est **MaisonLinux**. Les commandes `docker compose`,
+`make up`, `make down`, `make logs`, `make ps` et l’inspection des conteneurs
+doivent être exécutées sur MaisonLinux, sauf si Docker est explicitement lancé
+sur MaisonNeuve pour un essai local.
+
+Ne pas supposer que Docker est disponible sur MaisonNeuve.
+
+---
+
 ## prérequis
 
 - docker (20+ recommandé)
@@ -37,14 +52,21 @@ cp .env.example .env
 - domaine (`TRAEFIK_DOMAIN`)
 - ports exposés
 - mots de passe (postgres, kafka-ui)
+- politique par défaut des timeouts de partie côté lobby :
+  - `LOBBY_TIMEOUT_PARTIE_ACTIF`
+  - `LOBBY_TIMEOUT_PARTIE_DELAI_INACTIVITE_SECONDES`
 
 > ⚠️ le fichier `.env` **ne doit pas** être versionné.
+
+Ces valeurs sont appliquées à chaque nouvelle table. La partie recevra plus tard
+une copie effective de cette configuration au lancement ; le worker de
+surveillance ne doit pas coder de délai en dur.
 
 ---
 
 ## démarrage rapide
 
-À la racine du dépôt :
+Sur MaisonLinux, à la racine du dépôt :
 
 ```bash
 docker compose up --build

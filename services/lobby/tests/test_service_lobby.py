@@ -1,4 +1,8 @@
 # services/lobby/tests/test_service_lobby.py
+# rôle        : vérifie le service applicatif lobby
+# usage       : tests pytest des cas d'usage ServiceLobby
+# contexte    : joueurs, tables, événements et politique de timeout
+# statut      : actif
 from __future__ import annotations
 
 import asyncio
@@ -22,6 +26,7 @@ from services.lobby.events import (
 )
 from services.lobby.services_lobby import ServiceLobby
 from services.lobby.kafka_producteur import ProducteurEvenements
+from services.lobby.settings import Settings
 
 
 def test_inscription_et_connexion_produisent_evenements(
@@ -89,6 +94,8 @@ def test_table_reste_ouverte_jusqua_plein_service(
             )
         )
         assert rep_table.statut == StatutTable.OUVERTE.value
+        assert rep_table.politique_timeout_partie.active is True
+        assert rep_table.politique_timeout_partie.delai_inactivite_secondes == 3600
 
         async def creer_et_join(courriel: str, alias: str) -> str:
             rep_j = await service_lobby.inscrire_joueur(
@@ -119,6 +126,50 @@ def test_table_reste_ouverte_jusqua_plein_service(
         # 4/4 -> en_preparation
         statut = await creer_et_join("j4@example.com", "J4")
         assert statut == StatutTable.EN_PREPARATION.value
+
+    asyncio.run(scenario())
+
+
+def test_creer_table_applique_politique_timeout_depuis_settings(
+    joueur_repo,
+    table_repo,
+    producteur: ProducteurEvenements,
+):
+    service = ServiceLobby(
+        settings=Settings(
+            timeout_partie_actif=False,
+            timeout_partie_delai_inactivite_secondes=900,
+        ),
+        joueurs=joueur_repo,
+        tables=table_repo,
+        producteur=producteur,
+    )
+
+    async def scenario():
+        rep_j1 = await service.inscrire_joueur(
+            DemandeInscription(
+                nom="Joueur Un",
+                alias="Alias1",
+                courriel="joueur1@example.com",
+                mot_de_passe="secret1",
+            )
+        )
+
+        rep_table = await service.creer_table(
+            DemandeCreationTable(
+                id_hote=rep_j1.id_joueur,
+                nom_table="Table timeout",
+                nb_sieges=2,
+            )
+        )
+
+        assert rep_table.politique_timeout_partie.active is False
+        assert rep_table.politique_timeout_partie.delai_inactivite_secondes == 900
+
+        table = table_repo.trouver_par_id(rep_table.id_table)
+        assert table is not None
+        assert table.politique_timeout_partie.active is False
+        assert table.politique_timeout_partie.delai_inactivite_secondes == 900
 
     asyncio.run(scenario())
 
@@ -443,4 +494,3 @@ def test_lister_joueurs_lobby_et_table(
         assert ids_lobby_apres == set()
 
     asyncio.run(scenario())
-

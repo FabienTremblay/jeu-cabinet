@@ -21,9 +21,14 @@ create table if not exists lobby_tables (
   statut text not null,
   skin_jeu text not null,
   id_partie text null,
+  politique_timeout_partie jsonb not null default '{"version":1,"active":true,"delai_inactivite_secondes":3600}'::jsonb,
   cree_le timestamptz not null default now(),
   maj_le timestamptz not null default now()
 );
+
+alter table lobby_tables
+  add column if not exists politique_timeout_partie jsonb
+  not null default '{"version":1,"active":true,"delai_inactivite_secondes":3600}'::jsonb;
 
 create index if not exists idx_lobby_tables_statut on lobby_tables(statut);
 create index if not exists idx_lobby_tables_id_partie on lobby_tables(id_partie);

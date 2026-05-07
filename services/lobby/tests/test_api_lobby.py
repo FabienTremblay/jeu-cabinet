@@ -1,4 +1,8 @@
 # services/lobby/tests/test_api_lobby.py
+# rôle        : vérifie l'API HTTP du lobby
+# usage       : tests pytest avec TestClient FastAPI
+# contexte    : inscriptions, tables, sièges et politique de timeout
+# statut      : actif
 from __future__ import annotations
 
 from fastapi.testclient import TestClient
@@ -56,6 +60,11 @@ def test_parcours_acc_happy_path(client: TestClient):
     table = rep.json()
     assert table["id_table"].startswith("T")
     assert table["statut"] == StatutTable.OUVERTE.value
+    assert table["politique_timeout_partie"] == {
+        "version": 1,
+        "active": True,
+        "delai_inactivite_secondes": 3600,
+    }
 
     # 4) Inscription + auth joueur 2
     j2 = _inscrire(

@@ -1,10 +1,14 @@
 # services/lobby/schemas.py
+# rôle        : définit les DTO HTTP du lobby
+# usage       : contrats d'entrée et de sortie FastAPI
+# contexte    : API joueurs, tables, sièges et reprise de partie
+# statut      : actif
 from __future__ import annotations
 
 from typing import Literal, List, Optional
 from pydantic import BaseModel, EmailStr
 
-from .domaine import Table, StatutTable
+from .domaine import PolitiqueTimeoutPartie, Table, StatutTable
 
 
 # --- joueurs ---
@@ -79,6 +83,7 @@ class ReponseTable(BaseModel):
     id_hote: str
     statut: str
     skin_jeu: str | None = None
+    politique_timeout_partie: PolitiqueTimeoutPartie
 
     @classmethod
     def from_table(cls, table: Table) -> "ReponseTable":
@@ -91,6 +96,7 @@ class ReponseTable(BaseModel):
             id_hote=table.id_hote,
             statut=statut,
             skin_jeu=table.skin_jeu,
+            politique_timeout_partie=table.politique_timeout_partie,
         )
 
 
@@ -159,5 +165,3 @@ class SkinInfo(BaseModel):
 
 class ReponseListeSkins(BaseModel):
     skins: List[SkinInfo]
-
-

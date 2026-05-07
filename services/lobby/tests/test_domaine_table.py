@@ -1,4 +1,8 @@
 # services/lobby/tests/test_domaine_table.py
+# rôle        : vérifie le domaine table du lobby
+# usage       : tests pytest des règles locales de Table
+# contexte    : sièges, statuts et politique de timeout
+# statut      : actif
 from __future__ import annotations
 import pytest
 
@@ -14,6 +18,8 @@ def test_prendre_siege_et_statut_en_preparation():
     )
 
     assert table.statut == StatutTable.OUVERTE
+    assert table.politique_timeout_partie.active is True
+    assert table.politique_timeout_partie.delai_inactivite_secondes == 3600
 
     joueur_siege = table.prendre_siege("J000002", role="invite")
 
@@ -137,4 +143,3 @@ def test_marquer_joueur_pret_refuse_joueur_non_assis():
         assert False, "devrait lever ValueError"
     except ValueError as e:
         assert str(e) == "joueur_non_assis"
-

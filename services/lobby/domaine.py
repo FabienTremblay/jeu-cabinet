@@ -1,3 +1,7 @@
+# rôle        : définit les entités métier du lobby
+# usage       : importé par le service lobby et ses dépôts
+# contexte    : domaine tables, joueurs et politique de timeout
+# statut      : actif
 from __future__ import annotations
 
 from enum import Enum
@@ -32,6 +36,18 @@ class StatutTable(str, Enum):
     TERMINEE = "terminee"
 
 
+class PolitiqueTimeoutPartie(BaseModel):
+    """
+    Politique de timeout associée à une table, puis copiée dans la partie au lancement.
+
+    Le worker de surveillance devra lire la copie effective portée par la partie.
+    """
+
+    version: int = 1
+    active: bool = True
+    delai_inactivite_secondes: int = Field(default=3600, ge=1)
+
+
 class JoueurSiege(BaseModel):
     """Petit objet de retour quand un joueur prend un siège."""
 
@@ -48,6 +64,9 @@ class Table(BaseModel):
     id_hote: str
     mot_de_passe_table: str | None = None
     skin_jeu: str | None = None
+    politique_timeout_partie: PolitiqueTimeoutPartie = Field(
+        default_factory=PolitiqueTimeoutPartie
+    )
     id_partie: str | None = None
     joueurs_assis: List[str] = Field(default_factory=list)
     joueurs_prets: List[str] = Field(default_factory=list)
@@ -153,5 +172,3 @@ class Table(BaseModel):
         être obtenue en appelant aussi vider_joueurs().
         """
         self.statut = StatutTable.TERMINEE
-
-

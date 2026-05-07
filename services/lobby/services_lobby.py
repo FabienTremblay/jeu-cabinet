@@ -1,4 +1,8 @@
 # services/lobby/services_lobby.py
+# rôle        : orchestre les cas d'usage du lobby
+# usage       : appelé par l'API HTTP pour joueurs, tables et parties
+# contexte    : logique applicative lobby et événements associés
+# statut      : actif
 from __future__ import annotations
 
 import hashlib
@@ -7,7 +11,7 @@ from typing import List, Optional, Literal
 
 from fastapi import HTTPException, status
 
-from .domaine import Joueur, Table, StatutTable
+from .domaine import Joueur, PolitiqueTimeoutPartie, Table, StatutTable
 from .repositories import JoueurRepository, TableRepository
 from .schemas import (
     DemandeInscription,
@@ -67,6 +71,15 @@ def hacher_mot_de_passe(mot: str) -> str:
 
 def verifier_mot_de_passe(mot: str, hache: str) -> bool:
     return hacher_mot_de_passe(mot) == hache
+
+
+def construire_politique_timeout_partie_par_defaut(
+    settings: Settings,
+) -> PolitiqueTimeoutPartie:
+    return PolitiqueTimeoutPartie(
+        active=settings.timeout_partie_actif,
+        delai_inactivite_secondes=settings.timeout_partie_delai_inactivite_secondes,
+    )
 
 
 class ServiceLobby:
@@ -232,6 +245,9 @@ class ServiceLobby:
             id_hote=demande.id_hote,
             mot_de_passe_table=demande.mot_de_passe_table,
             skin_jeu=demande.skin_jeu,
+            politique_timeout_partie=construire_politique_timeout_partie_par_defaut(
+                self.settings
+            ),
         )
         self.tables.ajouter(table)
 
@@ -541,4 +557,3 @@ class ServiceLobby:
         await self.producteur.publier(self.settings.kafka_topic_evenements_parties, evt)
 
         return ReponsePartieLancee(id_partie=id_partie)
-

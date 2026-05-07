@@ -1,12 +1,17 @@
 # services/lobby/repositories_sql.py
+# rôle        : persiste les entités du lobby dans PostgreSQL
+# usage       : backend SQL du service lobby
+# contexte    : dépôts joueurs, tables et politique de timeout
+# statut      : actif
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 from typing import Iterable, Optional, Literal
 
 import psycopg
 
-from .domaine import Joueur, Table, StatutTable
+from .domaine import Joueur, PolitiqueTimeoutPartie, Table, StatutTable
 from .ids import GenerateurIds
 
 
@@ -27,6 +32,21 @@ def _assurer_compteurs(cur) -> None:
         )
         """
     )
+
+
+def _model_to_dict(model) -> dict:
+    model_dump = getattr(model, "model_dump", None)
+    if callable(model_dump):
+        return model_dump()
+    return model.dict()
+
+
+def _politique_timeout_depuis_db(value) -> PolitiqueTimeoutPartie:
+    if value is None:
+        return PolitiqueTimeoutPartie()
+    if isinstance(value, str):
+        value = json.loads(value)
+    return PolitiqueTimeoutPartie(**value)
 
 
 class JoueurRepositorySQL:
@@ -207,7 +227,8 @@ class TableRepositorySQL:
         with conn.cursor() as cur:
             cur.execute(
                 f"""
-                select id_table, nom_table, nb_sieges, id_hote, statut, skin_jeu, id_partie
+                select id_table, nom_table, nb_sieges, id_hote, statut, skin_jeu, id_partie,
+                       politique_timeout_partie
                 from lobby_tables
                 where id_table = %s
                 {'for update' if for_update else ''}
@@ -238,6 +259,7 @@ class TableRepositorySQL:
                 statut=StatutTable(t[4]),
                 skin_jeu=t[5],
                 id_partie=t[6],
+                politique_timeout_partie=_politique_timeout_depuis_db(t[7]),
                 joueurs_assis=joueurs_assis,
                 joueurs_prets=joueurs_prets,
             )
@@ -250,8 +272,17 @@ class TableRepositorySQL:
         with conn.cursor() as cur:
             cur.execute(
                 """
-                insert into lobby_tables(id_table, nom_table, nb_sieges, id_hote, statut, skin_jeu, id_partie)
-                values (%s, %s, %s, %s, %s, %s, %s)
+                insert into lobby_tables(
+                  id_table,
+                  nom_table,
+                  nb_sieges,
+                  id_hote,
+                  statut,
+                  skin_jeu,
+                  id_partie,
+                  politique_timeout_partie
+                )
+                values (%s, %s, %s, %s, %s, %s, %s, %s::jsonb)
                 on conflict (id_table) do update set
                   nom_table = excluded.nom_table,
                   nb_sieges = excluded.nb_sieges,
@@ -259,6 +290,7 @@ class TableRepositorySQL:
                   statut = excluded.statut,
                   skin_jeu = excluded.skin_jeu,
                   id_partie = excluded.id_partie,
+                  politique_timeout_partie = excluded.politique_timeout_partie,
                   maj_le = now()
                 """,
                 (
@@ -269,6 +301,7 @@ class TableRepositorySQL:
                     table.statut.value if hasattr(table.statut, "value") else str(table.statut),
                     table.skin_jeu,
                     table.id_partie,
+                    json.dumps(_model_to_dict(table.politique_timeout_partie)),
                 ),
             )
 

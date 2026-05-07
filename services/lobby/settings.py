@@ -1,4 +1,8 @@
 # services/lobby/settings.py
+# rôle        : centralise la configuration du service lobby
+# usage       : chargement des variables d'environnement LOBBY_*
+# contexte    : Kafka, persistance, ids et politique de timeout
+# statut      : actif
 from pydantic_settings import BaseSettings
 
 
@@ -13,6 +17,11 @@ class Settings(BaseSettings):
     kafka_topic_evenements_joueurs: str = "cabinet.joueurs.evenements"
     kafka_topic_evenements_tables: str = "cabinet.tables.evenements"
     kafka_topic_evenements_parties: str = "cabinet.parties.evenements"
+
+    # politique par défaut appliquée à chaque nouvelle table.
+    # La partie recevra une copie effective au lancement.
+    timeout_partie_actif: bool = True
+    timeout_partie_delai_inactivite_secondes: int = 3600
 
     # persistance
     # - memory : comportement actuel (tests/essais rapides)

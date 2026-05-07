@@ -167,6 +167,10 @@ Chaque événement contient :
 
 ### démarrage
 
+Les commandes Docker sont à exécuter sur l’hôte Docker cible (actuellement
+MaisonLinux). Depuis MaisonNeuve, ne les lancer que si Docker y est
+explicitement disponible.
+
 ```
 docker compose up --build
 ```

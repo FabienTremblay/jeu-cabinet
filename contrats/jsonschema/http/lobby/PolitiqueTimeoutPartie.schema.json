@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "version": {
+      "type": "integer",
+      "title": "Version",
+      "default": 1
+    },
+    "active": {
+      "type": "boolean",
+      "title": "Active",
+      "default": true
+    },
+    "delai_inactivite_secondes": {
+      "type": "integer",
+      "minimum": 1.0,
+      "title": "Delai Inactivite Secondes",
+      "default": 3600
+    }
+  },
+  "type": "object",
+  "title": "PolitiqueTimeoutPartie",
+  "description": "Politique de timeout associée à une table, puis copiée dans la partie au lancement.\n\nLe worker de surveillance devra lire la copie effective portée par la partie."
+}
