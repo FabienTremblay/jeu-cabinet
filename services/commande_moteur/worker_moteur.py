@@ -8,10 +8,13 @@ from __future__ import annotations
 import json
 import logging
 import os
+import time
+from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 import requests
-from kafka import KafkaConsumer
+from kafka import KafkaConsumer, KafkaProducer
 
 # ---------------------------------------------------------------------
 # config / logging
@@ -31,11 +34,50 @@ KAFKA_GROUP_ID_COMMANDS = os.getenv("KAFKA_GROUP_ID_COMMANDS", "cabinet-moteur-c
 
 API_MOTEUR_URL = os.getenv("API_MOTEUR_URL", "http://api-moteur:8080")
 
-# événements -> lobby (fin de partie)
+# événements moteur -> surveillance et, plus tard, synchronisation lobby
 KAFKA_TOPIC_EVENTS = os.getenv("KAFKA_TOPIC_EVENTS", "cabinet.parties.evenements")
 KAFKA_GROUP_ID_EVENTS = os.getenv("KAFKA_GROUP_ID_EVENTS", "cabinet-lobby-d600")
 
+SURVEILLANCE_INACTIVITE_ACTIF = os.getenv("SURVEILLANCE_INACTIVITE_ACTIF", "1") == "1"
+SURVEILLANCE_INACTIVITE_INTERVALLE_SECONDES = float(
+    os.getenv("SURVEILLANCE_INACTIVITE_INTERVALLE_SECONDES", "5")
+)
+
 API_LOBBY_URL = os.getenv("API_LOBBY_URL", "http://lobby:8080")
+
+
+@dataclass
+class PartieSurveillee:
+    id_partie: str
+    table_id: Optional[str]
+    delai_inactivite_secondes: int
+    derniere_activite_at: float
+    commande_timeout_produite: bool = False
+
+
+PARTIES_SURVEILLEES: dict[str, PartieSurveillee] = {}
+
+
+def maintenant_epoch() -> float:
+    return time.time()
+
+
+def horodatage_iso(ts: float | None = None) -> str:
+    return datetime.fromtimestamp(ts if ts is not None else maintenant_epoch(), tz=timezone.utc).isoformat()
+
+
+def horodatage_vers_epoch(value: Any) -> Optional[float]:
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    if not isinstance(value, str):
+        return None
+    try:
+        texte = value.replace("Z", "+00:00")
+        return datetime.fromisoformat(texte).timestamp()
+    except ValueError:
+        return None
 
 
 # ---------------------------------------------------------------------
@@ -60,6 +102,19 @@ def creer_consommateur(topic: str, group_id: str) -> KafkaConsumer:
     )
 
 
+def creer_producteur_commandes() -> KafkaProducer:
+    logger.info(
+        "Initialisation producer Kafka topic=%s bootstrap=%s",
+        KAFKA_TOPIC_COMMANDS,
+        KAFKA_BOOTSTRAP,
+    )
+    return KafkaProducer(
+        bootstrap_servers=KAFKA_BOOTSTRAP,
+        value_serializer=lambda v: json.dumps(v).encode("utf-8"),
+        key_serializer=lambda k: (k or "").encode("utf-8"),
+    )
+
+
 # ---------------------------------------------------------------------
 # Commandes → API moteur
 # ---------------------------------------------------------------------
@@ -76,6 +131,7 @@ def traiter_message_commandes(cle: Optional[str], payload: dict[str, Any]) -> No
     )
 
     if op == "partie.creer":
+        enregistrer_surveillance_partie(table_id=table_id, commande=commande)
         traiter_partie_creer(table_id=table_id, commande=commande, meta=meta)
     else:
         logger.warning("Commande non gérée (op=%s) -> ignorée", op)
@@ -150,6 +206,149 @@ def traiter_partie_creer(
 
 
 # ---------------------------------------------------------------------
+# Surveillance d'inactivité
+# ---------------------------------------------------------------------
+
+def extraire_politique_timeout(commande: dict[str, Any]) -> Optional[dict[str, Any]]:
+    politique = commande.get("politique_timeout_partie")
+    if politique is not None:
+        return politique
+
+    configuration = commande.get("configuration_partie") or {}
+    if isinstance(configuration, dict):
+        politique = configuration.get("politique_timeout_partie")
+        if isinstance(politique, dict):
+            return politique
+    return None
+
+
+def enregistrer_surveillance_partie(
+    *,
+    table_id: Optional[str],
+    commande: dict[str, Any],
+    maintenant: float | None = None,
+) -> None:
+    id_partie = commande.get("id_partie")
+    if not id_partie:
+        logger.warning("partie.creer sans id_partie: surveillance ignorée")
+        return
+
+    politique = extraire_politique_timeout(commande)
+    if not politique:
+        logger.info("Partie %s sans politique de timeout effective: surveillance ignorée", id_partie)
+        return
+
+    if politique.get("active") is not True:
+        logger.info("Politique de timeout inactive pour partie=%s: surveillance ignorée", id_partie)
+        return
+
+    try:
+        delai = int(politique["delai_inactivite_secondes"])
+    except (KeyError, TypeError, ValueError):
+        logger.warning("Politique de timeout invalide pour partie=%s: %r", id_partie, politique)
+        return
+
+    if delai <= 0:
+        logger.warning("Délai de timeout invalide pour partie=%s: %r", id_partie, delai)
+        return
+
+    PARTIES_SURVEILLEES[id_partie] = PartieSurveillee(
+        id_partie=id_partie,
+        table_id=table_id,
+        delai_inactivite_secondes=delai,
+        derniere_activite_at=maintenant if maintenant is not None else maintenant_epoch(),
+    )
+    logger.info("Surveillance inactivité active partie=%s delai=%ss", id_partie, delai)
+
+
+def extraire_partie_id_evenement(payload: dict[str, Any]) -> Optional[str]:
+    partie_id = payload.get("aggregate_id")
+    if partie_id:
+        return str(partie_id)
+
+    data = payload.get("data") or {}
+    if isinstance(data, dict) and data.get("partie_id"):
+        return str(data["partie_id"])
+
+    evenement_payload = payload.get("payload") or {}
+    if isinstance(evenement_payload, dict) and evenement_payload.get("partie_id"):
+        return str(evenement_payload["partie_id"])
+
+    return None
+
+
+def mettre_a_jour_activite_depuis_evenement(payload: dict[str, Any], maintenant: float | None = None) -> None:
+    partie_id = extraire_partie_id_evenement(payload)
+    if not partie_id:
+        return
+
+    op_code = payload.get("op_code")
+    if op_code == "partie.terminer":
+        PARTIES_SURVEILLEES.pop(partie_id, None)
+        logger.info("Partie terminée détectée sur cab.events: surveillance arrêtée partie=%s", partie_id)
+        return
+
+    partie = PARTIES_SURVEILLEES.get(partie_id)
+    if partie is None:
+        return
+
+    ts = (
+        horodatage_vers_epoch(payload.get("occurred_at"))
+        or horodatage_vers_epoch(payload.get("timestamp"))
+        or maintenant
+        or maintenant_epoch()
+    )
+    partie.derniere_activite_at = max(partie.derniere_activite_at, ts)
+    logger.debug("Activité partie=%s mise à jour à %s", partie_id, horodatage_iso(partie.derniere_activite_at))
+
+
+def construire_commande_timeout(partie: PartieSurveillee, maintenant: float) -> dict[str, Any]:
+    idempotency_key = f"timeout-inactivite:{partie.id_partie}"
+    return {
+        "table_id": partie.table_id,
+        "commande": {
+            "op": "partie.terminer",
+            "id_partie": partie.id_partie,
+            "raison": "TIMEOUT_INACTIVITE",
+            "idempotency_key": idempotency_key,
+        },
+        "meta": {
+            "source": "commande_moteur.surveillance_inactivite",
+            "timestamp": horodatage_iso(maintenant),
+            "idempotency_key": idempotency_key,
+            "derniere_activite_at": horodatage_iso(partie.derniere_activite_at),
+            "delai_inactivite_secondes": partie.delai_inactivite_secondes,
+        },
+    }
+
+
+def publier_commande_timeout(producteur: KafkaProducer, partie: PartieSurveillee, maintenant: float) -> None:
+    enveloppe = construire_commande_timeout(partie, maintenant)
+    producteur.send(KAFKA_TOPIC_COMMANDS, key=partie.id_partie, value=enveloppe)
+    producteur.flush(1.0)
+    partie.commande_timeout_produite = True
+    logger.warning(
+        "Commande partie.terminer produite pour inactivité partie=%s delai=%ss",
+        partie.id_partie,
+        partie.delai_inactivite_secondes,
+    )
+
+
+def verifier_timeouts_inactivite(producteur: KafkaProducer, maintenant: float | None = None) -> None:
+    if not SURVEILLANCE_INACTIVITE_ACTIF:
+        return
+
+    ts = maintenant if maintenant is not None else maintenant_epoch()
+    for partie in list(PARTIES_SURVEILLEES.values()):
+        if partie.commande_timeout_produite:
+            continue
+
+        inactive_depuis = ts - partie.derniere_activite_at
+        if inactive_depuis >= partie.delai_inactivite_secondes:
+            publier_commande_timeout(producteur, partie, ts)
+
+
+# ---------------------------------------------------------------------
 # Événements → API Lobby (libération joueurs et fin de partie)
 # ---------------------------------------------------------------------
 
@@ -162,6 +361,7 @@ def traiter_message_events(cle: Optional[str], payload: dict[str, Any]) -> None:
       - aggregate_id = id de la partie
       - data.joueur_id = joueur qui quitte définitivement
     """
+    mettre_a_jour_activite_depuis_evenement(payload)
 
     op_code = payload.get("op_code")
     if op_code != "partie.joueur_quitte_definitivement":
@@ -231,10 +431,13 @@ def appeler_lobby_quitte(partie_id: str, joueur_id: str) -> None:
 def main() -> None:
     cons_cmd = creer_consommateur(KAFKA_TOPIC_COMMANDS, KAFKA_GROUP_ID_COMMANDS)
     cons_evt = creer_consommateur(KAFKA_TOPIC_EVENTS, KAFKA_GROUP_ID_EVENTS)
+    prod_cmd = creer_producteur_commandes()
 
     logger.info("Worker moteur/lobby prêt :")
     logger.info(" - écoute commandes sur %s", KAFKA_TOPIC_COMMANDS)
     logger.info(" - écoute événements sur %s", KAFKA_TOPIC_EVENTS)
+
+    prochaine_verification_timeout = maintenant_epoch()
 
     try:
         while True:
@@ -255,9 +458,18 @@ def main() -> None:
                         traiter_message_events(rec.key, rec.value)
                     except Exception:
                         logger.exception("Erreur traitement événement")
+
+            maintenant = maintenant_epoch()
+            if maintenant >= prochaine_verification_timeout:
+                try:
+                    verifier_timeouts_inactivite(prod_cmd, maintenant=maintenant)
+                except Exception:
+                    logger.exception("Erreur vérification timeout inactivité")
+                prochaine_verification_timeout = maintenant + SURVEILLANCE_INACTIVITE_INTERVALLE_SECONDES
     finally:
         cons_cmd.close()
         cons_evt.close()
+        prod_cmd.close()
 
 if __name__ == "__main__":
     main()

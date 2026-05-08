@@ -120,6 +120,7 @@ Ce script :
 - les premiers contrats Kafka liés au lancement de partie :
   - `jsonschema/kafka/lobby/EvenementPartieLancee.schema.json`
   - `jsonschema/kafka/commande_moteur/CommandePartieCreer.schema.json`
+  - `jsonschema/kafka/commande_moteur/CommandePartieTerminer.schema.json`
 
 Les contrats internes suivants seront ajoutés progressivement :
 - contrats BRE (moteur de règles)
