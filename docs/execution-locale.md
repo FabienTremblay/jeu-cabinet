@@ -64,8 +64,11 @@ une copie effective de cette configuration au lancement via :
 - la commande Kafka `partie.creer` sur `cab.commands` ;
 - le champ HTTP `configuration_partie` de `POST /parties`.
 
-Le noyau conserve cette copie dans `Etat.configuration_partie`. Le worker de
-surveillance n'est pas encore implanté et ne doit pas coder de délai en dur.
+Le noyau conserve cette copie dans `Etat.configuration_partie`. Le worker
+`commande_moteur` utilise ensuite cette politique effective pour surveiller
+l'inactivité, produire `partie.terminer` sur `cab.commands` avec la raison
+`TIMEOUT_INACTIVITE`, puis synchroniser le lobby après l'événement domaine
+`cab.D600.partie.terminer` publié sur `cab.events`.
 
 ---
 
@@ -135,7 +138,7 @@ scripts/bootstrap-topics.sh
 Les topics sont définis via la variable :
 
 ```env
-TOPICS=example.topic_one,example.topic_two
+TOPICS=cab.commands,cab.events,cabinet.joueurs.evenements,cabinet.tables.evenements,cabinet.parties.evenements
 ```
 
 ---
@@ -192,9 +195,12 @@ Pour le lancement d'une partie, le flux local attendu est :
 1. le lobby publie `PartieLancee` avec `politique_timeout_partie` si la table en porte une ;
 2. `adapter-evenements` copie cette politique dans la commande `partie.creer` ;
 3. `commande_moteur` appelle `POST /parties` avec `configuration_partie.politique_timeout_partie` ;
-4. `api_moteur` transmet cette configuration au noyau, qui la conserve dans `Etat.configuration_partie`.
+4. `api_moteur` transmet cette configuration au noyau, qui la conserve dans `Etat.configuration_partie` ;
+5. `commande_moteur` surveille l'inactivité à partir des événements `cab.events` ;
+6. si le délai effectif est dépassé, `commande_moteur` produit `partie.terminer` sur `cab.commands` ;
+7. le moteur termine la partie, publie `cab.D600.partie.terminer` sur `cab.events`, puis `commande_moteur` synchronise la table lobby associée.
 
-Cette propagation ne termine aucune partie par timeout à ce stade.
+Les détails opératoires du timeout sont dans `docs/architecture/timeout-parties.md`.
 
 Chaque service dispose de son propre `Dockerfile` et de tests unitaires.
 

@@ -260,6 +260,12 @@ moteur.
 
 ### Événement domaine `cab.D600.partie.terminer`
 
+Contrat :
+
+```text
+contrats/jsonschema/kafka/api_moteur/EvenementDomainePartieTerminer.schema.json
+```
+
 Topic :
 
 ```text
