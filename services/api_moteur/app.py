@@ -148,4 +148,22 @@ def soumettre_action(partie_id: str, req: RequeteAction, manager=Depends(get_man
     return {"partie_id": partie_id, "etat": jsonable_encoder(etat, custom_encoder={deque: list})}
 
 
+@app.post("/parties/{partie_id}/terminer", response_model=ReponseEtat)
+def terminer_partie(
+    partie_id: str,
+    req: RequeteTerminerPartie,
+    manager=Depends(get_manager),
+    correlation_id: str = Depends(corr_id),
+    idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key"),
+):
+    etat = manager.terminer(partie_id, raison=req.raison)
+    if etat is None:
+        raise HTTPException(status_code=404, detail={"code": "PARTIE_ABSENTE"})
+
+    evenements = getattr(etat, "vider_evenements", lambda: [])()
+    publier_evenements_domaine(evenements, partition_key=partie_id, correlation_id=correlation_id)
+
+    return {"partie_id": partie_id, "etat": jsonable_encoder(etat, custom_encoder={deque: list})}
+
+
 app.include_router(api)

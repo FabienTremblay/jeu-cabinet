@@ -42,6 +42,9 @@ class RequeteAction(BaseModel):
         json_schema_extra={"additionalProperties": True},
     )
 
+class RequeteTerminerPartie(BaseModel):
+    raison: str = "FIN_INCONNUE"
+
 class RequeteDecision(BaseModel):
     table: str
     contexte: Dict[str, Any]

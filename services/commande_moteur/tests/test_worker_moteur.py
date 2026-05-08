@@ -93,6 +93,64 @@ def test_partie_creer_sans_politique_n_envoie_pas_configuration(monkeypatch):
     assert "configuration_partie" not in appels[0]
 
 
+def test_partie_terminer_appelle_api_moteur_avec_raison_et_idempotence(monkeypatch):
+    appels = []
+
+    def fake_post(url, json, headers, timeout):
+        appels.append({"url": url, "json": json, "headers": headers, "timeout": timeout})
+        return ReponseOk()
+
+    monkeypatch.setattr(worker_moteur.requests, "post", fake_post)
+
+    worker_moteur.traiter_partie_terminer(
+        table_id="T000001",
+        meta={"idempotency_key": "timeout-inactivite:P000001"},
+        commande={
+            "op": "partie.terminer",
+            "id_partie": "P000001",
+            "raison": "TIMEOUT_INACTIVITE",
+        },
+    )
+
+    assert appels == [
+        {
+            "url": f"{worker_moteur.API_MOTEUR_URL}/parties/P000001/terminer",
+            "json": {"raison": "TIMEOUT_INACTIVITE"},
+            "headers": {"Idempotency-Key": "timeout-inactivite:P000001"},
+            "timeout": 10,
+        }
+    ]
+
+
+def test_traiter_message_partie_terminer_route_vers_execution(monkeypatch):
+    appels = []
+
+    def fake_traiter_partie_terminer(**kwargs):
+        appels.append(kwargs)
+
+    monkeypatch.setattr(worker_moteur, "traiter_partie_terminer", fake_traiter_partie_terminer)
+
+    payload = {
+        "table_id": "T000001",
+        "commande": {
+            "op": "partie.terminer",
+            "id_partie": "P000001",
+            "raison": "TIMEOUT_INACTIVITE",
+        },
+        "meta": {"idempotency_key": "timeout-inactivite:P000001"},
+    }
+
+    worker_moteur.traiter_message_commandes("P000001", payload)
+
+    assert appels == [
+        {
+            "table_id": "T000001",
+            "commande": payload["commande"],
+            "meta": payload["meta"],
+        }
+    ]
+
+
 def test_traiter_message_partie_creer_enregistre_surveillance(monkeypatch):
     monkeypatch.setattr(worker_moteur, "traiter_partie_creer", lambda **kwargs: None)
 

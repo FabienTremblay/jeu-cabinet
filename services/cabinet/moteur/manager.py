@@ -82,10 +82,18 @@ class PartieManager:
 
             return etat, evt
 
-    def terminer(self, partie_id: str, raison: str = "terminee") -> None:
+    def terminer(self, partie_id: str, raison: str = "terminee") -> Etat | None:
         with self._lock:
             etat = self._parties.get(partie_id)
-            if etat:
-                etat.termine = True
-                etat.raison_fin = raison
-                etat.phase = "fin_jeu"
+            if etat is None:
+                return None
+            if etat.termine:
+                return etat
+
+            etat.appliquer_commandes([
+                {
+                    "op": "partie.terminer",
+                    "raison": raison,
+                }
+            ])
+            return etat

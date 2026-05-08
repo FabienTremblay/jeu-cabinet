@@ -133,6 +133,8 @@ def traiter_message_commandes(cle: Optional[str], payload: dict[str, Any]) -> No
     if op == "partie.creer":
         enregistrer_surveillance_partie(table_id=table_id, commande=commande)
         traiter_partie_creer(table_id=table_id, commande=commande, meta=meta)
+    elif op == "partie.terminer":
+        traiter_partie_terminer(table_id=table_id, commande=commande, meta=meta)
     else:
         logger.warning("Commande non gérée (op=%s) -> ignorée", op)
 
@@ -203,6 +205,59 @@ def traiter_partie_creer(
         except Exception:
             donnees = r.text
         logger.info("Partie créée avec succès: %r", donnees)
+
+
+def traiter_partie_terminer(
+    *,
+    table_id: Optional[str],
+    commande: dict[str, Any],
+    meta: dict[str, Any],
+) -> None:
+    id_partie = commande.get("id_partie")
+    if not id_partie:
+        logger.warning("Commande partie.terminer sans id_partie -> ignorée")
+        return
+
+    raison = commande.get("raison") or "FIN_INCONNUE"
+    idempotency_key = (
+        commande.get("idempotency_key")
+        or meta.get("idempotency_key")
+        or f"partie-terminer:{id_partie}:{raison}"
+    )
+
+    url = f"{API_MOTEUR_URL}/parties/{id_partie}/terminer"
+    body = {"raison": raison}
+    headers = {"Idempotency-Key": idempotency_key}
+
+    logger.info(
+        "POST moteur terminaison %s body=%r table_id=%s idempotency_key=%s",
+        url,
+        body,
+        table_id,
+        idempotency_key,
+    )
+
+    try:
+        r = requests.post(url, json=body, headers=headers, timeout=10)
+    except Exception:
+        logger.exception("Erreur réseau lors de l'appel terminaison à API moteur")
+        return
+
+    if r.status_code // 100 != 2:
+        logger.error(
+            "Échec terminaison partie=%s (HTTP %s): %s",
+            id_partie,
+            r.status_code,
+            r.text,
+        )
+        return
+
+    try:
+        donnees = r.json()
+    except Exception:
+        donnees = r.text
+    PARTIES_SURVEILLEES.pop(id_partie, None)
+    logger.info("Partie terminée avec succès: %r", donnees)
 
 
 # ---------------------------------------------------------------------
