@@ -419,6 +419,16 @@ def traiter_message_events(cle: Optional[str], payload: dict[str, Any]) -> None:
     mettre_a_jour_activite_depuis_evenement(payload)
 
     op_code = payload.get("op_code")
+    if op_code == "partie.terminer":
+        partie_id = payload.get("aggregate_id")
+        data = payload.get("data") or {}
+        raison = data.get("raison") if isinstance(data, dict) else None
+        if not partie_id:
+            logger.warning("Événement partie.terminer sans aggregate_id -> sync lobby ignorée")
+            return
+        appeler_lobby_terminer_partie(partie_id=partie_id, raison=raison)
+        return
+
     if op_code != "partie.joueur_quitte_definitivement":
         # on ne traite que ce cas précis pour l’instant
         return
@@ -476,6 +486,41 @@ def appeler_lobby_quitte(partie_id: str, joueur_id: str) -> None:
             "Synchronisation Lobby OK: partie=%s joueur=%s libéré",
             partie_id,
             joueur_id,
+        )
+
+
+def appeler_lobby_terminer_partie(partie_id: str, raison: Optional[str] = None) -> None:
+    """
+    Appelle le lobby pour marquer comme terminée la table associée à une partie.
+    Le lobby conserve les joueurs selon son contrat existant de terminaison table.
+    """
+    url = f"{API_LOBBY_URL}/api/parties/{partie_id}/terminer"
+    body = {"raison": raison} if raison is not None else {}
+
+    logger.info(
+        "POST Lobby terminaison partie: url=%s body=%r",
+        url,
+        body,
+    )
+
+    try:
+        r = requests.post(url, json=body, timeout=10)
+    except Exception:
+        logger.exception("Erreur réseau lors de l'appel terminaison à l'API Lobby")
+        return
+
+    if r.status_code // 100 != 2:
+        logger.error(
+            "Erreur côté Lobby (HTTP %s) pour terminaison partie=%s : %s",
+            r.status_code,
+            partie_id,
+            r.text,
+        )
+    else:
+        logger.info(
+            "Synchronisation Lobby fin de partie OK: partie=%s raison=%s",
+            partie_id,
+            raison,
         )
 
 

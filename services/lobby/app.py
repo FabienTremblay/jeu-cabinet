@@ -1,4 +1,8 @@
 # services/lobby/app.py
+# rôle        : expose l'API HTTP du service lobby
+# usage       : routes FastAPI pour joueurs, tables, parties et skins
+# contexte    : façade HTTP du lobby et synchronisation fin de partie
+# statut      : actif
 from __future__ import annotations
 
 import os
@@ -14,6 +18,7 @@ from .schemas import (
     DemandePriseSiege,
     DemandeJoueurPret,
     DemandeLancerPartie,
+    DemandeTerminerPartie,
     ReponseConnexion,
     ReponseInscription,
     ReponseJoueur,
@@ -164,6 +169,19 @@ async def quitter_partie(
 ):
     return await service.quitter_partie(id_partie=id_partie, id_joueur=demande.id_joueur)
 
+@app.post("/api/parties/{id_partie}/terminer", response_model=ReponseTable)
+async def terminer_partie(
+    id_partie: str,
+    demande: DemandeTerminerPartie | None = None,
+    service: ServiceLobby = Depends(get_service_lobby),
+):
+    """
+    Marque comme terminée la table associée à une partie moteur.
+    Typiquement appelée par un worker qui consomme cab.D600.partie.terminer.
+    """
+    raison = demande.raison if demande is not None else None
+    return await service.terminer_partie(id_partie=id_partie, raison=raison)
+
 @app.post("/api/tables/{id_table}/joueurs/quitter", response_model=ReponseTable)
 async def quitter_table(
     id_table: str,
@@ -208,4 +226,3 @@ async def lister_skins(
     service: ServiceLobby = Depends(get_service_lobby),
 ):
     return await service.lister_skins()
-

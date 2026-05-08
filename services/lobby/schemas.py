@@ -129,6 +129,10 @@ class DemandeLancerPartie(BaseModel):
     id_hote: str
 
 
+class DemandeTerminerPartie(BaseModel):
+    raison: Optional[str] = None
+
+
 class ReponsePartieLancee(BaseModel):
     id_partie: str
 

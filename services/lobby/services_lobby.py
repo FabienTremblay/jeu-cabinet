@@ -458,6 +458,17 @@ class ServiceLobby:
 
         return ReponseTable.from_table(table)
 
+    async def terminer_partie(self, id_partie: str, raison: str | None = None) -> ReponseTable:
+        """Marque comme terminée la table associée à une partie moteur."""
+        table = self.tables.trouver_par_id_partie(id_partie)
+        if table is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="table_introuvable_pour_cette_partie",
+            )
+
+        return await self.terminer_table(table.id_table)
+
     async def joueur_quitte_partie_definitivement(
         self,
         id_partie: str,

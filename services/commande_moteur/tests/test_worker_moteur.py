@@ -257,6 +257,58 @@ def test_evenement_partie_terminer_arrete_surveillance():
     assert worker_moteur.PARTIES_SURVEILLEES == {}
 
 
+def test_evenement_partie_terminer_synchronise_lobby(monkeypatch):
+    appels = []
+
+    def fake_sync(**kwargs):
+        appels.append(kwargs)
+
+    monkeypatch.setattr(worker_moteur, "appeler_lobby_terminer_partie", fake_sync)
+
+    worker_moteur.traiter_message_events(
+        "P000001",
+        {
+            "event_type": "cab.D600.partie.terminer",
+            "aggregate_id": "P000001",
+            "op_code": "partie.terminer",
+            "data": {
+                "op": "partie.terminer",
+                "raison": "TIMEOUT_INACTIVITE",
+            },
+        },
+    )
+
+    assert appels == [
+        {
+            "partie_id": "P000001",
+            "raison": "TIMEOUT_INACTIVITE",
+        }
+    ]
+
+
+def test_appeler_lobby_terminer_partie_transmet_raison(monkeypatch):
+    appels = []
+
+    def fake_post(url, json, timeout):
+        appels.append({"url": url, "json": json, "timeout": timeout})
+        return ReponseOk()
+
+    monkeypatch.setattr(worker_moteur.requests, "post", fake_post)
+
+    worker_moteur.appeler_lobby_terminer_partie(
+        partie_id="P000001",
+        raison="TIMEOUT_INACTIVITE",
+    )
+
+    assert appels == [
+        {
+            "url": f"{worker_moteur.API_LOBBY_URL}/api/parties/P000001/terminer",
+            "json": {"raison": "TIMEOUT_INACTIVITE"},
+            "timeout": 10,
+        }
+    ]
+
+
 def test_timeout_produit_commande_partie_terminer_une_seule_fois():
     producteur = ProducteurMemoire()
     worker_moteur.enregistrer_surveillance_partie(

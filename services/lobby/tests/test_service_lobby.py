@@ -256,6 +256,61 @@ def test_scenario_complet_lancer_partie(
 
     asyncio.run(scenario())
 
+
+def test_terminer_partie_marque_table_terminee_sans_vider_joueurs(
+    service_lobby: ServiceLobby,
+    table_repo,
+):
+    async def scenario():
+        rep_j1 = await service_lobby.inscrire_joueur(
+            DemandeInscription(
+                nom="Joueur Un",
+                alias="Alias1",
+                courriel="timeout1@example.com",
+                mot_de_passe="secret1",
+            )
+        )
+        rep_j2 = await service_lobby.inscrire_joueur(
+            DemandeInscription(
+                nom="Joueur Deux",
+                alias="Alias2",
+                courriel="timeout2@example.com",
+                mot_de_passe="secret2",
+            )
+        )
+
+        rep_table = await service_lobby.creer_table(
+            DemandeCreationTable(
+                id_hote=rep_j1.id_joueur,
+                nom_table="Table timeout",
+                nb_sieges=2,
+            )
+        )
+        await service_lobby.prendre_siege(
+            rep_table.id_table,
+            DemandePriseSiege(id_joueur=rep_j2.id_joueur, role="invite"),
+        )
+        await service_lobby.marquer_joueur_pret(rep_table.id_table, rep_j1.id_joueur)
+        await service_lobby.marquer_joueur_pret(rep_table.id_table, rep_j2.id_joueur)
+
+        rep_partie = await service_lobby.lancer_partie(rep_table.id_table, id_hote=rep_j1.id_joueur)
+
+        rep_terminee = await service_lobby.terminer_partie(
+            id_partie=rep_partie.id_partie,
+            raison="TIMEOUT_INACTIVITE",
+        )
+
+        assert rep_terminee.statut == StatutTable.TERMINEE.value
+        table = table_repo.trouver_par_id(rep_table.id_table)
+        assert table.statut == StatutTable.TERMINEE
+        assert table.id_partie == rep_partie.id_partie
+        assert rep_j2.id_joueur in table.joueurs_assis
+        assert rep_j1.id_joueur in table.joueurs_prets
+        assert rep_j2.id_joueur in table.joueurs_prets
+
+    asyncio.run(scenario())
+
+
 def test_inscription_refuse_courriel_duplique(service_lobby: ServiceLobby, producteur: ProducteurEvenements):
     async def scenario():
         # première inscription OK

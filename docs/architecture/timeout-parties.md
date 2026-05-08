@@ -103,6 +103,8 @@ Quand le délai est dépassé :
    `Etat.appliquer_commandes([{"op": "partie.terminer", "raison": ...}])`.
 7. Le moteur produit l'événement domaine `cab.D600.partie.terminer`.
 8. `api_moteur` publie cet événement sur `cab.events`.
+9. `commande_moteur` consomme cet événement et appelle le lobby pour terminer
+   la table associée à `id_partie`.
 
 ## Idempotence
 
@@ -287,7 +289,7 @@ Champs structurants de l'enveloppe domaine :
 - `data.raison = "TIMEOUT_INACTIVITE"`
 
 `commande_moteur` utilise cet événement pour arrêter la surveillance locale de
-la partie.
+la partie et synchroniser le lobby.
 
 ## Contrats HTTP liés
 
@@ -320,6 +322,40 @@ Snapshot OpenAPI :
 contrats/openapi/api_moteur.openapi.json
 ```
 
+Le même worker synchronise ensuite le lobby après réception de
+`cab.D600.partie.terminer`.
+
+Endpoint lobby :
+
+```http
+POST /api/parties/{id_partie}/terminer
+```
+
+Corps :
+
+```json
+{
+  "raison": "TIMEOUT_INACTIVITE"
+}
+```
+
+Schéma :
+
+```text
+contrats/jsonschema/http/lobby/DemandeTerminerPartie.schema.json
+```
+
+Snapshot OpenAPI :
+
+```text
+contrats/openapi/lobby.openapi.json
+```
+
+Le lobby retrouve la table par `id_partie`, passe son statut à `terminee` et
+conserve les joueurs selon le contrat de terminaison de table existant. Le modèle
+`Table` ne porte pas encore de champ `raison_fin`; la raison est transmise dans
+l'appel de synchronisation mais n'est pas persistée côté lobby.
+
 ## Limites actuelles
 
 La surveillance de timeout est volontairement minimale.
@@ -332,9 +368,8 @@ Limites connues :
 - il n'y a pas de présence joueur ;
 - il n'y a pas de websocket ;
 - il n'y a pas de heartbeat ;
-- il n'y a pas encore de synchronisation lobby finale sur
-  `cab.D600.partie.terminer` ;
-- le lobby n'est donc pas encore marqué terminé par ce flux ;
+- la synchronisation lobby marque la table `terminee`, mais ne persiste pas la
+  raison de fin car le modèle lobby ne porte pas encore ce champ ;
 - la commande Kafka `partie.terminer` est idempotente dans le worker courant et
   côté moteur, mais il n'y a pas encore de table durable d'idempotence ;
 - le registry Apicurio n'est pas encore utilisé comme validateur runtime pour
@@ -512,6 +547,7 @@ docker compose logs -f moteur-commands
 - production d'une commande `partie.terminer` ;
 - appel HTTP `POST /parties/{id_partie}/terminer` ;
 - publication de `cab.D600.partie.terminer` par `api_moteur`.
+- appel HTTP `POST /api/parties/{id_partie}/terminer` vers le lobby.
 
 Exemples de symptômes :
 
@@ -521,17 +557,16 @@ Exemples de symptômes :
   pas à `0` et que le délai effectif est bien dépassé ;
 - timeout produit plusieurs fois après redémarrage : limite connue du registre
   mémoire, à résoudre par une idempotence durable ;
-- partie terminée côté moteur mais table lobby encore active : limite connue,
-  à traiter par la synchronisation lobby.
+- partie terminée côté moteur mais table lobby encore active : vérifier les logs
+  `moteur-commands` et l'accessibilité HTTP du service `lobby`.
 
 ## Évolutions restantes
 
 Les prochaines étapes attendues sont :
 
-- synchroniser le lobby à partir de `cab.D600.partie.terminer` ;
-- marquer la table comme terminée et libérer les joueurs selon le contrat lobby ;
 - ajouter une idempotence durable si plusieurs instances de `commande_moteur`
   ou des redémarrages doivent être supportés sans doublon ;
+- persister la raison de fin côté lobby si le modèle de table évolue pour porter
+  ce champ ;
 - brancher les schémas Kafka au registry ou à une validation runtime ;
-- documenter un scénario bout-en-bout après intégration de la synchronisation
-  lobby.
+- documenter un scénario bout-en-bout exécuté sur MaisonLinux avec Kafka réel.
