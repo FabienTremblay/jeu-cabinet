@@ -16,7 +16,7 @@ Le projet vise à explorer — de manière ludique mais rigoureuse — la prise 
 
 👉 commencez par :
 1. `docs/architecture.md`
-2. `docs/execution-locale.md`
+2. `docs/execution-docker.md`
 3. `contrats/README.md`
 
 ---
@@ -110,7 +110,10 @@ En cas de divergence, les contrats dans `contrats/` priment pour les interfaces,
 │
 ├── rules-service/             # moteur de règles (java / BRE)
 ├── contrats/                  # OpenAPI et JSON Schema contractuels
-├── docker-compose.yml         # stack locale
+├── docker-compose.yml         # socle Docker commun
+├── docker-compose.dev.yml     # overlay developpement
+├── docker-compose.maisonlinux.yml # overlay LAN stable futur
+├── docker-compose.prod.yml    # overlay production publique future
 ├── docs/                      # documents d’architecture
 ├── Document/                  # fonds de conception et archives
 └── README.md
@@ -167,15 +170,18 @@ Chaque événement contient :
 
 ### démarrage
 
-Les commandes Docker sont à exécuter sur l’hôte Docker cible (actuellement
-MaisonLinux). Depuis MaisonNeuve, ne les lancer que si Docker y est
-explicitement disponible.
+La branche `essai-codex` separe le socle Docker des environnements. Pour le
+developpement sur MaisonNeuve :
 
 ```
-docker compose up --build
+cp .env.dev.example .env.dev
+docker network create cabinet_dev_net
+docker compose --env-file .env.dev -p cabinet-dev -f docker-compose.yml -f docker-compose.dev.yml up -d --build
 ```
 
-Les services sont alors accessibles localement (ports définis dans le compose).
+La production actuelle sur MaisonNeuve reste redemarrable depuis `main` tant que
+la migration n'est pas validee. Les commandes completes par environnement sont
+dans `docs/execution-docker.md`.
 
 ---
 

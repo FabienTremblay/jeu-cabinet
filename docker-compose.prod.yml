@@ -1,0 +1,68 @@
+# Production publique future.
+# Exposition stricte: Traefik seulement, pas de ports directs infrastructure.
+
+services:
+  traefik:
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=${STACK_NETWORK}"
+      - "--providers.docker.constraints=Label(`cabinet.stack`,`${STACK_ID}`)"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.traefik.address=:8080"
+      - "--ping=true"
+      - "--ping.entryPoint=traefik"
+      - "--log.level=INFO"
+    ports:
+      - "${TRAEFIK_HTTP_PORT}:80"
+      - "${TRAEFIK_HTTPS_PORT}:443"
+
+  api-moteur:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=${STACK_NETWORK}"
+      - "traefik.http.routers.${STACK_ID}-api-moteur.rule=Host(`${PUBLIC_HOST}`) && PathPrefix(`/api/moteur`)"
+      - "traefik.http.routers.${STACK_ID}-api-moteur.entrypoints=websecure"
+      - "traefik.http.routers.${STACK_ID}-api-moteur.tls=true"
+      - "traefik.http.routers.${STACK_ID}-api-moteur.priority=55"
+      - "traefik.http.routers.${STACK_ID}-api-moteur.service=${STACK_ID}-api-moteur"
+      - "traefik.http.routers.${STACK_ID}-api-moteur.middlewares=${STACK_ID}-api-moteur-stripprefix"
+      - "traefik.http.middlewares.${STACK_ID}-api-moteur-stripprefix.stripprefix.prefixes=/api/moteur"
+      - "traefik.http.services.${STACK_ID}-api-moteur.loadbalancer.server.port=8080"
+
+  lobby:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=${STACK_NETWORK}"
+      - "traefik.http.routers.${STACK_ID}-lobby.rule=Host(`${PUBLIC_HOST}`) && PathPrefix(`/api/lobby`)"
+      - "traefik.http.routers.${STACK_ID}-lobby.entrypoints=websecure"
+      - "traefik.http.routers.${STACK_ID}-lobby.tls=true"
+      - "traefik.http.routers.${STACK_ID}-lobby.priority=60"
+      - "traefik.http.routers.${STACK_ID}-lobby.service=${STACK_ID}-lobby"
+      - "traefik.http.routers.${STACK_ID}-lobby.middlewares=${STACK_ID}-lobby-stripprefix"
+      - "traefik.http.middlewares.${STACK_ID}-lobby-stripprefix.stripprefix.prefixes=/api/lobby"
+      - "traefik.http.services.${STACK_ID}-lobby.loadbalancer.server.port=8080"
+
+  ui-etat-joueur:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=${STACK_NETWORK}"
+      - "traefik.http.routers.${STACK_ID}-ui-etat.rule=Host(`${PUBLIC_HOST}`) && PathPrefix(`/api/ui-etat`)"
+      - "traefik.http.routers.${STACK_ID}-ui-etat.entrypoints=websecure"
+      - "traefik.http.routers.${STACK_ID}-ui-etat.tls=true"
+      - "traefik.http.routers.${STACK_ID}-ui-etat.priority=55"
+      - "traefik.http.routers.${STACK_ID}-ui-etat.service=${STACK_ID}-ui-etat"
+      - "traefik.http.routers.${STACK_ID}-ui-etat.middlewares=${STACK_ID}-ui-etat-stripprefix"
+      - "traefik.http.middlewares.${STACK_ID}-ui-etat-stripprefix.stripprefix.prefixes=/api/ui-etat"
+      - "traefik.http.services.${STACK_ID}-ui-etat.loadbalancer.server.port=8080"
+
+  ui-web:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=${STACK_NETWORK}"
+      - "traefik.http.routers.${STACK_ID}-ui-web.rule=Host(`${PUBLIC_HOST}`) && PathPrefix(`/`) && !PathPrefix(`/api`)"
+      - "traefik.http.routers.${STACK_ID}-ui-web.entrypoints=websecure"
+      - "traefik.http.routers.${STACK_ID}-ui-web.tls=true"
+      - "traefik.http.routers.${STACK_ID}-ui-web.service=${STACK_ID}-ui-web"
+      - "traefik.http.services.${STACK_ID}-ui-web.loadbalancer.server.port=80"
