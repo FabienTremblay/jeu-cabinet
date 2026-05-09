@@ -13,6 +13,10 @@ export interface ReponseConnexion {
   alias: string;
   courriel: string;
   jeton_session: string;
+  id_table?: string | null;
+  id_partie?: string | null;
+  statut_table?: string | null;
+  skin_jeu?: string | null;
 }
 
 // Ce qu'on garde en session côté front
@@ -92,3 +96,11 @@ export interface ReponseListeSkins {
 }
 
 export type TableInfo = ReponseTable;
+
+export interface ReponseContexteReprise {
+  id_joueur: string;
+  id_table?: string | null;
+  id_partie?: string | null;
+  statut_table?: string | null;
+  skin_jeu?: string | null;
+}

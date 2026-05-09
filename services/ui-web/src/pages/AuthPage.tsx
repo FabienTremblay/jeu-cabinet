@@ -5,7 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Button from "../components/shared/Button";
 import { inscription, connexion } from "../api/lobbyApi";
 import { useSession } from "../context/SessionContext";
-import { lireSituationJoueur } from "../api/uiEtatJoueur";
+import { resoudreDestinationJoueur } from "../utils/navigationJoueur";
 
 const AuthPage: React.FC = () => {
   const location = useLocation();
@@ -68,44 +68,8 @@ const AuthPage: React.FC = () => {
       // 1) On mémorise la session côté front (dans sessionStorage via le contexte)
       setJoueur(joueur);
 
-      // 2) On laisse ui-etat-joueur nous dire où aller :
-      //    - partie en cours  -> page de jeu
-      //    - table en attente -> page table
-      //    - sinon            -> lobby
-      try {
-        const situation = await lireSituationJoueur(joueur.id_joueur);
-
-        // Petit log temporaire pour voir la forme réelle de la réponse
-        console.log("Situation après connexion :", situation);
-
-        // Certains JSON utilisent partie_id / table_id, d'autres id_partie / id_table.
-        const brutAncrage = (situation as any).ancrage ?? (situation as any).ancrage_courant ?? {};
-        const type = brutAncrage.type;
-
-        const partieId =
-          brutAncrage.partie_id ??
-          brutAncrage.id_partie ??
-          brutAncrage.partie ??
-          null;
-
-        const tableId =
-          brutAncrage.table_id ??
-          brutAncrage.id_table ??
-          brutAncrage.table ??
-          null;
-
-        if (type === "partie" && partieId) {
-          navigate(`/parties/${partieId}`);
-        } else if (type === "table" && tableId) {
-          navigate(`/tables/${tableId}`);
-        } else {
-          navigate("/lobby");
-        }
-      } catch (e) {
-        console.warn("Impossible de lire la situation du joueur :", e);
-        // Si ui-etat est down ou pas encore prêt : fallback lobby
-        navigate("/lobby");
-      }
+      const destination = await resoudreDestinationJoueur(joueur.id_joueur);
+      navigate(destination);
 
     } catch (err) {
       const msg =
@@ -229,4 +193,3 @@ const AuthPage: React.FC = () => {
 };
 
 export default AuthPage;
-

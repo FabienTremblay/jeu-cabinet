@@ -11,7 +11,8 @@ import type {
   ReponseListeSkins,
   SkinInfo,
   ReponseJoueur,
-  PolitiqueTimeoutPartieModifiable
+  PolitiqueTimeoutPartieModifiable,
+  ReponseContexteReprise
 } from "../types/lobby";
 
 // même logique que ton TUI : base par défaut = http://lobby.cabinet.localhost
@@ -130,6 +131,15 @@ export async function listerJoueursLobby(): Promise<ReponseListeJoueursLobby> {
   return getJson<ReponseListeJoueursLobby>("/api/joueurs/lobby");
 }
 
+// GET /api/joueurs/{id_joueur}/contexte
+export async function lireContexteRepriseJoueur(
+  id_joueur: string
+): Promise<ReponseContexteReprise> {
+  return getJson<ReponseContexteReprise>(
+    `/api/joueurs/${encodeURIComponent(id_joueur)}/contexte`
+  );
+}
+
 // GET /api/tables/{id_table}/joueurs
 export async function listerJoueursTable(
   id_table: string
@@ -206,4 +216,3 @@ export async function trouverTableOuvertePourJoueur(
 
   return null;
 }
-

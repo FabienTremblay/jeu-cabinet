@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSession } from "../context/SessionContext";
-import { lireSituationJoueur } from "../api/uiEtatJoueur";
+import { resoudreDestinationJoueur } from "../utils/navigationJoueur";
 import Button from "../components/shared/Button";
 
 export function HomePage() {
@@ -19,36 +19,10 @@ export function HomePage() {
     setChecking(true);
     setError(null);
 
-    lireSituationJoueur(joueur.id_joueur)
-      .then((situation) => {
+    resoudreDestinationJoueur(joueur.id_joueur)
+      .then((destination) => {
         if (cancelled) return;
-
-        // même logique que dans AuthPage.tsx
-        const brutAncrage =
-          (situation as any).ancrage ??
-          (situation as any).ancrage_courant ??
-          {};
-        const type = brutAncrage.type;
-
-        const partieId =
-          brutAncrage.partie_id ??
-          brutAncrage.id_partie ??
-          brutAncrage.partie ??
-          null;
-
-        const tableId =
-          brutAncrage.table_id ??
-          brutAncrage.id_table ??
-          brutAncrage.table ??
-          null;
-
-        if (type === "partie" && partieId) {
-          navigate(`/parties/${partieId}`);
-        } else if (type === "table" && tableId) {
-          navigate(`/tables/${tableId}`);
-        } else {
-          navigate("/lobby");
-        }
+        navigate(destination);
       })
       .catch((err) => {
         if (cancelled) return;
@@ -145,4 +119,3 @@ export function HomePage() {
 }
 
 export default HomePage;
-
