@@ -45,9 +45,9 @@ l'hôte, avant lancement, quand la table est `ouverte` ou `en_preparation`.
 Les statuts `en_cours` et `terminee` verrouillent la configuration. Le délai
 accepté est borné entre 60 et 86400 secondes.
 
-L'UI affichera des valeurs plus lisibles en minutes/heures et une aide
-utilisateur en ligne dans une étape ultérieure ; ce contrat HTTP reste la source
-en secondes.
+L'UI affiche des valeurs lisibles en minutes/heures et convertit vers les
+secondes au moment du `PATCH`. Une aide utilisateur en ligne est disponible
+depuis la page d'aide. Le contrat HTTP reste la source en secondes.
 
 Règles métier appliquées :
 
@@ -64,6 +64,21 @@ Règles métier appliquées :
 
 Le délai métier n'est pas codé en dur dans le worker de surveillance. Il provient
 de la politique effective transmise au lancement de partie.
+
+## Discipline par couche
+
+| Couche | Responsabilité | Droit | Interdit | Fichiers principaux | Contrats | Tests principaux |
+| --- | --- | --- | --- | --- | --- | --- |
+| UI web | Afficher la politique de timeout de table, présenter le délai en minutes/heures, envoyer la configuration choisie par l'hôte. | Convertir l'affichage humain vers `delai_inactivite_secondes`, masquer ou désactiver l'édition selon rôle/statut. | Modifier `version`, décider d'un timeout, surveiller l'activité, terminer une partie. | `services/ui-web/src/pages/TableWaitingPage.tsx`, `services/ui-web/src/api/lobbyApi.ts`, `services/ui-web/src/types/lobby.ts`, `services/ui-web/src/pages/AideJeuPage.tsx` | `PATCH /api/tables/{id_table}/configuration`, `ReponseTable`, `DemandeConfigurationTable` | `services/ui-web/src/pages/__tests__/TableWaitingPage.test.tsx`, `services/ui-web/src/api/lobbyApi.test.ts` |
+| Lobby | Posséder la configuration de table avant lancement, valider l'hôte, les statuts et les bornes, copier la politique dans `PartieLancee`. | Gérer `version`, persister la politique de table, refuser la modification après lancement. | Surveiller l'inactivité, produire `partie.terminer`, connaître l'état moteur interne. | `services/lobby/schemas.py`, `services/lobby/app.py`, `services/lobby/services_lobby.py`, `services/lobby/repositories.py`, `services/lobby/repositories_sql.py` | `DemandeConfigurationTable`, `PolitiqueTimeoutPartieModifiable`, `ReponseTable`, `EvenementPartieLancee` | `services/lobby/tests/test_service_lobby.py`, `services/lobby/tests/test_api_lobby.py`, `services/lobby/tests/test_repositories.py` |
+| Contrats HTTP | Décrire les DTO et endpoints synchrones entre UI, lobby, worker et moteur. | Fixer les champs, types et bornes publiques. | Porter des règles non appliquées par les services. | `contrats/openapi/lobby.openapi.json`, `contrats/openapi/api_moteur.openapi.json`, `contrats/jsonschema/http/` | `DemandeConfigurationTable`, `PolitiqueTimeoutPartieModifiable`, `RequetePartie`, `RequeteTerminerPartie`, `DemandeTerminerPartie` | validation JSON des schémas et tests API des services concernés |
+| Contrats Kafka | Décrire les messages asynchrones de lancement, création moteur, terminaison timeout et événement domaine. | Porter la copie effective et la raison `TIMEOUT_INACTIVITE`. | Transporter les réglages UI pré-lancement ou remplacer les contrats HTTP. | `contrats/jsonschema/kafka/` | `EvenementPartieLancee`, `CommandePartieCreer`, `CommandePartieTerminer`, `EvenementDomainePartieTerminer` | `services/adapter-evenements/tests/test_worker_adapter.py`, `services/commande_moteur/tests/test_worker_moteur.py` |
+| Worker `commande_moteur` | Créer les parties côté moteur, surveiller l'inactivité depuis `cab.events`, produire et exécuter `partie.terminer`, synchroniser le lobby. | Ignorer les parties sans politique effective, journaliser les politiques invalides, utiliser une clé d'idempotence stable. | Coder un délai métier en dur, modifier la configuration de table, implanter présence/heartbeat. | `services/commande_moteur/worker_moteur.py` | `cab.commands`, `cab.events`, `CommandePartieCreer`, `CommandePartieTerminer`, `EvenementDomainePartieTerminer` | `services/commande_moteur/tests/test_worker_moteur.py` |
+| Moteur `api_moteur` / `cabinet` | Conserver `Etat.configuration_partie`, terminer la partie via la logique moteur existante, publier `cab.D600.partie.terminer`. | Préserver la raison de fin, rendre la terminaison aussi idempotente que possible côté moteur. | Connaître le lobby, surveiller l'inactivité, gérer la configuration de table. | `services/api_moteur/app.py`, `services/api_moteur/schemas.py`, `services/cabinet/moteur/manager.py`, `services/cabinet/moteur/etat.py` | `RequetePartie`, `ConfigurationPartie`, `RequeteTerminerPartie`, `EvenementDomainePartieTerminer` | `services/api_moteur/tests/test_configuration_partie.py`, `services/api_moteur/tests/test_terminer_partie.py`, `services/cabinet/tests/test_configuration_partie.py`, `services/cabinet/tests/test_terminer_partie.py` |
+| Docker / MaisonLinux | Fournir l'environnement d'exécution, les topics, les variables et les logs de diagnostic. | Documenter les commandes de validation et d'observation. | Redéfinir les règles métier ou les contrats. | `docker-compose.yml`, `.env.example`, `docs/execution-docker.md` | topics `cab.commands`, `cab.events`, `cabinet.parties.evenements` | `docker compose config --quiet`, validations manuelles MaisonLinux |
+
+Cette séparation évite que l'ergonomie UI, la configuration lobby, la
+surveillance Kafka et la terminaison moteur se mélangent dans une même couche.
 
 ## Architecture événementielle
 

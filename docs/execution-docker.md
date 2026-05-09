@@ -182,11 +182,19 @@ Le mecanisme de timeout de partie n'est pas modifie par cette separation Docker.
 Les variables `LOBBY_TIMEOUT_PARTIE_ACTIF` et
 `LOBBY_TIMEOUT_PARTIE_DELAI_INACTIVITE_SECONDES` restent documentees dans les
 fichiers env d'exemple.
-Avant lancement, l'hote peut ajuster la politique de timeout d'une table avec
-`PATCH /api/tables/{id_table}/configuration`. L'API reste en secondes et borne
-`delai_inactivite_secondes` entre 60 et 86400. L'UI affichera des valeurs
-minutes/heures et une aide utilisateur dans une etape ulterieure.
-Les details fonctionnels restent dans `docs/architecture/timeout-parties.md`.
+
+Logs utiles pour diagnostiquer le timeout:
+
+```bash
+docker compose logs -f moteur-commands
+docker compose logs -f api-moteur
+docker compose logs -f lobby
+docker compose logs -f adapter-evenements
+```
+
+Les details fonctionnels et la discipline par couche restent dans
+`docs/architecture/timeout-parties.md`. Le parcours UI est documente dans
+`docs/ui/flux-auth-lobby-table.md`.
 
 La separation Docker ne change pas les contrats OpenAPI et JSON Schema: elle
 porte sur l'orchestration, les ports hote, les domaines et le routage Traefik.

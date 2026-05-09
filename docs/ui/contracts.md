@@ -124,6 +124,41 @@ Règles :
 
 L’UI ne doit pas inventer de champ métier supplémentaire.
 
+## 5 bis. Configuration De Table
+
+Avant le lancement d'une partie, l'UI peut modifier la configuration de timeout
+de la table via le lobby :
+
+```http
+PATCH /api/tables/{id_table}/configuration
+```
+
+Payload contractuel :
+
+```json
+{
+  "id_hote": "J000001",
+  "politique_timeout_partie": {
+    "active": true,
+    "delai_inactivite_secondes": 3600
+  }
+}
+```
+
+Règles UI :
+
+- l'API reste en secondes (`delai_inactivite_secondes`) ;
+- l'UI affiche et édite le délai en minutes/heures ;
+- l'UI convertit minutes/heures vers secondes au moment du `PATCH` ;
+- l'UI n'expose jamais `politique_timeout_partie.version` en édition ;
+- seuls les hôtes voient les contrôles d'édition ;
+- les invités peuvent voir la politique mais ne peuvent pas la modifier ;
+- l'édition est désactivée quand la table n'est plus `ouverte` ou
+  `en_preparation`.
+
+Le backend reste responsable des validations métier : identité de l'hôte,
+statut de table, bornes du délai et gestion de `version`.
+
 ## 6. Navigation
 
 La navigation dépend de `ancrage.type` et, en partie, de `etat_partie.phase`.
