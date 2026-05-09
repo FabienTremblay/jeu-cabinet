@@ -28,7 +28,10 @@ Communication :
 UI → ui-état-joueur → moteur → ui-état-joueur → UI
 ```
 
-Le frontend ne déduit rien : il réagit à la situation renvoyée par ui-état-joueur.
+Le frontend utilise `ui-état-joueur.ancrage` comme source principale de
+navigation. Pour une reprise après refresh, retour d’aide, retour accueil/lobby
+ou projection UI absente/en retard, il peut utiliser le contexte persistant du
+lobby : `GET /api/joueurs/{id_joueur}/contexte`.
 
 ---
 
@@ -283,6 +286,14 @@ La navigation est *réactive* :
 
 Cela évite la boucle vers la page de victoire.
 
+En reprise de session, l'UI résout d'abord la destination depuis
+`ui-état-joueur.ancrage`. Si l'ancrage ne fournit pas de table ou partie
+exploitable, elle consulte le contexte lobby :
+
+- `ouverte` ou `en_preparation` avec `id_table` → `/tables/{id_table}` ;
+- `en_cours` avec `id_partie` → `/parties/{id_partie}` ;
+- contexte vide ou table terminée → `/lobby`.
+
 ---
 
 ## 8. Fin de partie
@@ -314,7 +325,10 @@ UI fait :
 navigate("/lobby")
 ```
 
-Le polling *ne rebascule plus* vers la partie.
+Pour une partie terminée, le polling ne rebascule plus vers la partie. En
+revanche, “retour au lobby” ne signifie pas rester au lobby si le joueur est
+encore attaché côté lobby à une table ou partie active : la reprise de contexte
+peut alors reprojeter automatiquement vers la destination active.
 
 ---
 

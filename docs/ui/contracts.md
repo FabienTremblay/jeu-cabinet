@@ -209,6 +209,23 @@ Règles :
   le bouton retour de `/aide` revient à la table d'origine. Sans ce paramètre,
   le retour standard reste l'accueil.
 
+### Reprise de session/navigation
+
+`ui-etat-joueur.ancrage` reste la source principale de navigation. Si cette
+projection est absente, incomplète ou en retard, le frontend peut utiliser
+`GET /api/joueurs/{id_joueur}/contexte` comme fallback de reprise.
+
+Ordre de résolution :
+
+1. `ui-etat-joueur.ancrage` est prioritaire.
+2. `ancrage.type = table` + `table_id` → `/tables/{table_id}`.
+3. `ancrage.type = partie` + `partie_id` et `phase != TERMINEE` → `/parties/{partie_id}`.
+4. `phase = TERMINEE` → ne pas rediriger automatiquement vers la partie.
+5. fallback lobby via `GET /api/joueurs/{id_joueur}/contexte` :
+   - `statut_table = ouverte|en_preparation` + `id_table` → `/tables/{id_table}` ;
+   - `statut_table = en_cours` + `id_partie` → `/parties/{id_partie}` ;
+   - sinon → `/lobby`.
+
 ## 7. Journal
 
 Le journal exposé dans `journal_recent[]` suit `EntreeJournalDTO`.
