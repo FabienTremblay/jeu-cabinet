@@ -178,6 +178,11 @@ Règles UI :
 - les invités peuvent voir la politique mais ne peuvent pas la modifier ;
 - l'édition est désactivée quand la table n'est plus `ouverte` ou
   `en_preparation`.
+- le polling de `TableWaitingPage` ne doit pas provoquer de retour à l'écran
+  `Loading` après le chargement initial ;
+- une erreur temporaire de rafraîchissement conserve la dernière table connue ;
+- le formulaire timeout protège les valeurs locales pendant l'édition et ne les
+  resynchronise pas depuis le polling tant que l'édition est en cours.
 
 Le backend reste responsable des validations métier : identité de l'hôte,
 statut de table, bornes du délai et gestion de `version`.
@@ -200,6 +205,9 @@ Règles :
 - une partie terminée doit permettre l’affichage de la page de fin ;
 - l’UI ne doit pas reboucler vers `/parties/{partie_id}` lorsque `phase = "TERMINEE"` ;
 - le retour au lobby est une action UI explicite.
+- l'aide contextuelle peut recevoir `?retour=/tables/{table_id}` ; dans ce cas,
+  le bouton retour de `/aide` revient à la table d'origine. Sans ce paramètre,
+  le retour standard reste l'accueil.
 
 ## 7. Journal
 

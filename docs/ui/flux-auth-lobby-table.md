@@ -99,6 +99,20 @@ Règles UI :
 - l'UI n'expose pas le champ `version` en édition ;
 - l'édition est désactivée si la table n'est plus `ouverte` ou
   `en_preparation`.
+- le polling de la table reste actif, mais ne doit pas réafficher l'écran
+  `Loading` après le chargement initial ;
+- une erreur temporaire de rafraîchissement conserve la dernière table connue,
+  afin de ne pas masquer le bloc timeout ;
+- pendant que l'hôte édite le formulaire timeout, le polling ne doit pas
+  écraser les valeurs locales ni faire perdre le focus.
+
+Le lien d'aide du bloc timeout pointe vers :
+
+```text
+/aide?retour=/tables/{id_table}#timeout-partie
+```
+
+Le bouton de retour de l'aide revient alors à la table d'origine.
 
 Endpoint utilisé :
 
