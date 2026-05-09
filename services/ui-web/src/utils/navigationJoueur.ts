@@ -67,10 +67,6 @@ export async function resoudreDestinationJoueur(
     const situationUI = situation as unknown as SituationUI;
     const destination = destinationDepuisSituationUI(situationUI);
     if (destination) return destination;
-
-    if (phaseTerminee(situationUI)) {
-      return "/lobby";
-    }
   } catch (err) {
     console.warn("Impossible de lire la situation du joueur :", err);
   }

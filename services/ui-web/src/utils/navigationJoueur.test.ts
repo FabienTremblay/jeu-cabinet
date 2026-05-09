@@ -91,7 +91,7 @@ describe("navigationJoueur", () => {
     await expect(resoudreDestinationJoueur("J000001")).resolves.toBe("/lobby");
   });
 
-  it("ne redirige pas automatiquement vers une partie terminée", async () => {
+  it("résout une table en_preparation depuis le contexte lobby après une situation UI terminée", async () => {
     vi.mocked(lireSituationJoueur).mockResolvedValueOnce({
       ...situationLobby,
       ancrage: {
@@ -105,9 +105,117 @@ describe("navigationJoueur", () => {
         tour: 4,
       },
     });
+    vi.mocked(lireContexteRepriseJoueur).mockResolvedValueOnce({
+      id_joueur: "J000001",
+      id_table: "T1",
+      id_partie: null,
+      statut_table: "en_preparation",
+    });
+
+    await expect(resoudreDestinationJoueur("J000001")).resolves.toBe(
+      "/tables/T1"
+    );
+    expect(lireContexteRepriseJoueur).toHaveBeenCalledWith("J000001");
+  });
+
+  it("résout une table ouverte depuis le contexte lobby après une situation UI terminée", async () => {
+    vi.mocked(lireSituationJoueur).mockResolvedValueOnce({
+      ...situationLobby,
+      ancrage: {
+        type: "partie",
+        table_id: null,
+        partie_id: "PTERMINEE",
+      },
+      etat_partie: {
+        phase: "TERMINEE",
+        sous_phase: null,
+        tour: 4,
+      },
+    });
+    vi.mocked(lireContexteRepriseJoueur).mockResolvedValueOnce({
+      id_joueur: "J000001",
+      id_table: "T1",
+      id_partie: null,
+      statut_table: "ouverte",
+    });
+
+    await expect(resoudreDestinationJoueur("J000001")).resolves.toBe(
+      "/tables/T1"
+    );
+  });
+
+  it("reste au lobby après une situation UI terminée si le contexte lobby est vide", async () => {
+    vi.mocked(lireSituationJoueur).mockResolvedValueOnce({
+      ...situationLobby,
+      ancrage: {
+        type: "partie",
+        table_id: null,
+        partie_id: "PTERMINEE",
+      },
+      etat_partie: {
+        phase: "TERMINEE",
+        sous_phase: null,
+        tour: 4,
+      },
+    });
+    vi.mocked(lireContexteRepriseJoueur).mockResolvedValueOnce({
+      id_joueur: "J000001",
+      id_table: null,
+      id_partie: null,
+      statut_table: null,
+    });
 
     await expect(resoudreDestinationJoueur("J000001")).resolves.toBe("/lobby");
-    expect(lireContexteRepriseJoueur).not.toHaveBeenCalled();
+  });
+
+  it("ne reprend pas une ancienne partie terminée sans table active", async () => {
+    vi.mocked(lireSituationJoueur).mockResolvedValueOnce({
+      ...situationLobby,
+      ancrage: {
+        type: "partie",
+        table_id: null,
+        partie_id: "PTERMINEE",
+      },
+      etat_partie: {
+        phase: "TERMINEE",
+        sous_phase: null,
+        tour: 4,
+      },
+    });
+    vi.mocked(lireContexteRepriseJoueur).mockResolvedValueOnce({
+      id_joueur: "J000001",
+      id_table: "TTERMINEE",
+      id_partie: "PTERMINEE",
+      statut_table: "terminee",
+    });
+
+    await expect(resoudreDestinationJoueur("J000001")).resolves.toBe("/lobby");
+  });
+
+  it("résout une partie en_cours depuis le contexte lobby après une situation UI terminée", async () => {
+    vi.mocked(lireSituationJoueur).mockResolvedValueOnce({
+      ...situationLobby,
+      ancrage: {
+        type: "partie",
+        table_id: null,
+        partie_id: "PTERMINEE",
+      },
+      etat_partie: {
+        phase: "TERMINEE",
+        sous_phase: null,
+        tour: 4,
+      },
+    });
+    vi.mocked(lireContexteRepriseJoueur).mockResolvedValueOnce({
+      id_joueur: "J000001",
+      id_table: "T1",
+      id_partie: "P1",
+      statut_table: "en_cours",
+    });
+
+    await expect(resoudreDestinationJoueur("J000001")).resolves.toBe(
+      "/parties/P1"
+    );
   });
 
   it("garde ui-etat-joueur comme source prioritaire quand l'ancrage est utilisable", async () => {
@@ -122,6 +230,27 @@ describe("navigationJoueur", () => {
 
     await expect(resoudreDestinationJoueur("J000001")).resolves.toBe(
       "/tables/TUI"
+    );
+    expect(lireContexteRepriseJoueur).not.toHaveBeenCalled();
+  });
+
+  it("garde une partie active ui-etat-joueur comme source prioritaire", async () => {
+    vi.mocked(lireSituationJoueur).mockResolvedValueOnce({
+      ...situationLobby,
+      ancrage: {
+        type: "partie",
+        table_id: null,
+        partie_id: "P1",
+      },
+      etat_partie: {
+        phase: "TOUR",
+        sous_phase: null,
+        tour: 1,
+      },
+    });
+
+    await expect(resoudreDestinationJoueur("J000001")).resolves.toBe(
+      "/parties/P1"
     );
     expect(lireContexteRepriseJoueur).not.toHaveBeenCalled();
   });
