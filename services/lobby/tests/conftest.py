@@ -1,8 +1,10 @@
 # services/lobby/tests/conftest.py
 from __future__ import annotations
 
+import asyncio
+
+import httpx
 import pytest
-from fastapi.testclient import TestClient
 
 from services.lobby.settings import Settings
 from services.lobby.repositories import JoueurRepository, TableRepository
@@ -21,6 +23,31 @@ class ProducteurEvenementsMemoire(ProducteurEvenements):
 
     async def publier(self, topic: str, evenement: Evenement) -> None:
         self.evenements.append((topic, evenement))
+
+
+class ClientASGITest:
+    def __init__(self, app):
+        self._app = app
+
+    def request(self, method: str, path: str, **kwargs):
+        async def _request():
+            transport = httpx.ASGITransport(app=self._app)
+            async with httpx.AsyncClient(
+                transport=transport,
+                base_url="http://testserver",
+            ) as client:
+                return await client.request(method, path, **kwargs)
+
+        return asyncio.run(_request())
+
+    def get(self, path: str, **kwargs):
+        return self.request("GET", path, **kwargs)
+
+    def post(self, path: str, **kwargs):
+        return self.request("POST", path, **kwargs)
+
+    def patch(self, path: str, **kwargs):
+        return self.request("PATCH", path, **kwargs)
 
 
 @pytest.fixture
@@ -60,12 +87,11 @@ def service_lobby(
 
 
 @pytest.fixture
-def client(service_lobby: ServiceLobby) -> TestClient:
+def client(service_lobby: ServiceLobby) -> ClientASGITest:
     """Client HTTP de test avec override du service_lobby."""
 
-    def override_service_lobby() -> ServiceLobby:
+    async def override_service_lobby() -> ServiceLobby:
         return service_lobby
 
     app.dependency_overrides[get_service_lobby] = override_service_lobby
-    client = TestClient(app)
-    return client
+    return ClientASGITest(app)

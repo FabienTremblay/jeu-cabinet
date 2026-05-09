@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, Iterable, Optional, Literal
 
-from .domaine import Joueur, Table, StatutTable
+from .domaine import Joueur, PolitiqueTimeoutPartie, Table, StatutTable
 from .ids import GenerateurIds
 
 
@@ -131,6 +131,19 @@ class TableRepository:
 
         table.id_partie = id_partie
         table.statut = StatutTable.EN_COURS
+        return table
+
+    def modifier_politique_timeout_partie(
+        self,
+        id_table: str,
+        politique_timeout_partie: PolitiqueTimeoutPartie,
+    ) -> Table:
+        table = self.trouver_par_id(id_table)
+        if table is None:
+            raise ValueError("table_introuvable")
+
+        table.politique_timeout_partie = politique_timeout_partie
+        self.ajouter(table)
         return table
 
     def prochain_id(self) -> str:

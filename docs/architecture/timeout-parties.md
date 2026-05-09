@@ -20,6 +20,35 @@ La politique effective est portée par `politique_timeout_partie` :
 }
 ```
 
+Avant le lancement de la partie, l'hôte peut modifier la politique de timeout de
+la table via :
+
+```http
+PATCH /api/tables/{id_table}/configuration
+```
+
+Le corps HTTP expose uniquement les champs modifiables :
+
+```json
+{
+  "id_hote": "J000001",
+  "politique_timeout_partie": {
+    "active": true,
+    "delai_inactivite_secondes": 3600
+  }
+}
+```
+
+L'API reste exprimée en secondes. Le champ `version` reste géré côté backend et
+n'est pas modifiable par l'UI. La modification est autorisée seulement pour
+l'hôte, avant lancement, quand la table est `ouverte` ou `en_preparation`.
+Les statuts `en_cours` et `terminee` verrouillent la configuration. Le délai
+accepté est borné entre 60 et 86400 secondes.
+
+L'UI affichera des valeurs plus lisibles en minutes/heures et une aide
+utilisateur en ligne dans une étape ultérieure ; ce contrat HTTP reste la source
+en secondes.
+
 Règles métier appliquées :
 
 - si la politique est absente, la partie n'est pas surveillée ;

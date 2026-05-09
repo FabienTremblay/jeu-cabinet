@@ -182,7 +182,11 @@ Le mecanisme de timeout de partie n'est pas modifie par cette separation Docker.
 Les variables `LOBBY_TIMEOUT_PARTIE_ACTIF` et
 `LOBBY_TIMEOUT_PARTIE_DELAI_INACTIVITE_SECONDES` restent documentees dans les
 fichiers env d'exemple.
+Avant lancement, l'hote peut ajuster la politique de timeout d'une table avec
+`PATCH /api/tables/{id_table}/configuration`. L'API reste en secondes et borne
+`delai_inactivite_secondes` entre 60 et 86400. L'UI affichera des valeurs
+minutes/heures et une aide utilisateur dans une etape ulterieure.
 Les details fonctionnels restent dans `docs/architecture/timeout-parties.md`.
 
-Les contrats OpenAPI et JSON Schema ne sont pas affectes: la separation porte
-sur l'orchestration, les ports hote, les domaines et le routage Traefik.
+La separation Docker ne change pas les contrats OpenAPI et JSON Schema: elle
+porte sur l'orchestration, les ports hote, les domaines et le routage Traefik.

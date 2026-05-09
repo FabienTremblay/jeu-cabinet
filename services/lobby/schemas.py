@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from typing import Literal, List, Optional
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 from .domaine import PolitiqueTimeoutPartie, Table, StatutTable
 
@@ -74,6 +74,16 @@ class DemandeCreationTable(BaseModel):
     nb_sieges: int
     mot_de_passe_table: str | None = None
     skin_jeu: str | None = None
+
+
+class PolitiqueTimeoutPartieModifiable(BaseModel):
+    active: bool
+    delai_inactivite_secondes: int = Field(ge=60, le=86400)
+
+
+class DemandeConfigurationTable(BaseModel):
+    id_hote: str
+    politique_timeout_partie: PolitiqueTimeoutPartieModifiable
 
 
 class ReponseTable(BaseModel):

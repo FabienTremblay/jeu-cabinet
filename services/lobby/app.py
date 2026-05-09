@@ -15,6 +15,7 @@ from .schemas import (
     DemandeInscription,
     DemandeConnexion,
     DemandeCreationTable,
+    DemandeConfigurationTable,
     DemandePriseSiege,
     DemandeJoueurPret,
     DemandeLancerPartie,
@@ -142,6 +143,15 @@ async def lister_joueurs_table(
 ):
     joueurs = await service.lister_joueurs_table(id_table=id_table)
     return ReponseListeJoueursTable(id_table=id_table, joueurs=joueurs)
+
+
+@app.patch("/api/tables/{id_table}/configuration", response_model=ReponseTable)
+async def modifier_configuration_table(
+    id_table: str,
+    demande: DemandeConfigurationTable,
+    service: ServiceLobby = Depends(get_service_lobby),
+):
+    return await service.modifier_configuration_table(id_table, demande)
 
 
 @app.post("/api/tables/{id_table}/joueurs", response_model=ReponseJoueurSiege)

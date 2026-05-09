@@ -12,6 +12,7 @@ from services.lobby.schemas import (
     DemandeInscription,
     DemandeConnexion,
     DemandeCreationTable,
+    DemandeConfigurationTable,
     DemandePriseSiege,
 )
 from services.lobby.domaine import StatutTable
@@ -174,6 +175,170 @@ def test_creer_table_applique_politique_timeout_depuis_settings(
     asyncio.run(scenario())
 
 
+def test_hote_modifie_configuration_timeout_avant_lancement(
+    service_lobby: ServiceLobby,
+    table_repo,
+):
+    async def scenario():
+        rep_hote = await service_lobby.inscrire_joueur(
+            DemandeInscription(
+                nom="Hote Timeout",
+                alias="HoteTimeout",
+                courriel="hote-timeout@example.com",
+                mot_de_passe="secret",
+            )
+        )
+        rep_table = await service_lobby.creer_table(
+            DemandeCreationTable(
+                id_hote=rep_hote.id_joueur,
+                nom_table="Table configurable",
+                nb_sieges=2,
+            )
+        )
+
+        rep_modifiee = await service_lobby.modifier_configuration_table(
+            rep_table.id_table,
+            DemandeConfigurationTable(
+                id_hote=rep_hote.id_joueur,
+                politique_timeout_partie={
+                    "active": False,
+                    "delai_inactivite_secondes": 900,
+                },
+            ),
+        )
+
+        assert rep_modifiee.politique_timeout_partie.version == 1
+        assert rep_modifiee.politique_timeout_partie.active is False
+        assert rep_modifiee.politique_timeout_partie.delai_inactivite_secondes == 900
+
+        table_relue = table_repo.trouver_par_id(rep_table.id_table)
+        assert table_relue is not None
+        assert table_relue.politique_timeout_partie.active is False
+        assert table_relue.politique_timeout_partie.delai_inactivite_secondes == 900
+
+    asyncio.run(scenario())
+
+
+def test_non_hote_ne_peut_pas_modifier_configuration_timeout(
+    service_lobby: ServiceLobby,
+):
+    async def scenario():
+        rep_hote = await service_lobby.inscrire_joueur(
+            DemandeInscription(
+                nom="Hote",
+                alias="Hote",
+                courriel="hote-refus@example.com",
+                mot_de_passe="secret",
+            )
+        )
+        rep_table = await service_lobby.creer_table(
+            DemandeCreationTable(
+                id_hote=rep_hote.id_joueur,
+                nom_table="Table refus",
+                nb_sieges=2,
+            )
+        )
+
+        try:
+            await service_lobby.modifier_configuration_table(
+                rep_table.id_table,
+                DemandeConfigurationTable(
+                    id_hote="J-AUTRE",
+                    politique_timeout_partie={
+                        "active": True,
+                        "delai_inactivite_secondes": 600,
+                    },
+                ),
+            )
+        except HTTPException as exc:
+            assert exc.status_code == 403
+            assert exc.detail == "seul_l_hote_peut_modifier_configuration"
+        else:
+            raise AssertionError("modification acceptee pour un non-hote")
+
+    asyncio.run(scenario())
+
+
+def test_modifier_configuration_table_introuvable_retourne_404(
+    service_lobby: ServiceLobby,
+):
+    async def scenario():
+        try:
+            await service_lobby.modifier_configuration_table(
+                "T-INCONNUE",
+                DemandeConfigurationTable(
+                    id_hote="J000001",
+                    politique_timeout_partie={
+                        "active": True,
+                        "delai_inactivite_secondes": 600,
+                    },
+                ),
+            )
+        except HTTPException as exc:
+            assert exc.status_code == 404
+            assert exc.detail == "table_introuvable"
+        else:
+            raise AssertionError("modification acceptee pour une table inconnue")
+
+    asyncio.run(scenario())
+
+
+def test_configuration_timeout_refusee_apres_lancement_ou_terminaison(
+    service_lobby: ServiceLobby,
+    table_repo,
+):
+    async def scenario():
+        rep_hote = await service_lobby.inscrire_joueur(
+            DemandeInscription(
+                nom="Hote Verrou",
+                alias="HoteVerrou",
+                courriel="hote-verrou@example.com",
+                mot_de_passe="secret",
+            )
+        )
+        rep_table = await service_lobby.creer_table(
+            DemandeCreationTable(
+                id_hote=rep_hote.id_joueur,
+                nom_table="Table verrou",
+                nb_sieges=2,
+            )
+        )
+
+        table = table_repo.trouver_par_id(rep_table.id_table)
+        assert table is not None
+        table.statut = StatutTable.EN_COURS
+        table_repo.ajouter(table)
+
+        demande = DemandeConfigurationTable(
+            id_hote=rep_hote.id_joueur,
+            politique_timeout_partie={
+                "active": True,
+                "delai_inactivite_secondes": 600,
+            },
+        )
+
+        try:
+            await service_lobby.modifier_configuration_table(rep_table.id_table, demande)
+        except HTTPException as exc:
+            assert exc.status_code == 400
+            assert exc.detail == "configuration_table_verrouillee"
+        else:
+            raise AssertionError("modification acceptee pour une table en_cours")
+
+        table.statut = StatutTable.TERMINEE
+        table_repo.ajouter(table)
+
+        try:
+            await service_lobby.modifier_configuration_table(rep_table.id_table, demande)
+        except HTTPException as exc:
+            assert exc.status_code == 400
+            assert exc.detail == "configuration_table_verrouillee"
+        else:
+            raise AssertionError("modification acceptee pour une table terminee")
+
+    asyncio.run(scenario())
+
+
 def test_scenario_complet_lancer_partie(
     service_lobby: ServiceLobby,
     producteur: ProducteurEvenements,
@@ -253,6 +418,67 @@ def test_scenario_complet_lancer_partie(
         assert evt_partie.politique_timeout_partie is not None
         assert evt_partie.politique_timeout_partie.active is True
         assert evt_partie.politique_timeout_partie.delai_inactivite_secondes == 3600
+
+    asyncio.run(scenario())
+
+
+def test_lancer_partie_publie_politique_timeout_modifiee(
+    service_lobby: ServiceLobby,
+    producteur: ProducteurEvenements,
+):
+    async def scenario():
+        rep_j1 = await service_lobby.inscrire_joueur(
+            DemandeInscription(
+                nom="Joueur Un",
+                alias="Alias1",
+                courriel="timeout-modifie-1@example.com",
+                mot_de_passe="secret1",
+            )
+        )
+        rep_table = await service_lobby.creer_table(
+            DemandeCreationTable(
+                id_hote=rep_j1.id_joueur,
+                nom_table="Table timeout modifie",
+                nb_sieges=2,
+            )
+        )
+
+        rep_j2 = await service_lobby.inscrire_joueur(
+            DemandeInscription(
+                nom="Joueur Deux",
+                alias="Alias2",
+                courriel="timeout-modifie-2@example.com",
+                mot_de_passe="secret2",
+            )
+        )
+        await service_lobby.prendre_siege(
+            rep_table.id_table,
+            DemandePriseSiege(id_joueur=rep_j2.id_joueur, role="invite"),
+        )
+
+        await service_lobby.modifier_configuration_table(
+            rep_table.id_table,
+            DemandeConfigurationTable(
+                id_hote=rep_j1.id_joueur,
+                politique_timeout_partie={
+                    "active": False,
+                    "delai_inactivite_secondes": 1200,
+                },
+            ),
+        )
+
+        await service_lobby.marquer_joueur_pret(rep_table.id_table, rep_j1.id_joueur)
+        await service_lobby.marquer_joueur_pret(rep_table.id_table, rep_j2.id_joueur)
+        await service_lobby.lancer_partie(rep_table.id_table, id_hote=rep_j1.id_joueur)
+
+        evt_partie = next(
+            evt
+            for _, evt in producteur.evenements
+            if isinstance(evt, EvenementPartieLancee)
+        )
+        assert evt_partie.politique_timeout_partie is not None
+        assert evt_partie.politique_timeout_partie.active is False
+        assert evt_partie.politique_timeout_partie.delai_inactivite_secondes == 1200
 
     asyncio.run(scenario())
 

@@ -5,12 +5,12 @@
 # statut      : actif
 from __future__ import annotations
 
-from fastapi.testclient import TestClient
+from typing import Any
 
 from services.lobby.domaine import StatutTable
 
 
-def _inscrire(client: TestClient, email: str, nom: str, mot_de_passe: str, alias: str):
+def _inscrire(client: Any, email: str, nom: str, mot_de_passe: str, alias: str):
     rep = client.post(
         "/api/joueurs",
         json={
@@ -24,7 +24,7 @@ def _inscrire(client: TestClient, email: str, nom: str, mot_de_passe: str, alias
     return rep.json()
 
 
-def _auth(client: TestClient, email: str, mot_de_passe: str):
+def _auth(client: Any, email: str, mot_de_passe: str):
     rep = client.post(
         "/api/sessions",
         json={"courriel": email, "mot_de_passe": mot_de_passe},
@@ -33,7 +33,7 @@ def _auth(client: TestClient, email: str, mot_de_passe: str):
     return rep.json()
 
 
-def test_parcours_acc_happy_path(client: TestClient):
+def test_parcours_acc_happy_path(client: Any):
     # 1) Inscription joueur 1
     j1 = _inscrire(
         client,
@@ -113,7 +113,79 @@ def test_parcours_acc_happy_path(client: TestClient):
     assert partie["id_partie"].startswith("P")
 
 
-def test_table_reste_ouverte_jusqua_plein_et_filtre_ouverte(client: TestClient):
+def test_patch_configuration_table_timeout(client: Any):
+    hote = _inscrire(
+        client,
+        email="hote-config@example.com",
+        nom="Hôte Config",
+        mot_de_passe="secret",
+        alias="Config",
+    )
+    rep = client.post(
+        "/api/tables",
+        json={
+            "id_hote": hote["id_joueur"],
+            "nom_table": "Table config",
+            "nb_sieges": 2,
+        },
+    )
+    assert rep.status_code == 200
+    table = rep.json()
+
+    rep = client.patch(
+        f"/api/tables/{table['id_table']}/configuration",
+        json={
+            "id_hote": hote["id_joueur"],
+            "politique_timeout_partie": {
+                "active": False,
+                "delai_inactivite_secondes": 1800,
+            },
+        },
+    )
+
+    assert rep.status_code == 200
+    table_modifiee = rep.json()
+    assert table_modifiee["politique_timeout_partie"] == {
+        "version": 1,
+        "active": False,
+        "delai_inactivite_secondes": 1800,
+    }
+
+
+def test_patch_configuration_table_timeout_valide_bornes(client: Any):
+    hote = _inscrire(
+        client,
+        email="hote-bornes@example.com",
+        nom="Hôte Bornes",
+        mot_de_passe="secret",
+        alias="Bornes",
+    )
+    rep = client.post(
+        "/api/tables",
+        json={
+            "id_hote": hote["id_joueur"],
+            "nom_table": "Table bornes",
+            "nb_sieges": 2,
+        },
+    )
+    assert rep.status_code == 200
+    table = rep.json()
+
+    rep = client.patch(
+        f"/api/tables/{table['id_table']}/configuration",
+        json={
+            "id_hote": hote["id_joueur"],
+            "politique_timeout_partie": {
+                "active": True,
+                "delai_inactivite_secondes": 59,
+            },
+        },
+    )
+
+    assert rep.status_code == 422
+
+
+def test_table_reste_ouverte_jusqua_plein_et_filtre_ouverte(client: Any):
     # 1) Inscription + auth hôte
     j1 = _inscrire(
         client,

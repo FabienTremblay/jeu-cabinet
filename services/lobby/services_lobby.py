@@ -19,6 +19,7 @@ from .schemas import (
     DemandeConnexion,
     ReponseConnexion,
     DemandeCreationTable,
+    DemandeConfigurationTable,
     ReponseTable,
     DemandePriseSiege,
     ReponseJoueurSiege,
@@ -266,6 +267,43 @@ class ServiceLobby:
         return ReponseListeSkins(
             skins=[SkinInfo(**data) for data in SKINS_DISPONIBLES]
         )
+
+    async def modifier_configuration_table(
+        self,
+        id_table: str,
+        demande: DemandeConfigurationTable,
+    ) -> ReponseTable:
+        table = self.tables.trouver_par_id(id_table)
+        if table is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="table_introuvable",
+            )
+
+        if table.id_hote != demande.id_hote:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="seul_l_hote_peut_modifier_configuration",
+            )
+
+        if table.statut not in (StatutTable.OUVERTE, StatutTable.EN_PREPARATION):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="configuration_table_verrouillee",
+            )
+
+        politique = PolitiqueTimeoutPartie(
+            version=table.politique_timeout_partie.version,
+            active=demande.politique_timeout_partie.active,
+            delai_inactivite_secondes=(
+                demande.politique_timeout_partie.delai_inactivite_secondes
+            ),
+        )
+        table = self.tables.modifier_politique_timeout_partie(
+            id_table=id_table,
+            politique_timeout_partie=politique,
+        )
+        return ReponseTable.from_table(table)
 
     async def lister_joueurs_lobby(self) -> list[ReponseJoueur]:
         """

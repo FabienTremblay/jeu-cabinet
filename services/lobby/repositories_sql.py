@@ -452,6 +452,18 @@ class TableRepositorySQL:
         self.ajouter(table)
         return table
 
+    def modifier_politique_timeout_partie(
+        self,
+        id_table: str,
+        politique_timeout_partie: PolitiqueTimeoutPartie,
+    ) -> Table:
+        table = self.trouver_par_id(id_table)
+        if table is None:
+            raise ValueError("table_introuvable")
+        table.politique_timeout_partie = politique_timeout_partie
+        self.ajouter(table)
+        return table
+
     def terminer_table(self, id_table: str) -> Table:
         table = self.trouver_par_id(id_table)
         if table is None:
