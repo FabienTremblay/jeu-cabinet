@@ -1,4 +1,8 @@
 # services/lobby/tests/conftest.py
+# rôle        : configure les fixtures de tests du lobby
+# usage       : dépôts mémoire, producteur factice et client ASGI de test
+# contexte    : tests backend HTTP et service du lobby
+# statut      : actif
 from __future__ import annotations
 
 import asyncio

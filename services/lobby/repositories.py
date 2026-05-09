@@ -1,3 +1,8 @@
+# services/lobby/repositories.py
+# rôle        : fournit les dépôts mémoire du lobby
+# usage       : persistance locale des joueurs, tables et configuration de table
+# contexte    : tests et exécution sans backend SQL
+# statut      : actif
 from __future__ import annotations
 
 from typing import Dict, Iterable, Optional, Literal

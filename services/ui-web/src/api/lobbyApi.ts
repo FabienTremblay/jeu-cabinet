@@ -1,5 +1,5 @@
 // src/api/lobbyApi.ts
-import { makeGetJson, makePostJson } from "./apiClient";
+import { makeGetJson, makePatchJson, makePostJson } from "./apiClient";
 import type {
   JoueurSession,
   ReponseInscription,
@@ -10,7 +10,8 @@ import type {
   ReponsePartieLancee,
   ReponseListeSkins,
   SkinInfo,
-  ReponseJoueur
+  ReponseJoueur,
+  PolitiqueTimeoutPartieModifiable
 } from "../types/lobby";
 
 // même logique que ton TUI : base par défaut = http://lobby.cabinet.localhost
@@ -19,6 +20,10 @@ const getJson = makeGetJson(
   "http://lobby.cabinet.localhost"
 );
 const postJson = makePostJson(
+  "VITE_LOBBY_BASE_URL",
+  "http://lobby.cabinet.localhost"
+);
+const patchJson = makePatchJson(
   "VITE_LOBBY_BASE_URL",
   "http://lobby.cabinet.localhost"
 );
@@ -93,6 +98,23 @@ export async function creerTable(params: {
   skin_jeu?: string | null;
 }): Promise<ReponseTable> {
   return postJson<ReponseTable, typeof params>("/api/tables", params);
+}
+
+export async function modifierConfigurationTable(params: {
+  id_table: string;
+  id_hote: string;
+  politique_timeout_partie: PolitiqueTimeoutPartieModifiable;
+}): Promise<ReponseTable> {
+  return patchJson<
+    ReponseTable,
+    {
+      id_hote: string;
+      politique_timeout_partie: PolitiqueTimeoutPartieModifiable;
+    }
+  >(`/api/tables/${params.id_table}/configuration`, {
+    id_hote: params.id_hote,
+    politique_timeout_partie: params.politique_timeout_partie,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -184,5 +206,4 @@ export async function trouverTableOuvertePourJoueur(
 
   return null;
 }
-
 

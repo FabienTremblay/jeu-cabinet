@@ -51,6 +51,17 @@ export interface ReponseListeJoueursTable {
   joueurs: ReponseJoueurTable[];
 }
 
+export interface PolitiqueTimeoutPartie {
+  version: number;
+  active: boolean;
+  delai_inactivite_secondes: number;
+}
+
+export interface PolitiqueTimeoutPartieModifiable {
+  active: boolean;
+  delai_inactivite_secondes: number;
+}
+
 // Table telle que renvoyée par le lobby
 export interface ReponseTable {
   id_table: string;
@@ -59,6 +70,7 @@ export interface ReponseTable {
   id_hote: string;
   statut: string;          // ex: "en_preparation", "en_jeu", "terminee"
   skin_jeu?: string | null;
+  politique_timeout_partie: PolitiqueTimeoutPartie;
 }
 
 export interface ReponseListeTables {

@@ -45,12 +45,38 @@ export function makeGetJson(baseUrlEnvVar: string, defaultBaseUrl: string) {
 export function makePostJson(baseUrlEnvVar: string, defaultBaseUrl: string) {
   const baseUrl = resolveBaseUrl(baseUrlEnvVar, defaultBaseUrl);
 
-  return async function postJson<T>(path: string, body: unknown): Promise<T> {
+  return async function postJson<T, Body = unknown>(
+    path: string,
+    body: Body
+  ): Promise<T> {
     const cleanedPath = path.startsWith("/") ? path.slice(1) : path;
     const url = `${baseUrl}/${cleanedPath}`;
 
     const response = await fetch(url, {
       method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    return handleResponse<T>(response);
+  };
+}
+
+export function makePatchJson(baseUrlEnvVar: string, defaultBaseUrl: string) {
+  const baseUrl = resolveBaseUrl(baseUrlEnvVar, defaultBaseUrl);
+
+  return async function patchJson<T, Body = unknown>(
+    path: string,
+    body: Body
+  ): Promise<T> {
+    const cleanedPath = path.startsWith("/") ? path.slice(1) : path;
+    const url = `${baseUrl}/${cleanedPath}`;
+
+    const response = await fetch(url, {
+      method: "PATCH",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
@@ -100,5 +126,5 @@ export async function handleResponse<T>(response: Response): Promise<T> {
 // Types utilitaires
 export type ApiClientGet = ReturnType<typeof makeGetJson>;
 export type ApiClientPost = ReturnType<typeof makePostJson>;
+export type ApiClientPatch = ReturnType<typeof makePatchJson>;
 export type { ApiErreur, ApiErreurType };
-

@@ -114,6 +114,27 @@ const AideJeuPage: React.FC = () => {
           </div>
         </section>
 
+        <section id="timeout-partie" className="aide-bloc">
+          <h2>timeout d’inactivité</h2>
+          <p>
+            le délai d’inactivité sert à terminer automatiquement une partie qui ne reçoit
+            plus d’activité pendant la durée choisie par l’hôte.
+          </p>
+          <ul>
+            <li>le réglage est choisi dans la table avant le lancement.</li>
+            <li>il s’applique à la partie au moment où l’hôte la lance.</li>
+            <li>après le lancement, il ne peut plus être changé depuis le lobby.</li>
+            <li>
+              le timeout n’est pas un abandon joueur : il concerne l’inactivité globale de
+              la partie.
+            </li>
+            <li>
+              il ne remplace pas une fermeture normale : une partie peut aussi se terminer
+              par ses règles de jeu ou par une action de fin prévue.
+            </li>
+          </ul>
+        </section>
+
         {/* 7) gagner / perdre */}
         <section className="aide-bloc">
           <h2>gagner / perdre</h2>
@@ -136,4 +157,3 @@ const AideJeuPage: React.FC = () => {
 };
 
 export default AideJeuPage;
-
