@@ -288,7 +288,10 @@ Cela évite la boucle vers la page de victoire.
 
 En reprise de session, l'UI résout d'abord la destination depuis
 `ui-état-joueur.ancrage`. Si l'ancrage ne fournit pas de table ou partie
-exploitable, elle consulte le contexte lobby :
+exploitable, elle consulte le contexte lobby. Une partie `TERMINEE` dans
+`ui-état-joueur` n'est pas une destination exploitable : elle interdit la
+reprojection vers l'ancienne partie, mais ne bloque pas la consultation du
+contexte lobby.
 
 - `ouverte` ou `en_preparation` avec `id_table` → `/tables/{id_table}` ;
 - `en_cours` avec `id_partie` → `/parties/{id_partie}` ;

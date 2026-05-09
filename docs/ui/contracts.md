@@ -220,7 +220,8 @@ Ordre de résolution :
 1. `ui-etat-joueur.ancrage` est prioritaire.
 2. `ancrage.type = table` + `table_id` → `/tables/{table_id}`.
 3. `ancrage.type = partie` + `partie_id` et `phase != TERMINEE` → `/parties/{partie_id}`.
-4. `phase = TERMINEE` → ne pas rediriger automatiquement vers la partie.
+4. `phase = TERMINEE` → ne pas rediriger automatiquement vers cette partie,
+   mais continuer vers le fallback lobby.
 5. fallback lobby via `GET /api/joueurs/{id_joueur}/contexte` :
    - `statut_table = ouverte|en_preparation` + `id_table` → `/tables/{id_table}` ;
    - `statut_table = en_cours` + `id_partie` → `/parties/{id_partie}` ;
