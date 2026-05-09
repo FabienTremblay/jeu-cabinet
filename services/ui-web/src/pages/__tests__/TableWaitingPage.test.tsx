@@ -3,13 +3,18 @@
  */
 // src/pages/__tests__/TableWaitingPage.test.tsx
 import React from "react";
-import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from "vitest";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import TableWaitingPage from "../TableWaitingPage";
+import AideJeuPage from "../AideJeuPage";
 import { useSituationPolling } from "../../hooks/useSituationPolling";
-import { modifierConfigurationTable } from "../../api/lobbyApi";
+import {
+  listerJoueursTable,
+  listerTables,
+  modifierConfigurationTable,
+} from "../../api/lobbyApi";
 
 const mocks = vi.hoisted(() => ({
   joueurSession: {
@@ -58,11 +63,13 @@ vi.mock("../../context/SessionContext", () => ({
 // --- mocks API lobby ---------------------------------------------------------
 
 vi.mock("../../api/lobbyApi", () => ({
-  listerJoueursTable: vi.fn().mockResolvedValue({
-    id_table: "T000001",
-    joueurs: mocks.joueursTable,
-  }),
-  listerTables: vi.fn().mockResolvedValue(mocks.tables),
+  listerJoueursTable: vi.fn(() =>
+    Promise.resolve({
+      id_table: "T000001",
+      joueurs: mocks.joueursTable,
+    })
+  ),
+  listerTables: vi.fn(() => Promise.resolve(mocks.tables)),
   joueurPret: vi.fn(),
   lancerPartie: vi.fn().mockResolvedValue({ id_partie: "P000001" }),
   modifierConfigurationTable: mocks.modifierConfigurationTable,
@@ -79,6 +86,8 @@ function renderWithRouter(
   return render(
     <MemoryRouter initialEntries={[initialPath]}>
       <Routes>
+        <Route path="/" element={<div>Accueil</div>} />
+        <Route path="/aide" element={<AideJeuPage />} />
         <Route path="/tables/:tableId" element={ui} />
         <Route path="/parties/:partieId" element={<div>Page partie</div>} />
         <Route path="/lobby" element={<div>Lobby</div>} />
@@ -92,6 +101,7 @@ describe("TableWaitingPage – redirections automatiques", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useRealTimers();
     mocks.joueurSession = {
       id_joueur: "J000001",
       alias: "Georges",
@@ -124,6 +134,19 @@ describe("TableWaitingPage – redirections automatiques", () => {
       },
     ];
     mocks.modifierConfigurationTable.mockResolvedValue(mocks.tables[0]);
+    (listerJoueursTable as unknown as Mock).mockImplementation(() =>
+      Promise.resolve({
+        id_table: "T000001",
+        joueurs: mocks.joueursTable,
+      })
+    );
+    (listerTables as unknown as Mock).mockImplementation(() =>
+      Promise.resolve(mocks.tables)
+    );
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("redirige vers la partie lorsque ancrage.type = 'partie'", async () => {
@@ -332,5 +355,131 @@ describe("TableWaitingPage – redirections automatiques", () => {
         },
       });
     });
+  });
+
+  it("ne réaffiche pas le chargement pendant le polling après le chargement initial", async () => {
+    vi.useFakeTimers();
+    mockedUseSituation.mockReturnValue({
+      situation: {
+        version: 1,
+        joueur_id: "J000001",
+        ancrage: { type: "table", table_id: "T000001", partie_id: null },
+        etat_partie: null,
+      },
+      marqueurs: { en_partie: false, retour_lobby: false },
+      ancrage: { type: "table", table_id: "T000001", partie_id: null },
+      loading: false,
+      error: null,
+    });
+
+    const attentePolling = new Promise<never>(() => undefined);
+    (listerJoueursTable as unknown as Mock)
+      .mockResolvedValueOnce({
+        id_table: "T000001",
+        joueurs: mocks.joueursTable,
+      })
+      .mockImplementation(() => attentePolling);
+
+    renderWithRouter(<TableWaitingPage />);
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(screen.getByText("Table T000001")).toBeInTheDocument();
+
+    await act(async () => {
+      vi.advanceTimersByTime(3000);
+    });
+
+    expect(screen.queryByText("Chargement de la table…")).toBeNull();
+    expect(screen.getByText("Timeout d’inactivité")).toBeInTheDocument();
+  });
+
+  it("conserve la valeur et le focus du formulaire timeout pendant un refresh", async () => {
+    vi.useFakeTimers();
+    mockedUseSituation.mockReturnValue({
+      situation: {
+        version: 1,
+        joueur_id: "J000001",
+        ancrage: { type: "table", table_id: "T000001", partie_id: null },
+        etat_partie: null,
+      },
+      marqueurs: { en_partie: false, retour_lobby: false },
+      ancrage: { type: "table", table_id: "T000001", partie_id: null },
+      loading: false,
+      error: null,
+    });
+
+    renderWithRouter(<TableWaitingPage />);
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    const delai = screen.getByLabelText("Délai");
+    const unite = screen.getByLabelText("Unité");
+    fireEvent.change(delai, { target: { value: "15" } });
+    fireEvent.change(unite, { target: { value: "minutes" } });
+    delai.focus();
+
+    mocks.tables = [
+      {
+        ...mocks.tables[0],
+        politique_timeout_partie: {
+          version: 1,
+          active: true,
+          delai_inactivite_secondes: 7200,
+        },
+      },
+    ];
+
+    await act(async () => {
+      vi.advanceTimersByTime(3000);
+      await Promise.resolve();
+    });
+
+    expect(screen.getByLabelText("Délai")).toHaveValue(15);
+    expect(screen.getByLabelText("Unité")).toHaveValue("minutes");
+    expect(document.activeElement).toBe(screen.getByLabelText("Délai"));
+  });
+
+  it("permet de revenir à la table après ouverture de l’aide timeout", async () => {
+    mockedUseSituation.mockReturnValue({
+      situation: {
+        version: 1,
+        joueur_id: "J000001",
+        ancrage: { type: "table", table_id: "T000001", partie_id: null },
+        etat_partie: null,
+      },
+      marqueurs: { en_partie: false, retour_lobby: false },
+      ancrage: { type: "table", table_id: "T000001", partie_id: null },
+      loading: false,
+      error: null,
+    });
+
+    renderWithRouter(<TableWaitingPage />);
+
+    fireEvent.click(await screen.findByRole("link", { name: "aide sur le timeout" }));
+
+    expect(await screen.findByRole("heading", { name: "comprendre le jeu" }))
+      .toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "retour" }));
+
+    expect(await screen.findByText("Table T000001")).toBeInTheDocument();
+  });
+
+  it("garde le retour de l’aide vers l’accueil sans paramètre de contexte", async () => {
+    renderWithRouter(<AideJeuPage />, "/aide");
+
+    expect(await screen.findByRole("heading", { name: "comprendre le jeu" }))
+      .toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "retour" }));
+
+    expect(await screen.findByText("Accueil")).toBeInTheDocument();
   });
 });

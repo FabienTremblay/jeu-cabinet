@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useSession } from "../context/SessionContext";
 import {
   listerTables,
@@ -51,6 +51,48 @@ function delaiEditionVersSecondes(valeur: number, unite: UniteDelaiTimeout): num
   return unite === "heures" ? entier * 3600 : entier * 60;
 }
 
+function etatsTableIdentiques(
+  gauche: ReponseListeJoueursTable | null,
+  droite: ReponseListeJoueursTable
+): boolean {
+  if (!gauche || gauche.id_table !== droite.id_table) return false;
+  if (gauche.joueurs.length !== droite.joueurs.length) return false;
+
+  return gauche.joueurs.every((joueur, index) => {
+    const autre = droite.joueurs[index];
+    return (
+      autre &&
+      joueur.id_joueur === autre.id_joueur &&
+      joueur.alias === autre.alias &&
+      joueur.nom === autre.nom &&
+      joueur.courriel === autre.courriel &&
+      joueur.pret === autre.pret &&
+      joueur.role === autre.role
+    );
+  });
+}
+
+function tablesIdentiques(
+  gauche: ReponseTable | null,
+  droite: ReponseTable | null
+): boolean {
+  if (!gauche || !droite) return gauche === droite;
+  return (
+    gauche.id_table === droite.id_table &&
+    gauche.nom_table === droite.nom_table &&
+    gauche.nb_sieges === droite.nb_sieges &&
+    gauche.id_hote === droite.id_hote &&
+    gauche.statut === droite.statut &&
+    gauche.skin_jeu === droite.skin_jeu &&
+    gauche.politique_timeout_partie?.version ===
+      droite.politique_timeout_partie?.version &&
+    gauche.politique_timeout_partie?.active ===
+      droite.politique_timeout_partie?.active &&
+    gauche.politique_timeout_partie?.delai_inactivite_secondes ===
+      droite.politique_timeout_partie?.delai_inactivite_secondes
+  );
+}
+
 const TableWaitingPage: React.FC = () => {
   const { tableId } = useParams<{ tableId: string }>();
   const { joueur } = useSession();
@@ -69,6 +111,7 @@ const TableWaitingPage: React.FC = () => {
   const [delaiTimeoutValeur, setDelaiTimeoutValeur] = useState(60);
   const [delaiTimeoutUnite, setDelaiTimeoutUnite] =
     useState<UniteDelaiTimeout>("minutes");
+  const [editionTimeoutDirty, setEditionTimeoutDirty] = useState(false);
   const [sauvegardeTimeoutEnCours, setSauvegardeTimeoutEnCours] = useState(false);
   const [messageTimeout, setMessageTimeout] = useState<string | null>(null);
 
@@ -80,37 +123,51 @@ const TableWaitingPage: React.FC = () => {
     if (!tableId) return;
     const idTableCourante = tableId;
 
-    async function charger() {
+    async function charger(chargementInitial = false) {
       try {
-        setLoading(true);
-        setErreur(null);
+        if (chargementInitial) {
+          setLoading(true);
+        }
         // joueurs à la table
         const data = await listerJoueursTable(idTableCourante);
-        setEtatTable(data);
+        setEtatTable((etatCourant) =>
+          etatsTableIdentiques(etatCourant, data) ? etatCourant : data
+        );
 
         // nom de la table (source: /api/tables)
         try {
           const tables = await listerTables();
           const t = tables.find((x) => x.id_table === idTableCourante);
-          setTable(t ?? null);
+          setTable((tableCourante) =>
+            tablesIdentiques(tableCourante, t ?? null) ? tableCourante : t ?? null
+          );
+          setErreur(null);
         } catch {
-          // pas bloquant (fallback idCourt)
-          setTable(null);
+          // pas bloquant : on conserve la dernière table connue pour éviter
+          // de masquer le bloc timeout pendant un incident de polling.
+          setErreur("Rafraîchissement de la table incomplet. Dernières données conservées.");
         }
       } catch (err) {
         setErreur((err as Error).message);
       } finally {
-        setLoading(false);
+        if (chargementInitial) {
+          setLoading(false);
+        }
       }
     }
 
-    charger();
-    const interval = setInterval(charger, 3000);
+    charger(true);
+    const interval = setInterval(() => charger(false), 3000);
     return () => clearInterval(interval);
   }, [joueur, tableId, navigate]);
 
   useEffect(() => {
+    setEditionTimeoutDirty(false);
+  }, [tableId]);
+
+  useEffect(() => {
     const politique = table?.politique_timeout_partie;
+    if (editionTimeoutDirty) return;
     if (!politique) return;
 
     const edition = delaiVersEdition(politique.delai_inactivite_secondes);
@@ -118,6 +175,7 @@ const TableWaitingPage: React.FC = () => {
     setDelaiTimeoutValeur(edition.valeur);
     setDelaiTimeoutUnite(edition.unite);
   }, [
+    editionTimeoutDirty,
     table?.politique_timeout_partie.active,
     table?.politique_timeout_partie.delai_inactivite_secondes,
   ]);
@@ -154,7 +212,7 @@ const TableWaitingPage: React.FC = () => {
   const idTable = tableId;
   const idJoueur = joueur.id_joueur;
 
-  if (loading || !etatTable) {
+  if (!etatTable || loading) {
     return <Loading message="Chargement de la table…" />;
   }
 
@@ -214,6 +272,7 @@ const TableWaitingPage: React.FC = () => {
         },
       });
       setTable(tableModifiee);
+      setEditionTimeoutDirty(false);
       setMessageTimeout("Paramètres de timeout enregistrés.");
     } catch (err) {
       const message =
@@ -268,12 +327,12 @@ const TableWaitingPage: React.FC = () => {
                 configuration n’est plus modifiable.
               </p>
             </div>
-            <a
-              href="/aide#timeout-partie"
+            <Link
+              to={`/aide?retour=${encodeURIComponent(`/tables/${idTable}`)}#timeout-partie`}
               className="text-xs text-bleuGlacier hover:underline"
             >
               aide sur le timeout
-            </a>
+            </Link>
           </div>
 
           <div className="text-sm">
@@ -310,7 +369,10 @@ const TableWaitingPage: React.FC = () => {
                 <input
                   type="checkbox"
                   checked={timeoutActif}
-                  onChange={(e) => setTimeoutActif(e.target.checked)}
+                  onChange={(e) => {
+                    setEditionTimeoutDirty(true);
+                    setTimeoutActif(e.target.checked);
+                  }}
                 />
                 Timeout d’inactivité actif
               </label>
@@ -324,9 +386,10 @@ const TableWaitingPage: React.FC = () => {
                     max={delaiTimeoutUnite === "heures" ? 24 : 1440}
                     className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-sm"
                     value={delaiTimeoutValeur}
-                    onChange={(e) =>
-                      setDelaiTimeoutValeur(Number(e.target.value))
-                    }
+                    onChange={(e) => {
+                      setEditionTimeoutDirty(true);
+                      setDelaiTimeoutValeur(Number(e.target.value));
+                    }}
                   />
                 </label>
 
@@ -335,9 +398,10 @@ const TableWaitingPage: React.FC = () => {
                   <select
                     className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-sm"
                     value={delaiTimeoutUnite}
-                    onChange={(e) =>
-                      setDelaiTimeoutUnite(e.target.value as UniteDelaiTimeout)
-                    }
+                    onChange={(e) => {
+                      setEditionTimeoutDirty(true);
+                      setDelaiTimeoutUnite(e.target.value as UniteDelaiTimeout);
+                    }}
                   >
                     <option value="minutes">minutes</option>
                     <option value="heures">heures</option>

@@ -1,11 +1,14 @@
 // src/pages/AideJeuPage.tsx
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import PageLayout from "../components/layout/PageLayout";
 import Button from "../components/shared/Button";
 
 const AideJeuPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const retour = new URLSearchParams(location.search).get("retour");
+  const cheminRetour = retour?.startsWith("/") ? retour : "/";
 
   return (
       <div className="aide">
@@ -14,7 +17,7 @@ const AideJeuPage: React.FC = () => {
           <button
             type="button"
             className="aide-retour"
-            onClick={() => navigate("/")}
+            onClick={() => navigate(cheminRetour)}
           >
             retour
           </button>
