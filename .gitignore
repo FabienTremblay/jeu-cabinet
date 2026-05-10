@@ -56,3 +56,4 @@ tmp/
 
 # LibreOffice locks
 .~lock.*#
+.aider*
