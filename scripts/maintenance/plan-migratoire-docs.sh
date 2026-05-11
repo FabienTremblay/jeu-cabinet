@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+# ------------------------------------------------------------------------------
+# rôle        : migre et archive les documents historiques du dépôt
+# usage       : ./scripts/maintenance/plan-migratoire-docs.sh [apply|dry-run]
+# contexte    : maintenance documentaire du dépôt
+# statut      : historique
+# ------------------------------------------------------------------------------
+
 set -euo pipefail
 
 MODE="${1:-apply}" # apply | dry-run
@@ -63,22 +70,6 @@ if [[ -f "services/cabinet/skins/Mandat_difficile/documentation.odt" ]]; then
   run "git mv 'services/cabinet/skins/Mandat_difficile/documentation.odt' 'archives/odt/skins/Mandat_difficile/documentation.odt' 2>/dev/null || mv 'services/cabinet/skins/Mandat_difficile/documentation.odt' 'archives/odt/skins/Mandat_difficile/documentation.odt'"
 fi
 
-if [[ -d "services/ui-web/docs" ]]; then
-  run "mkdir -p 'docs/ui/_from-services-ui-web'"
-  run "cp -a 'services/ui-web/docs/.' 'docs/ui/_from-services-ui-web/'"
-  if [[ ! -f "services/ui-web/docs/README.md" ]]; then
-    run "cat > 'services/ui-web/docs/README.md' <<'EOF'
-# Documentation UI (déplacée)
-
-La documentation UI a été centralisée dans \`docs/ui/\`.
-
-Voir :
-- \`docs/ui/_from-services-ui-web/\` (copie des fichiers historiques)
-- \`docs/\` pour la documentation officielle
-EOF"
-  fi
-fi
-
 if [[ -f "services/ui-web/conversation.txt" ]]; then
   run "git mv 'services/ui-web/conversation.txt' 'archives/notes/ui-web-conversation.txt' 2>/dev/null || mv 'services/ui-web/conversation.txt' 'archives/notes/ui-web-conversation.txt'"
 fi
@@ -118,7 +109,7 @@ if [[ ! -f "docs/README.md" ]]; then
 - architecture : \`docs/architecture.md\`
 - exécution locale : \`docs/execution-locale.md\`
 - contrats : \`contrats/README.md\`
-- UI (historique) : \`docs/ui/_from-services-ui-web/\`
+- UI : \`docs/ui/README.md\`
 EOF"
 fi
 

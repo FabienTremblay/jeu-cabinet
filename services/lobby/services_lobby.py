@@ -1,20 +1,27 @@
 # services/lobby/services_lobby.py
+# rôle        : orchestre les cas d'usage du lobby
+# usage       : appelé par l'API HTTP pour joueurs, tables et parties
+# contexte    : logique applicative lobby et événements associés
+# statut      : actif
 from __future__ import annotations
 
 import hashlib
 import secrets
+import time
 from typing import List, Optional, Literal
 
 from fastapi import HTTPException, status
 
-from .domaine import Joueur, Table, StatutTable
-from .repositories import JoueurRepository, TableRepository
+from .domaine import Joueur, PolitiqueTimeoutPartie, SessionJoueur, StatutSession, Table, StatutTable
+from .repositories import JoueurRepository, SessionRepository, TableRepository
 from .schemas import (
     DemandeInscription,
     ReponseInscription,
     DemandeConnexion,
     ReponseConnexion,
+    ReponseHeartbeatSession,
     DemandeCreationTable,
+    DemandeConfigurationTable,
     ReponseTable,
     DemandePriseSiege,
     ReponseJoueurSiege,
@@ -69,6 +76,15 @@ def verifier_mot_de_passe(mot: str, hache: str) -> bool:
     return hacher_mot_de_passe(mot) == hache
 
 
+def construire_politique_timeout_partie_par_defaut(
+    settings: Settings,
+) -> PolitiqueTimeoutPartie:
+    return PolitiqueTimeoutPartie(
+        active=settings.timeout_partie_actif,
+        delai_inactivite_secondes=settings.timeout_partie_delai_inactivite_secondes,
+    )
+
+
 class ServiceLobby:
     """
     Service applicatif du lobby.
@@ -84,11 +100,13 @@ class ServiceLobby:
         settings: Settings,
         joueurs: JoueurRepository,
         tables: TableRepository,
+        sessions: SessionRepository,
         producteur: ProducteurEvenements,
     ) -> None:
         self.settings = settings
         self.joueurs = joueurs
         self.tables = tables
+        self.sessions = sessions
         self.producteur = producteur
 
     # -------------------------------------------------------------------------
@@ -151,7 +169,19 @@ class ServiceLobby:
                 detail="mot_de_passe_invalide",
             )
 
-        jeton_session = secrets.token_urlsafe(32)
+        self.expirer_sessions_inactives()
+        self.sessions.invalider_sessions_remplacables(joueur.id_joueur)
+
+        id_session = secrets.token_urlsafe(32)
+        maintenant = time.time()
+        session = SessionJoueur(
+            id_session=id_session,
+            id_joueur=joueur.id_joueur,
+            statut=StatutSession.ACTIVE,
+            dernier_heartbeat=maintenant,
+            expire_le=maintenant + self.settings.session_expiration_secondes,
+        )
+        self.sessions.ajouter(session)
 
         # contexte de reprise : table active du joueur (si elle existe)
         table_active = self.tables.trouver_table_active_du_joueur(joueur.id_joueur)
@@ -161,6 +191,13 @@ class ServiceLobby:
             table_active.statut.value if table_active is not None and hasattr(table_active.statut, "value") else None
         )
         skin_jeu = table_active.skin_jeu if table_active is not None else None
+        contexte_reprise = ReponseContexteReprise(
+            id_joueur=joueur.id_joueur,
+            id_table=id_table,
+            id_partie=id_partie,
+            statut_table=statut_table,
+            skin_jeu=skin_jeu,
+        )
 
         evt_connecte = EvenementJoueurConnecte(
             id_joueur=joueur.id_joueur,
@@ -173,12 +210,76 @@ class ServiceLobby:
             nom=joueur.nom,
             alias=joueur.alias,
             courriel=joueur.courriel,
-            jeton_session=jeton_session,
+            jeton_session=id_session,
             id_table=id_table,
             id_partie=id_partie,
             statut_table=statut_table,
             skin_jeu=skin_jeu,
+            contexte_reprise=contexte_reprise,
         )
+
+    def expirer_sessions_inactives(self, maintenant: float | None = None) -> list[SessionJoueur]:
+        maintenant = time.time() if maintenant is None else maintenant
+        expirees: list[SessionJoueur] = []
+        for session in self.sessions.lister():
+            if session.statut == StatutSession.EXPIREE:
+                continue
+            age = maintenant - session.dernier_heartbeat
+            if maintenant >= session.expire_le:
+                session.statut = StatutSession.EXPIREE
+                expirees.append(session)
+            elif age >= self.settings.session_absence_secondes:
+                session.statut = StatutSession.ABSENTE
+            else:
+                session.statut = StatutSession.ACTIVE
+            self.sessions.sauvegarder(session)
+        return expirees
+
+    async def heartbeat_session(self, id_session: str) -> ReponseHeartbeatSession:
+        self.expirer_sessions_inactives()
+        session = self.sessions.trouver_par_id(id_session)
+        if session is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="session_introuvable",
+            )
+        if session.statut == StatutSession.EXPIREE:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="session_expiree",
+            )
+
+        maintenant = time.time()
+        session.statut = StatutSession.ACTIVE
+        session.dernier_heartbeat = maintenant
+        session.expire_le = maintenant + self.settings.session_expiration_secondes
+        self.sessions.sauvegarder(session)
+        return ReponseHeartbeatSession(
+            id_session=session.id_session,
+            id_joueur=session.id_joueur,
+            statut=session.statut,
+            expire_le=session.expire_le,
+        )
+
+    def verifier_session_active(self, id_session: str, id_joueur: str) -> SessionJoueur:
+        self.expirer_sessions_inactives()
+        session = self.sessions.trouver_par_id(id_session)
+        if session is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="session_introuvable",
+            )
+        if session.id_joueur != id_joueur:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="session_joueur_incoherente",
+            )
+        if session.statut == StatutSession.EXPIREE:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="session_expiree",
+            )
+        return session
 
     async def contexte_reprise(self, id_joueur: str) -> ReponseContexteReprise:
         """
@@ -232,6 +333,9 @@ class ServiceLobby:
             id_hote=demande.id_hote,
             mot_de_passe_table=demande.mot_de_passe_table,
             skin_jeu=demande.skin_jeu,
+            politique_timeout_partie=construire_politique_timeout_partie_par_defaut(
+                self.settings
+            ),
         )
         self.tables.ajouter(table)
 
@@ -250,6 +354,43 @@ class ServiceLobby:
         return ReponseListeSkins(
             skins=[SkinInfo(**data) for data in SKINS_DISPONIBLES]
         )
+
+    async def modifier_configuration_table(
+        self,
+        id_table: str,
+        demande: DemandeConfigurationTable,
+    ) -> ReponseTable:
+        table = self.tables.trouver_par_id(id_table)
+        if table is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="table_introuvable",
+            )
+
+        if table.id_hote != demande.id_hote:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="seul_l_hote_peut_modifier_configuration",
+            )
+
+        if table.statut not in (StatutTable.OUVERTE, StatutTable.EN_PREPARATION):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="configuration_table_verrouillee",
+            )
+
+        politique = PolitiqueTimeoutPartie(
+            version=table.politique_timeout_partie.version,
+            active=demande.politique_timeout_partie.active,
+            delai_inactivite_secondes=(
+                demande.politique_timeout_partie.delai_inactivite_secondes
+            ),
+        )
+        table = self.tables.modifier_politique_timeout_partie(
+            id_table=id_table,
+            politique_timeout_partie=politique,
+        )
+        return ReponseTable.from_table(table)
 
     async def lister_joueurs_lobby(self) -> list[ReponseJoueur]:
         """
@@ -442,6 +583,17 @@ class ServiceLobby:
 
         return ReponseTable.from_table(table)
 
+    async def terminer_partie(self, id_partie: str, raison: str | None = None) -> ReponseTable:
+        """Marque comme terminée la table associée à une partie moteur."""
+        table = self.tables.trouver_par_id_partie(id_partie)
+        if table is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="table_introuvable_pour_cette_partie",
+            )
+
+        return await self.terminer_table(table.id_table)
+
     async def joueur_quitte_partie_definitivement(
         self,
         id_partie: str,
@@ -537,8 +689,8 @@ class ServiceLobby:
             id_partie=id_partie,
             joueurs=joueurs_evt,
             skin_jeu=table.skin_jeu,
+            politique_timeout_partie=table.politique_timeout_partie,
         )
         await self.producteur.publier(self.settings.kafka_topic_evenements_parties, evt)
 
         return ReponsePartieLancee(id_partie=id_partie)
-

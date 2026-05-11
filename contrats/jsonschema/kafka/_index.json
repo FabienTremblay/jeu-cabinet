@@ -1,0 +1,8 @@
+{
+  "schemas": [
+    "lobby/EvenementPartieLancee.schema.json",
+    "commande_moteur/CommandePartieCreer.schema.json",
+    "commande_moteur/CommandePartieTerminer.schema.json",
+    "api_moteur/EvenementDomainePartieTerminer.schema.json"
+  ]
+}

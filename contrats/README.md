@@ -29,10 +29,13 @@ contrats/
 └── jsonschema/
     ├── _common/           # schémas partagés
     │   └── http/          # erreurs et structures communes HTTP
-    └── http/              # schémas JSON extraits des OpenAPI
+    ├── http/              # schémas JSON extraits des OpenAPI
+    │   ├── lobby/
+    │   ├── api_moteur/
+    │   └── ui_etat_joueur/
+    └── kafka/             # schémas JSON des événements et commandes Kafka
         ├── lobby/
-        ├── api_moteur/
-        └── ui_etat_joueur/
+        └── commande_moteur/
 ```
 
 ---
@@ -77,6 +80,8 @@ Ils servent à :
 Exemples :
 
 - `jsonschema/http/lobby/DemandeCreationTable.schema.json`
+- `jsonschema/http/lobby/DemandeConfigurationTable.schema.json`
+- `jsonschema/http/lobby/PolitiqueTimeoutPartieModifiable.schema.json`
 - `jsonschema/http/ui_etat_joueur/SituationJoueurDTO.schema.json`
 - `jsonschema/_common/http/ValidationError.schema.json`
 
@@ -114,10 +119,19 @@ Ce script :
 
 À ce stade, ce répertoire couvre :
 - les contrats HTTP des services (lobby, moteur, UI état joueur)
+- les contrats HTTP de configuration de table côté lobby :
+  - `jsonschema/http/lobby/DemandeConfigurationTable.schema.json`
+  - `jsonschema/http/lobby/PolitiqueTimeoutPartieModifiable.schema.json`
+- les contrats Kafka liés au lancement, à la commande moteur et à la terminaison
+  par timeout :
+  - `jsonschema/kafka/lobby/EvenementPartieLancee.schema.json`
+  - `jsonschema/kafka/commande_moteur/CommandePartieCreer.schema.json`
+  - `jsonschema/kafka/commande_moteur/CommandePartieTerminer.schema.json`
+  - `jsonschema/kafka/api_moteur/EvenementDomainePartieTerminer.schema.json`
 
 Les contrats internes suivants seront ajoutés progressivement :
 - contrats BRE (moteur de règles)
-- contrats commandes / événements (Kafka)
+- autres contrats commandes / événements (Kafka) non encore stabilisés
 
 ---
 

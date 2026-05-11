@@ -1,8 +1,13 @@
+# services/lobby/repositories.py
+# rôle        : fournit les dépôts mémoire du lobby
+# usage       : persistance locale des joueurs, tables et configuration de table
+# contexte    : tests et exécution sans backend SQL
+# statut      : actif
 from __future__ import annotations
 
 from typing import Dict, Iterable, Optional, Literal
 
-from .domaine import Joueur, Table, StatutTable
+from .domaine import Joueur, PolitiqueTimeoutPartie, SessionJoueur, StatutSession, Table, StatutTable
 from .ids import GenerateurIds
 
 
@@ -31,6 +36,43 @@ class JoueurRepository:
         if self._ids.mode.lower().strip() == "sequentiel":
             return self._ids.id_joueur(len(self._par_id) + 1)
         return self._ids.id_joueur(None)
+
+
+class SessionRepository:
+    """Dépôt en mémoire pour les sessions joueur jetables."""
+
+    def __init__(self) -> None:
+        self._par_id: Dict[str, SessionJoueur] = {}
+
+    def ajouter(self, session: SessionJoueur) -> None:
+        self._par_id[session.id_session] = session
+
+    def sauvegarder(self, session: SessionJoueur) -> None:
+        self._par_id[session.id_session] = session
+
+    def trouver_par_id(self, id_session: str) -> Optional[SessionJoueur]:
+        return self._par_id.get(id_session)
+
+    def trouver_active_par_joueur(self, id_joueur: str) -> Optional[SessionJoueur]:
+        for session in self._par_id.values():
+            if session.id_joueur == id_joueur and session.statut in (
+                StatutSession.ACTIVE,
+                StatutSession.ABSENTE,
+            ):
+                return session
+        return None
+
+    def invalider_sessions_remplacables(self, id_joueur: str) -> None:
+        for session in self._par_id.values():
+            if session.id_joueur == id_joueur and session.statut in (
+                StatutSession.ACTIVE,
+                StatutSession.ABSENTE,
+            ):
+                session.statut = StatutSession.EXPIREE
+                self.sauvegarder(session)
+
+    def lister(self) -> Iterable[SessionJoueur]:
+        return self._par_id.values()
 
 
 class TableRepository:
@@ -131,6 +173,19 @@ class TableRepository:
 
         table.id_partie = id_partie
         table.statut = StatutTable.EN_COURS
+        return table
+
+    def modifier_politique_timeout_partie(
+        self,
+        id_table: str,
+        politique_timeout_partie: PolitiqueTimeoutPartie,
+    ) -> Table:
+        table = self.trouver_par_id(id_table)
+        if table is None:
+            raise ValueError("table_introuvable")
+
+        table.politique_timeout_partie = politique_timeout_partie
+        self.ajouter(table)
         return table
 
     def prochain_id(self) -> str:

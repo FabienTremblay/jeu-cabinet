@@ -1,3 +1,7 @@
+# rôle        : définit les entités métier du lobby
+# usage       : importé par le service lobby et ses dépôts
+# contexte    : domaine tables, joueurs et politique de timeout
+# statut      : actif
 from __future__ import annotations
 
 from enum import Enum
@@ -15,12 +19,22 @@ class Joueur(BaseModel):
     mot_de_passe_hache: str
 
 
+class StatutSession(str, Enum):
+    """Statut de présence d'une session joueur jetable."""
+
+    ACTIVE = "active"
+    ABSENTE = "absente"
+    EXPIREE = "expiree"
+
+
 class SessionJoueur(BaseModel):
     """Session d'un joueur connecté au lobby."""
 
+    id_session: str
     id_joueur: str
-    jeton_session: str
-    expire_le: float  # timestamp epoch pour garder simple ici
+    statut: StatutSession = StatutSession.ACTIVE
+    dernier_heartbeat: float
+    expire_le: float
 
 
 class StatutTable(str, Enum):
@@ -30,6 +44,18 @@ class StatutTable(str, Enum):
     EN_PREPARATION = "en_preparation"
     EN_COURS = "en_cours"
     TERMINEE = "terminee"
+
+
+class PolitiqueTimeoutPartie(BaseModel):
+    """
+    Politique de timeout associée à une table, puis copiée dans la partie au lancement.
+
+    Le worker de surveillance devra lire la copie effective portée par la partie.
+    """
+
+    version: int = 1
+    active: bool = True
+    delai_inactivite_secondes: int = Field(default=3600, ge=1)
 
 
 class JoueurSiege(BaseModel):
@@ -48,6 +74,9 @@ class Table(BaseModel):
     id_hote: str
     mot_de_passe_table: str | None = None
     skin_jeu: str | None = None
+    politique_timeout_partie: PolitiqueTimeoutPartie = Field(
+        default_factory=PolitiqueTimeoutPartie
+    )
     id_partie: str | None = None
     joueurs_assis: List[str] = Field(default_factory=list)
     joueurs_prets: List[str] = Field(default_factory=list)
@@ -153,5 +182,3 @@ class Table(BaseModel):
         être obtenue en appelant aussi vider_joueurs().
         """
         self.statut = StatutTable.TERMINEE
-
-

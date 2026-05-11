@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "active": {
+      "type": "boolean",
+      "title": "Active"
+    },
+    "delai_inactivite_secondes": {
+      "type": "integer",
+      "maximum": 86400.0,
+      "minimum": 60.0,
+      "title": "Delai Inactivite Secondes"
+    }
+  },
+  "type": "object",
+  "required": [
+    "active",
+    "delai_inactivite_secondes"
+  ],
+  "title": "PolitiqueTimeoutPartieModifiable"
+}

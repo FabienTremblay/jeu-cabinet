@@ -1,4 +1,8 @@
 # services/api_moteur/app.py
+# rôle        : expose la façade HTTP du moteur de jeu
+# usage       : API FastAPI pour parties, état et actions
+# contexte    : point d'entrée HTTP du noyau cabinet
+# statut      : actif
 
 from fastapi import FastAPI, APIRouter, Depends, Header, HTTPException, Response
 from fastapi.encoders import jsonable_encoder
@@ -89,6 +93,7 @@ def creer_partie(req: RequetePartie, manager=Depends(get_manager), correlation_i
         partie_id=partie_id,
         joueurs=req.joueurs,
         seed=req.seed,
+        configuration_partie=jsonable_encoder(req.configuration_partie, exclude_none=True),
     )
     # 1) ancien événement simple
     publier_evenement(
@@ -143,5 +148,22 @@ def soumettre_action(partie_id: str, req: RequeteAction, manager=Depends(get_man
     return {"partie_id": partie_id, "etat": jsonable_encoder(etat, custom_encoder={deque: list})}
 
 
-app.include_router(api)
+@app.post("/parties/{partie_id}/terminer", response_model=ReponseEtat)
+def terminer_partie(
+    partie_id: str,
+    req: RequeteTerminerPartie,
+    manager=Depends(get_manager),
+    correlation_id: str = Depends(corr_id),
+    idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key"),
+):
+    etat = manager.terminer(partie_id, raison=req.raison)
+    if etat is None:
+        raise HTTPException(status_code=404, detail={"code": "PARTIE_ABSENTE"})
 
+    evenements = getattr(etat, "vider_evenements", lambda: [])()
+    publier_evenements_domaine(evenements, partition_key=partie_id, correlation_id=correlation_id)
+
+    return {"partie_id": partie_id, "etat": jsonable_encoder(etat, custom_encoder={deque: list})}
+
+
+app.include_router(api)

@@ -1,20 +1,27 @@
 # services/lobby/app.py
+# rôle        : expose l'API HTTP du service lobby
+# usage       : routes FastAPI pour joueurs, tables, parties et skins
+# contexte    : façade HTTP du lobby et synchronisation fin de partie
+# statut      : actif
 from __future__ import annotations
 
 import os
 
 import logging
-from fastapi import FastAPI, Depends, HTTPException, Query
+from fastapi import FastAPI, Depends, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from .schemas import (
     DemandeInscription,
     DemandeConnexion,
     DemandeCreationTable,
+    DemandeConfigurationTable,
     DemandePriseSiege,
     DemandeJoueurPret,
     DemandeLancerPartie,
+    DemandeTerminerPartie,
     ReponseConnexion,
+    ReponseHeartbeatSession,
     ReponseInscription,
     ReponseJoueur,
     ReponseListeJoueursLobby,
@@ -61,6 +68,26 @@ app.add_middleware(
 logger.info("CORS origins autorisées: %s", origins)
 
 
+def _extraire_id_session(authorization: str | None) -> str:
+    if not authorization:
+        raise HTTPException(status_code=401, detail="session_requise")
+    prefix = "Bearer "
+    if not authorization.startswith(prefix):
+        raise HTTPException(status_code=401, detail="session_requise")
+    id_session = authorization[len(prefix):].strip()
+    if not id_session:
+        raise HTTPException(status_code=401, detail="session_requise")
+    return id_session
+
+
+def _verifier_session_joueur(
+    service: ServiceLobby,
+    authorization: str | None,
+    id_joueur: str,
+) -> None:
+    service.verifier_session_active(_extraire_id_session(authorization), id_joueur)
+
+
 @app.get("/health")
 async def health():
     return {"statut": "ok"}
@@ -87,6 +114,15 @@ async def connexion(
 ):
     return await service.connecter_joueur(demande)
 
+
+@app.post("/api/sessions/{id_session}/heartbeat", response_model=ReponseHeartbeatSession)
+async def heartbeat_session(
+    id_session: str,
+    service: ServiceLobby = Depends(get_service_lobby),
+):
+    return await service.heartbeat_session(id_session)
+
+
 @app.get("/api/joueurs/lobby", response_model=ReponseListeJoueursLobby)
 async def lister_joueurs_lobby(
     service: ServiceLobby = Depends(get_service_lobby),
@@ -110,8 +146,10 @@ async def contexte_reprise(
 @app.post("/api/tables", response_model=ReponseTable)
 async def creer_table(
     demande: DemandeCreationTable,
+    authorization: str | None = Header(default=None),
     service: ServiceLobby = Depends(get_service_lobby),
 ):
+    _verifier_session_joueur(service, authorization, demande.id_hote)
     return await service.creer_table(demande)
 
 
@@ -139,12 +177,25 @@ async def lister_joueurs_table(
     return ReponseListeJoueursTable(id_table=id_table, joueurs=joueurs)
 
 
+@app.patch("/api/tables/{id_table}/configuration", response_model=ReponseTable)
+async def modifier_configuration_table(
+    id_table: str,
+    demande: DemandeConfigurationTable,
+    authorization: str | None = Header(default=None),
+    service: ServiceLobby = Depends(get_service_lobby),
+):
+    _verifier_session_joueur(service, authorization, demande.id_hote)
+    return await service.modifier_configuration_table(id_table, demande)
+
+
 @app.post("/api/tables/{id_table}/joueurs", response_model=ReponseJoueurSiege)
 async def joindre_table(
     id_table: str,
     demande: DemandePriseSiege,
+    authorization: str | None = Header(default=None),
     service: ServiceLobby = Depends(get_service_lobby),
 ):
+    _verifier_session_joueur(service, authorization, demande.id_joueur)
     return await service.prendre_siege(id_table, demande)
 
 
@@ -152,22 +203,40 @@ async def joindre_table(
 async def joueur_pret(
     id_table: str,
     demande: DemandeJoueurPret,
+    authorization: str | None = Header(default=None),
     service: ServiceLobby = Depends(get_service_lobby),
 ):
+    _verifier_session_joueur(service, authorization, demande.id_joueur)
     return await service.marquer_joueur_pret(id_table, demande.id_joueur)
 
 @app.post("/api/parties/{id_partie}/joueurs/quitter", response_model=ReponseTable)
 async def quitter_partie(
     id_partie: str,
     demande: DemandeJoueurPret,  # contient id_joueur
+    authorization: str | None = Header(default=None),
     service: ServiceLobby = Depends(get_service_lobby),
 ):
+    _verifier_session_joueur(service, authorization, demande.id_joueur)
     return await service.quitter_partie(id_partie=id_partie, id_joueur=demande.id_joueur)
+
+@app.post("/api/parties/{id_partie}/terminer", response_model=ReponseTable)
+async def terminer_partie(
+    id_partie: str,
+    demande: DemandeTerminerPartie | None = None,
+    service: ServiceLobby = Depends(get_service_lobby),
+):
+    """
+    Marque comme terminée la table associée à une partie moteur.
+    Typiquement appelée par un worker qui consomme cab.D600.partie.terminer.
+    """
+    raison = demande.raison if demande is not None else None
+    return await service.terminer_partie(id_partie=id_partie, raison=raison)
 
 @app.post("/api/tables/{id_table}/joueurs/quitter", response_model=ReponseTable)
 async def quitter_table(
     id_table: str,
     demande: DemandeJoueurPret,
+    authorization: str | None = Header(default=None),
     service: ServiceLobby = Depends(get_service_lobby),
 ):
     """
@@ -175,6 +244,7 @@ async def quitter_table(
 
     On réutilise DemandeJoueurPret qui ne contient que id_joueur.
     """
+    _verifier_session_joueur(service, authorization, demande.id_joueur)
     return await service.quitter_table(id_table, demande.id_joueur)
 
 
@@ -195,8 +265,10 @@ async def terminer_table(
 async def lancer_partie(
     id_table: str,
     demande: DemandeLancerPartie,
+    authorization: str | None = Header(default=None),
     service: ServiceLobby = Depends(get_service_lobby),
 ):
+    _verifier_session_joueur(service, authorization, demande.id_hote)
     return await service.lancer_partie(id_table, demande.id_hote)
 
 # ---------------------------------------------------------------------------
@@ -208,4 +280,3 @@ async def lister_skins(
     service: ServiceLobby = Depends(get_service_lobby),
 ):
     return await service.lister_skins()
-

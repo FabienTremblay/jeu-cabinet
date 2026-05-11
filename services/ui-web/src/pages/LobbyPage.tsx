@@ -13,6 +13,7 @@ import { useSession } from "../context/SessionContext";
 import Button from "../components/shared/Button";
 import Loading from "../components/shared/Loading";
 import { useSituationPolling } from "../hooks/useSituationPolling";
+import { resoudreDestinationJoueur } from "../utils/navigationJoueur";
 
 const LobbyPage: React.FC = () => {
   // 👉 ici : on récupère bien `joueur`, pas `session`
@@ -34,6 +35,21 @@ const LobbyPage: React.FC = () => {
   const [joueursLobby, setJoueursLobby] = useState<
     ReponseListeJoueursLobby["joueurs"]
   >([]);
+
+  useEffect(() => {
+    if (!joueur) return;
+
+    let cancelled = false;
+
+    resoudreDestinationJoueur(joueur.id_joueur).then((destination) => {
+      if (cancelled || destination === "/lobby") return;
+      navigate(destination);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [joueur, navigate]);
 
   // Rafraîchissement régulier des tables ouvertes (et des joueurs présents au lobby)
   useEffect(() => {
@@ -318,4 +334,3 @@ const LobbyPage: React.FC = () => {
 };
 
 export default LobbyPage;
-

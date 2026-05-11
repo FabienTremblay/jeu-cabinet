@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: up down logs ps nuke topics build-rules up-rules logs-rules
+.PHONY: up down logs ps nuke topics migrate migrate-dev migrate-maisonlinux build-rules up-rules logs-rules
 
 up:
 	docker compose up -d --remove-orphans
@@ -16,6 +16,15 @@ ps:
 
 topics:
 	./scripts/bootstrap-topics.sh
+
+migrate:
+	docker compose exec postgres /opt/sql/apply-migrations.sh
+
+migrate-dev:
+	docker compose --env-file .env.dev -p cabinet-dev -f docker-compose.yml -f docker-compose.dev.yml exec postgres /opt/sql/apply-migrations.sh
+
+migrate-maisonlinux:
+	docker compose --env-file .env.maisonlinux -p cabinet-maisonlinux -f docker-compose.yml -f docker-compose.maisonlinux.yml exec postgres /opt/sql/apply-migrations.sh
 
 nuke:
 	docker compose down -v --remove-orphans
@@ -36,4 +45,3 @@ up-rules: build-rules
 
 logs-rules:
 	docker compose logs -f --tail=200 rules-service
-

@@ -1,4 +1,8 @@
 # services/cabinet/moteur/manager.py
+# rôle        : gère les instances de parties en mémoire
+# usage       : façade applicative du noyau moteur
+# contexte    : création, lecture et mutation des états de partie
+# statut      : actif
 from __future__ import annotations
 from threading import RLock
 from typing import Dict, Optional, List, Any
@@ -13,11 +17,24 @@ class PartieManager:
         self._lock = RLock()
         self._parties: Dict[str, Etat] = {}
 
-    def creer(self, skin: str, partie_id: str, joueurs: Dict[str, Any], seed: int | None = None) -> Etat:
+    def creer(
+        self,
+        skin: str,
+        partie_id: str,
+        joueurs: Dict[str, Any],
+        seed: int | None = None,
+        configuration_partie: Dict[str, Any] | None = None,
+    ) -> Etat:
         with self._lock:
             if partie_id in self._parties:
                 raise ValueError(f"partie {partie_id} existe déjà")
-            etat = construire_etat(skin, partie_id, joueurs, seed=seed)
+            etat = construire_etat(
+                skin,
+                partie_id,
+                joueurs,
+                seed=seed,
+                configuration_partie=configuration_partie,
+            )
             self._parties[partie_id] = etat
             return etat
 
@@ -65,12 +82,18 @@ class PartieManager:
 
             return etat, evt
 
-    def terminer(self, partie_id: str, raison: str = "terminee") -> None:
+    def terminer(self, partie_id: str, raison: str = "terminee") -> Etat | None:
         with self._lock:
             etat = self._parties.get(partie_id)
-            if etat:
-                etat.termine = True
-                etat.raison_fin = raison
-                etat.phase = "fin_jeu"
+            if etat is None:
+                return None
+            if etat.termine:
+                return etat
 
-
+            etat.appliquer_commandes([
+                {
+                    "op": "partie.terminer",
+                    "raison": raison,
+                }
+            ])
+            return etat

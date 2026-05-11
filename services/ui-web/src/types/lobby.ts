@@ -13,6 +13,11 @@ export interface ReponseConnexion {
   alias: string;
   courriel: string;
   jeton_session: string;
+  id_table?: string | null;
+  id_partie?: string | null;
+  statut_table?: string | null;
+  skin_jeu?: string | null;
+  contexte_reprise?: ReponseContexteReprise | null;
 }
 
 // Ce qu'on garde en session côté front
@@ -22,6 +27,7 @@ export interface JoueurSession {
   alias: string;
   courriel: string;
   jeton_session?: string; // présent après connexion
+  contexte_reprise?: ReponseContexteReprise | null;
 }
 
 export interface ReponseJoueur {
@@ -51,6 +57,17 @@ export interface ReponseListeJoueursTable {
   joueurs: ReponseJoueurTable[];
 }
 
+export interface PolitiqueTimeoutPartie {
+  version: number;
+  active: boolean;
+  delai_inactivite_secondes: number;
+}
+
+export interface PolitiqueTimeoutPartieModifiable {
+  active: boolean;
+  delai_inactivite_secondes: number;
+}
+
 // Table telle que renvoyée par le lobby
 export interface ReponseTable {
   id_table: string;
@@ -59,6 +76,7 @@ export interface ReponseTable {
   id_hote: string;
   statut: string;          // ex: "en_preparation", "en_jeu", "terminee"
   skin_jeu?: string | null;
+  politique_timeout_partie: PolitiqueTimeoutPartie;
 }
 
 export interface ReponseListeTables {
@@ -80,3 +98,18 @@ export interface ReponseListeSkins {
 }
 
 export type TableInfo = ReponseTable;
+
+export interface ReponseContexteReprise {
+  id_joueur: string;
+  id_table?: string | null;
+  id_partie?: string | null;
+  statut_table?: string | null;
+  skin_jeu?: string | null;
+}
+
+export interface ReponseHeartbeatSession {
+  id_session: string;
+  id_joueur: string;
+  statut: "active" | "absente" | "expiree";
+  expire_le: number;
+}

@@ -14,6 +14,32 @@ function resolveBaseUrl(baseUrlEnvVar: string, defaultBaseUrl: string): string {
   return baseUrl;
 }
 
+function lireJetonSession(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem("cabinet.session.joueur");
+    if (!raw) return null;
+    const data = JSON.parse(raw) as { jeton_session?: string };
+    return data.jeton_session ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function construireHeadersJson(accepteContenu: boolean): HeadersInit {
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+  };
+  if (accepteContenu) {
+    headers["Content-Type"] = "application/json";
+  }
+  const jetonSession = lireJetonSession();
+  if (jetonSession) {
+    headers.Authorization = `Bearer ${jetonSession}`;
+  }
+  return headers;
+}
+
 /**
  * GET JSON générique.
  * Usage : const getLobbyJson = makeGetJson("VITE_LOBBY_BASE_URL", "http://lobby.cabinet.localhost");
@@ -28,9 +54,7 @@ export function makeGetJson(baseUrlEnvVar: string, defaultBaseUrl: string) {
 
     const response = await fetch(url, {
       method: "GET",
-      headers: {
-        Accept: "application/json",
-      },
+      headers: construireHeadersJson(false),
     });
 
     return handleResponse<T>(response);
@@ -45,16 +69,36 @@ export function makeGetJson(baseUrlEnvVar: string, defaultBaseUrl: string) {
 export function makePostJson(baseUrlEnvVar: string, defaultBaseUrl: string) {
   const baseUrl = resolveBaseUrl(baseUrlEnvVar, defaultBaseUrl);
 
-  return async function postJson<T>(path: string, body: unknown): Promise<T> {
+  return async function postJson<T, Body = unknown>(
+    path: string,
+    body: Body
+  ): Promise<T> {
     const cleanedPath = path.startsWith("/") ? path.slice(1) : path;
     const url = `${baseUrl}/${cleanedPath}`;
 
     const response = await fetch(url, {
       method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
+      headers: construireHeadersJson(true),
+      body: JSON.stringify(body),
+    });
+
+    return handleResponse<T>(response);
+  };
+}
+
+export function makePatchJson(baseUrlEnvVar: string, defaultBaseUrl: string) {
+  const baseUrl = resolveBaseUrl(baseUrlEnvVar, defaultBaseUrl);
+
+  return async function patchJson<T, Body = unknown>(
+    path: string,
+    body: Body
+  ): Promise<T> {
+    const cleanedPath = path.startsWith("/") ? path.slice(1) : path;
+    const url = `${baseUrl}/${cleanedPath}`;
+
+    const response = await fetch(url, {
+      method: "PATCH",
+      headers: construireHeadersJson(true),
       body: JSON.stringify(body),
     });
 
@@ -94,11 +138,18 @@ export async function handleResponse<T>(response: Response): Promise<T> {
   }
 
   const err: ApiErreur = { type, status: response.status, message };
+  if (
+    type === "auth" &&
+    typeof window !== "undefined" &&
+    message.startsWith("session_")
+  ) {
+    window.dispatchEvent(new CustomEvent("cabinet:session-expiree"));
+  }
   throw err;
 }
 
 // Types utilitaires
 export type ApiClientGet = ReturnType<typeof makeGetJson>;
 export type ApiClientPost = ReturnType<typeof makePostJson>;
+export type ApiClientPatch = ReturnType<typeof makePatchJson>;
 export type { ApiErreur, ApiErreurType };
-

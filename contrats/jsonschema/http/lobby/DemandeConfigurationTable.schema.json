@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "id_hote": {
+      "type": "string",
+      "title": "Id Hote"
+    },
+    "politique_timeout_partie": {
+      "$ref": "./PolitiqueTimeoutPartieModifiable.schema.json"
+    }
+  },
+  "type": "object",
+  "required": [
+    "id_hote",
+    "politique_timeout_partie"
+  ],
+  "title": "DemandeConfigurationTable"
+}

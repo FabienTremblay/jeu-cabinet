@@ -1,5 +1,5 @@
 // src/api/lobbyApi.ts
-import { makeGetJson, makePostJson } from "./apiClient";
+import { makeGetJson, makePatchJson, makePostJson } from "./apiClient";
 import type {
   JoueurSession,
   ReponseInscription,
@@ -10,7 +10,10 @@ import type {
   ReponsePartieLancee,
   ReponseListeSkins,
   SkinInfo,
-  ReponseJoueur
+  ReponseJoueur,
+  PolitiqueTimeoutPartieModifiable,
+  ReponseContexteReprise,
+  ReponseHeartbeatSession
 } from "../types/lobby";
 
 // même logique que ton TUI : base par défaut = http://lobby.cabinet.localhost
@@ -19,6 +22,10 @@ const getJson = makeGetJson(
   "http://lobby.cabinet.localhost"
 );
 const postJson = makePostJson(
+  "VITE_LOBBY_BASE_URL",
+  "http://lobby.cabinet.localhost"
+);
+const patchJson = makePatchJson(
   "VITE_LOBBY_BASE_URL",
   "http://lobby.cabinet.localhost"
 );
@@ -61,9 +68,19 @@ export async function connexion(params: {
     nom: data.nom,
     alias: data.alias,
     courriel: data.courriel,
-    jeton_session: data.jeton_session
+    jeton_session: data.jeton_session,
+    contexte_reprise: data.contexte_reprise ?? null
   };
   return session;
+}
+
+export async function envoyerHeartbeatSession(
+  id_session: string
+): Promise<ReponseHeartbeatSession> {
+  return postJson<ReponseHeartbeatSession, Record<string, never>>(
+    `/api/sessions/${encodeURIComponent(id_session)}/heartbeat`,
+    {}
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -95,6 +112,23 @@ export async function creerTable(params: {
   return postJson<ReponseTable, typeof params>("/api/tables", params);
 }
 
+export async function modifierConfigurationTable(params: {
+  id_table: string;
+  id_hote: string;
+  politique_timeout_partie: PolitiqueTimeoutPartieModifiable;
+}): Promise<ReponseTable> {
+  return patchJson<
+    ReponseTable,
+    {
+      id_hote: string;
+      politique_timeout_partie: PolitiqueTimeoutPartieModifiable;
+    }
+  >(`/api/tables/${params.id_table}/configuration`, {
+    id_hote: params.id_hote,
+    politique_timeout_partie: params.politique_timeout_partie,
+  });
+}
+
 // ---------------------------------------------------------------------------
 //  Joueurs / lobby & table
 // ---------------------------------------------------------------------------
@@ -106,6 +140,15 @@ export interface ReponseListeJoueursLobby {
 // GET /api/joueurs/lobby
 export async function listerJoueursLobby(): Promise<ReponseListeJoueursLobby> {
   return getJson<ReponseListeJoueursLobby>("/api/joueurs/lobby");
+}
+
+// GET /api/joueurs/{id_joueur}/contexte
+export async function lireContexteRepriseJoueur(
+  id_joueur: string
+): Promise<ReponseContexteReprise> {
+  return getJson<ReponseContexteReprise>(
+    `/api/joueurs/${encodeURIComponent(id_joueur)}/contexte`
+  );
 }
 
 // GET /api/tables/{id_table}/joueurs
@@ -184,5 +227,3 @@ export async function trouverTableOuvertePourJoueur(
 
   return null;
 }
-
-

@@ -1,12 +1,17 @@
 # services/lobby/repositories_sql.py
+# rôle        : persiste les entités du lobby dans PostgreSQL
+# usage       : backend SQL du service lobby
+# contexte    : dépôts joueurs, tables et politique de timeout
+# statut      : actif
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 from typing import Iterable, Optional, Literal
 
 import psycopg
 
-from .domaine import Joueur, Table, StatutTable
+from .domaine import Joueur, PolitiqueTimeoutPartie, SessionJoueur, StatutSession, Table, StatutTable
 from .ids import GenerateurIds
 
 
@@ -27,6 +32,21 @@ def _assurer_compteurs(cur) -> None:
         )
         """
     )
+
+
+def _model_to_dict(model) -> dict:
+    model_dump = getattr(model, "model_dump", None)
+    if callable(model_dump):
+        return model_dump()
+    return model.dict()
+
+
+def _politique_timeout_depuis_db(value) -> PolitiqueTimeoutPartie:
+    if value is None:
+        return PolitiqueTimeoutPartie()
+    if isinstance(value, str):
+        value = json.loads(value)
+    return PolitiqueTimeoutPartie(**value)
 
 
 class JoueurRepositorySQL:
@@ -136,6 +156,123 @@ class JoueurRepositorySQL:
                 )
 
 
+class SessionRepositorySQL:
+    def __init__(self, db: Db) -> None:
+        self._db = db
+
+    def ajouter(self, session: SessionJoueur) -> None:
+        self.sauvegarder(session)
+
+    def sauvegarder(self, session: SessionJoueur) -> None:
+        with self._db.connect() as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                insert into lobby_sessions(
+                  id_session,
+                  id_joueur,
+                  statut,
+                  dernier_heartbeat,
+                  expire_le
+                )
+                values (%s, %s, %s, to_timestamp(%s), to_timestamp(%s))
+                on conflict (id_session) do update set
+                  id_joueur = excluded.id_joueur,
+                  statut = excluded.statut,
+                  dernier_heartbeat = excluded.dernier_heartbeat,
+                  expire_le = excluded.expire_le,
+                  maj_le = now()
+                """,
+                (
+                    session.id_session,
+                    session.id_joueur,
+                    session.statut.value if hasattr(session.statut, "value") else str(session.statut),
+                    session.dernier_heartbeat,
+                    session.expire_le,
+                ),
+            )
+            conn.commit()
+
+    def trouver_par_id(self, id_session: str) -> Optional[SessionJoueur]:
+        with self._db.connect() as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                select id_session, id_joueur, statut,
+                       extract(epoch from dernier_heartbeat),
+                       extract(epoch from expire_le)
+                from lobby_sessions
+                where id_session = %s
+                """,
+                (id_session,),
+            )
+            row = cur.fetchone()
+            if not row:
+                return None
+            return SessionJoueur(
+                id_session=row[0],
+                id_joueur=row[1],
+                statut=StatutSession(row[2]),
+                dernier_heartbeat=float(row[3]),
+                expire_le=float(row[4]),
+            )
+
+    def trouver_active_par_joueur(self, id_joueur: str) -> Optional[SessionJoueur]:
+        with self._db.connect() as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                select id_session
+                from lobby_sessions
+                where id_joueur = %s
+                  and statut = any(%s)
+                order by cree_le desc
+                limit 1
+                """,
+                (id_joueur, [StatutSession.ACTIVE.value, StatutSession.ABSENTE.value]),
+            )
+            row = cur.fetchone()
+            if not row:
+                return None
+            return self.trouver_par_id(row[0])
+
+    def invalider_sessions_remplacables(self, id_joueur: str) -> None:
+        with self._db.connect() as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                update lobby_sessions
+                set statut = %s,
+                    maj_le = now()
+                where id_joueur = %s
+                  and statut = any(%s)
+                """,
+                (
+                    StatutSession.EXPIREE.value,
+                    id_joueur,
+                    [StatutSession.ACTIVE.value, StatutSession.ABSENTE.value],
+                ),
+            )
+            conn.commit()
+
+    def lister(self) -> Iterable[SessionJoueur]:
+        with self._db.connect() as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                select id_session, id_joueur, statut,
+                       extract(epoch from dernier_heartbeat),
+                       extract(epoch from expire_le)
+                from lobby_sessions
+                order by cree_le asc
+                """
+            )
+            rows = cur.fetchall()
+        for row in rows:
+            yield SessionJoueur(
+                id_session=row[0],
+                id_joueur=row[1],
+                statut=StatutSession(row[2]),
+                dernier_heartbeat=float(row[3]),
+                expire_le=float(row[4]),
+            )
+
+
 class TableRepositorySQL:
     def __init__(self, db: Db, generateur_ids: GenerateurIds) -> None:
         self._db = db
@@ -207,7 +344,8 @@ class TableRepositorySQL:
         with conn.cursor() as cur:
             cur.execute(
                 f"""
-                select id_table, nom_table, nb_sieges, id_hote, statut, skin_jeu, id_partie
+                select id_table, nom_table, nb_sieges, id_hote, statut, skin_jeu, id_partie,
+                       politique_timeout_partie
                 from lobby_tables
                 where id_table = %s
                 {'for update' if for_update else ''}
@@ -238,6 +376,7 @@ class TableRepositorySQL:
                 statut=StatutTable(t[4]),
                 skin_jeu=t[5],
                 id_partie=t[6],
+                politique_timeout_partie=_politique_timeout_depuis_db(t[7]),
                 joueurs_assis=joueurs_assis,
                 joueurs_prets=joueurs_prets,
             )
@@ -250,8 +389,17 @@ class TableRepositorySQL:
         with conn.cursor() as cur:
             cur.execute(
                 """
-                insert into lobby_tables(id_table, nom_table, nb_sieges, id_hote, statut, skin_jeu, id_partie)
-                values (%s, %s, %s, %s, %s, %s, %s)
+                insert into lobby_tables(
+                  id_table,
+                  nom_table,
+                  nb_sieges,
+                  id_hote,
+                  statut,
+                  skin_jeu,
+                  id_partie,
+                  politique_timeout_partie
+                )
+                values (%s, %s, %s, %s, %s, %s, %s, %s::jsonb)
                 on conflict (id_table) do update set
                   nom_table = excluded.nom_table,
                   nb_sieges = excluded.nb_sieges,
@@ -259,6 +407,7 @@ class TableRepositorySQL:
                   statut = excluded.statut,
                   skin_jeu = excluded.skin_jeu,
                   id_partie = excluded.id_partie,
+                  politique_timeout_partie = excluded.politique_timeout_partie,
                   maj_le = now()
                 """,
                 (
@@ -269,6 +418,7 @@ class TableRepositorySQL:
                     table.statut.value if hasattr(table.statut, "value") else str(table.statut),
                     table.skin_jeu,
                     table.id_partie,
+                    json.dumps(_model_to_dict(table.politique_timeout_partie)),
                 ),
             )
 
@@ -416,6 +566,18 @@ class TableRepositorySQL:
             raise ValueError("table_introuvable")
         table.id_partie = id_partie
         table.statut = StatutTable.EN_COURS
+        self.ajouter(table)
+        return table
+
+    def modifier_politique_timeout_partie(
+        self,
+        id_table: str,
+        politique_timeout_partie: PolitiqueTimeoutPartie,
+    ) -> Table:
+        table = self.trouver_par_id(id_table)
+        if table is None:
+            raise ValueError("table_introuvable")
+        table.politique_timeout_partie = politique_timeout_partie
         self.ajouter(table)
         return table
 

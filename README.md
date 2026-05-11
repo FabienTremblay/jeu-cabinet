@@ -16,8 +16,20 @@ Le projet vise à explorer — de manière ludique mais rigoureuse — la prise 
 
 👉 commencez par :
 1. `docs/architecture.md`
-2. `docs/execution-locale.md`
+2. `docs/execution-docker.md`
 3. `contrats/README.md`
+
+---
+
+## organisation documentaire
+
+Pour éviter les doublons, le dépôt distingue trois niveaux de documentation :
+
+- `docs/` contient la documentation active du projet : architecture, exécution locale, flux UI et notes maintenues ;
+- `contrats/` contient les sources contractuelles normatives : snapshots OpenAPI et schémas JSON Schema ;
+- `Document/` contient le fonds de conception et les documents historiques ou sources de travail (`.odt`, gabarits, diagrammes).
+
+En cas de divergence, les contrats dans `contrats/` priment pour les interfaces, puis les documents actifs dans `docs/` pour l’architecture et les usages courants. Les documents dans `Document/` doivent être traités comme contexte ou archives tant qu’ils n’ont pas été synchronisés vers `docs/` ou `contrats/`.
 
 ---
 
@@ -84,17 +96,26 @@ Le projet vise à explorer — de manière ludique mais rigoureuse — la prise 
 ├── services/
 │   ├── cabinet/              # noyau de jeu (python)
 │   │   ├── moteur/
-│   │   ├── domaine/
-│   │   ├── evenements/
-│   │   └── projections/
+│   │   ├── bre/
+│   │   ├── skins/
+│   │   └── tests/
 │   ├── lobby/                # gestion des tables et joueurs
-│   ├── api-moteur/            # exposition HTTP du moteur
-│   ├── ui-etat-joueur/        # projection dédiée à l’UI
-│   ├── rules-service/         # moteur de règles (java / BRE)
-│   └── ui2-web/               # interface web (react / ts)
+│   ├── api_moteur/            # exposition HTTP du moteur
+│   ├── ui_etat_joueur/        # projection dédiée à l’UI
+│   ├── commande_moteur/       # worker de commandes Kafka
+│   ├── adapter-evenements/    # adaptation événements Kafka
+│   ├── ui-web/                # interface web (react / ts)
+│   ├── tui_lobby/             # interface terminal lobby
+│   └── cli_cabinet/           # client CLI
 │
-├── docker-compose.yml         # stack locale
+├── rules-service/             # moteur de règles (java / BRE)
+├── contrats/                  # OpenAPI et JSON Schema contractuels
+├── docker-compose.yml         # socle Docker commun
+├── docker-compose.dev.yml     # overlay developpement
+├── docker-compose.maisonlinux.yml # overlay LAN stable futur
+├── docker-compose.prod.yml    # overlay production publique future
 ├── docs/                      # documents d’architecture
+├── Document/                  # fonds de conception et archives
 └── README.md
 ```
 
@@ -142,18 +163,25 @@ Chaque événement contient :
 
 ### prérequis
 
-- docker + docker-compose
+- docker + plugin Docker Compose v2 (`docker compose`)
 - python 3.11+
 - node 18+
-- java 17+
+- java 21+ pour `rules-service`
 
 ### démarrage
 
+La branche `essai-codex` separe le socle Docker des environnements. Pour le
+developpement sur MaisonNeuve :
+
 ```
-docker-compose up --build
+cp .env.dev.example .env.dev
+docker network create cabinet_dev_net
+docker compose --env-file .env.dev -p cabinet-dev -f docker-compose.yml -f docker-compose.dev.yml up -d --build
 ```
 
-Les services sont alors accessibles localement (ports définis dans le compose).
+La production actuelle sur MaisonNeuve reste redemarrable depuis `main` tant que
+la migration n'est pas validee. Les commandes completes par environnement sont
+dans `docs/execution-docker.md`.
 
 ---
 
@@ -193,5 +221,3 @@ y compris via un service réseau, doit conserver le caractère libre et ouvert d
 
 L’objectif est de préserver l’intégrité conceptuelle du jeu et d’éviter toute
 appropriation fermée de ses mécanismes.
-
-

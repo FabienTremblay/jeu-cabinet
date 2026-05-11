@@ -151,12 +151,32 @@ Responsabilités :
 - gestion des tables
 - gestion des joueurs
 - persistance des sièges et statuts
+- publication de la configuration effective de lancement de partie
 
 Le lobby est volontairement séparé du noyau de jeu.
 
 ---
 
 ## flux principaux
+
+### 0. lancement de partie
+
+1. le lobby crée la partie depuis une table prête
+2. il publie `PartieLancee` avec les joueurs, la skin et, si présente, `politique_timeout_partie`
+3. `adapter-evenements` transforme cet événement en commande Kafka `partie.creer`
+4. `commande_moteur` transmet la configuration à `POST /parties`
+5. le moteur conserve la copie effective dans `Etat.configuration_partie`
+
+La politique de timeout effective est ensuite utilisée par `commande_moteur`
+pour surveiller l'inactivité. Si le délai configuré est dépassé, le worker
+produit une commande Kafka `partie.terminer` avec la raison
+`TIMEOUT_INACTIVITE`, le moteur applique la terminaison via la logique existante
+et publie l'événement domaine `cab.D600.partie.terminer` sur `cab.events`.
+`commande_moteur` consomme aussi cet événement pour synchroniser le lobby et
+marquer la table associée comme `terminee`.
+
+Le mécanisme détaillé est documenté dans
+`docs/architecture/timeout-parties.md`.
 
 ### 1. action joueur
 
@@ -212,4 +232,3 @@ Ces éléments pourront être ajoutés ultérieurement.
 - contrats : `contrats/`
 - règles BRE : `rules-service/.../README.md`
 - documents de conception : `Document/`
-

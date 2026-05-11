@@ -40,3 +40,10 @@ if [[ -f "${SCHEMA_FILE}" ]]; then
 else
   echo "WARN: fichier de schéma introuvable: ${SCHEMA_FILE}" >&2
 fi
+
+MIGRATIONS_SCRIPT="/opt/sql/apply-migrations.sh"
+if [[ -x "${MIGRATIONS_SCRIPT}" ]]; then
+  "${MIGRATIONS_SCRIPT}"
+else
+  echo "WARN: script de migrations introuvable ou non executable: ${MIGRATIONS_SCRIPT}" >&2
+fi

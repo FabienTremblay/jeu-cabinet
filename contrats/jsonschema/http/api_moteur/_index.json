@@ -2,10 +2,13 @@
   "service": "api_moteur",
   "source_openapi": "contrats/openapi/api_moteur.openapi.json",
   "schemas": [
+    "ConfigurationPartie",
+    "PolitiqueTimeoutPartie",
     "ReponseEtat",
     "RequeteAction",
     "RequeteJoueur",
-    "RequetePartie"
+    "RequetePartie",
+    "RequeteTerminerPartie"
   ],
   "common": [
     "HTTPValidationError",

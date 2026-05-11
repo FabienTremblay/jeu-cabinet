@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EvenementDomainePartieTerminer",
+  "description": "Enveloppe domaine publiée sur cab.events quand le moteur termine une partie.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "event_id": {
+      "type": "string"
+    },
+    "event_type": {
+      "const": "cab.D600.partie.terminer"
+    },
+    "event_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "occurred_at": {
+      "type": "string"
+    },
+    "aggregate_type": {
+      "const": "partie"
+    },
+    "aggregate_id": {
+      "type": "string"
+    },
+    "process_code": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "process_instance_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "op_family": {
+      "const": "D600"
+    },
+    "op_code": {
+      "const": "partie.terminer"
+    },
+    "category": {
+      "const": "DEROULEMENT"
+    },
+    "requires_action": {
+      "type": "boolean"
+    },
+    "recipients": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "severity": {
+      "type": "string"
+    },
+    "correlation_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "causation_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "source": {
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "op": {
+          "const": "partie.terminer"
+        },
+        "raison": {
+          "type": "string",
+          "description": "Pour un timeout d'inactivité, la valeur attendue est TIMEOUT_INACTIVITE."
+        }
+      },
+      "required": [
+        "op",
+        "raison"
+      ]
+    }
+  },
+  "required": [
+    "event_id",
+    "event_type",
+    "event_version",
+    "occurred_at",
+    "aggregate_type",
+    "aggregate_id",
+    "op_family",
+    "op_code",
+    "category",
+    "requires_action",
+    "recipients",
+    "severity",
+    "source",
+    "metadata",
+    "data"
+  ]
+}

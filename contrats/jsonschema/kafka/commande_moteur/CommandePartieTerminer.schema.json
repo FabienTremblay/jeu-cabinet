@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CommandePartieTerminer",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "table_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "commande": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "op": {
+          "const": "partie.terminer"
+        },
+        "id_partie": {
+          "type": "string"
+        },
+        "raison": {
+          "const": "TIMEOUT_INACTIVITE"
+        },
+        "idempotency_key": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "op",
+        "id_partie",
+        "raison",
+        "idempotency_key"
+      ]
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "source": {
+          "const": "commande_moteur.surveillance_inactivite"
+        },
+        "timestamp": {
+          "type": "string"
+        },
+        "idempotency_key": {
+          "type": "string"
+        },
+        "derniere_activite_at": {
+          "type": "string"
+        },
+        "delai_inactivite_secondes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "source",
+        "timestamp",
+        "idempotency_key",
+        "derniere_activite_at",
+        "delai_inactivite_secondes"
+      ]
+    }
+  },
+  "required": [
+    "table_id",
+    "commande",
+    "meta"
+  ]
+}

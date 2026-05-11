@@ -1,10 +1,14 @@
 # services/lobby/schemas.py
+# rôle        : définit les DTO HTTP du lobby
+# usage       : contrats d'entrée et de sortie FastAPI
+# contexte    : API joueurs, tables, sièges et reprise de partie
+# statut      : actif
 from __future__ import annotations
 
 from typing import Literal, List, Optional
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
-from .domaine import Table, StatutTable
+from .domaine import PolitiqueTimeoutPartie, StatutSession, Table, StatutTable
 
 
 # --- joueurs ---
@@ -29,6 +33,18 @@ class DemandeConnexion(BaseModel):
     mot_de_passe: str
 
 
+class ReponseContexteReprise(BaseModel):
+    """
+    Contexte minimal permettant au front de reprendre une partie si le joueur
+    est déjà impliqué dans une table active.
+    """
+    id_joueur: str
+    id_table: Optional[str] = None
+    id_partie: Optional[str] = None
+    statut_table: Optional[str] = None
+    skin_jeu: Optional[str] = None
+
+
 class ReponseConnexion(BaseModel):
     id_joueur: str
     nom: str
@@ -40,18 +56,14 @@ class ReponseConnexion(BaseModel):
     id_partie: Optional[str] = None
     statut_table: Optional[str] = None
     skin_jeu: Optional[str] = None
+    contexte_reprise: Optional[ReponseContexteReprise] = None
 
 
-class ReponseContexteReprise(BaseModel):
-    """
-    Contexte minimal permettant au front de reprendre une partie si le joueur
-    est déjà impliqué dans une table active.
-    """
+class ReponseHeartbeatSession(BaseModel):
+    id_session: str
     id_joueur: str
-    id_table: Optional[str] = None
-    id_partie: Optional[str] = None
-    statut_table: Optional[str] = None
-    skin_jeu: Optional[str] = None
+    statut: StatutSession
+    expire_le: float
 
 
 class JoueurPublic(BaseModel):
@@ -72,6 +84,16 @@ class DemandeCreationTable(BaseModel):
     skin_jeu: str | None = None
 
 
+class PolitiqueTimeoutPartieModifiable(BaseModel):
+    active: bool
+    delai_inactivite_secondes: int = Field(ge=60, le=86400)
+
+
+class DemandeConfigurationTable(BaseModel):
+    id_hote: str
+    politique_timeout_partie: PolitiqueTimeoutPartieModifiable
+
+
 class ReponseTable(BaseModel):
     id_table: str
     nom_table: str
@@ -79,6 +101,7 @@ class ReponseTable(BaseModel):
     id_hote: str
     statut: str
     skin_jeu: str | None = None
+    politique_timeout_partie: PolitiqueTimeoutPartie
 
     @classmethod
     def from_table(cls, table: Table) -> "ReponseTable":
@@ -91,6 +114,7 @@ class ReponseTable(BaseModel):
             id_hote=table.id_hote,
             statut=statut,
             skin_jeu=table.skin_jeu,
+            politique_timeout_partie=table.politique_timeout_partie,
         )
 
 
@@ -121,6 +145,10 @@ class DemandeJoueurPret(BaseModel):
 
 class DemandeLancerPartie(BaseModel):
     id_hote: str
+
+
+class DemandeTerminerPartie(BaseModel):
+    raison: Optional[str] = None
 
 
 class ReponsePartieLancee(BaseModel):
@@ -159,5 +187,3 @@ class SkinInfo(BaseModel):
 
 class ReponseListeSkins(BaseModel):
     skins: List[SkinInfo]
-
-

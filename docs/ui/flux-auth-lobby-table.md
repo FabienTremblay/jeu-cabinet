@@ -6,6 +6,7 @@ Sources de vérité contractuelles :
 - OpenAPI API Moteur : `contrats/openapi/api_moteur.openapi.json`
 - OpenAPI UI État Joueur : `contrats/openapi/ui_etat_joueur.openapi.json`
 - JSON Schema UI : `contrats/jsonschema/http/ui_etat_joueur/`
+- Contrats UI transverses : `docs/ui/contracts.md`
 
 ## 1. Introduction
 
@@ -27,7 +28,10 @@ Communication :
 UI → ui-état-joueur → moteur → ui-état-joueur → UI
 ```
 
-Le frontend ne déduit rien : il réagit à la situation renvoyée par ui-état-joueur.
+Le frontend utilise `ui-état-joueur.ancrage` comme source principale de
+navigation. Pour une reprise après refresh, retour d’aide, retour accueil/lobby
+ou projection UI absente/en retard, il peut utiliser le contexte persistant du
+lobby : `GET /api/joueurs/{id_joueur}/contexte`.
 
 ---
 
@@ -41,13 +45,13 @@ Après login :
 {
   "version": 1,
   "joueur_id": "J000001",
-  "ancrage": { "type": "libre" },
+  "ancrage": { "type": "lobby" },
   "etat_partie": null,
   "actions_disponibles": []
 }
 ```
 
-L’UI se base uniquement sur `ancrage.type === "lobby"` pour afficher l’écran Lobby.
+L’UI se base sur `ancrage.type === "lobby"` pour afficher l’écran Lobby.
 
 ---
 
@@ -78,7 +82,64 @@ Le champ table_id correspond à AncrageDTO.table_id.
 
 ## 4. Table → Pré-partie → Démarrage
 
-Dans l’écran de table, les joueurs marquent leur statut *Prêt*.
+Dans l’écran de table, les joueurs voient les joueurs présents, la politique de
+timeout de la table et marquent leur statut *Prêt*.
+
+### 4.1. Configuration du timeout avant lancement
+
+Le bloc timeout est affiché avant le lancement de la partie.
+
+Visibilité :
+
+- l'hôte voit la politique et les contrôles d'édition ;
+- les invités voient la politique, mais ne peuvent pas la modifier.
+
+Règles UI :
+
+- l'UI affiche le délai en minutes/heures compréhensibles ;
+- l'API lobby reste exprimée en secondes ;
+- lors de la sauvegarde, l'UI convertit vers `delai_inactivite_secondes` ;
+- l'UI n'expose pas le champ `version` en édition ;
+- l'édition est désactivée si la table n'est plus `ouverte` ou
+  `en_preparation`.
+- le polling de la table reste actif, mais ne doit pas réafficher l'écran
+  `Loading` après le chargement initial ;
+- une erreur temporaire de rafraîchissement conserve la dernière table connue,
+  afin de ne pas masquer le bloc timeout ;
+- pendant que l'hôte édite le formulaire timeout, le polling ne doit pas
+  écraser les valeurs locales ni faire perdre le focus.
+
+Le lien d'aide du bloc timeout pointe vers :
+
+```text
+/aide?retour=/tables/{id_table}#timeout-partie
+```
+
+Le bouton de retour de l'aide revient alors à la table d'origine.
+
+Endpoint utilisé :
+
+```http
+PATCH /api/tables/{id_table}/configuration
+```
+
+Payload :
+
+```json
+{
+  "id_hote": "J000001",
+  "politique_timeout_partie": {
+    "active": true,
+    "delai_inactivite_secondes": 3600
+  }
+}
+```
+
+Le réglage s'applique au lancement : le lobby copie la politique effective dans
+`PartieLancee`, puis la partie conserve sa propre configuration. Après le
+lancement, la configuration de table est verrouillée côté lobby.
+
+### 4.2. Préparation et lancement
 
 Exemple :
 
@@ -225,6 +286,17 @@ La navigation est *réactive* :
 
 Cela évite la boucle vers la page de victoire.
 
+En reprise de session, l'UI résout d'abord la destination depuis
+`ui-état-joueur.ancrage`. Si l'ancrage ne fournit pas de table ou partie
+exploitable, elle consulte le contexte lobby. Une partie `TERMINEE` dans
+`ui-état-joueur` n'est pas une destination exploitable : elle interdit la
+reprojection vers l'ancienne partie, mais ne bloque pas la consultation du
+contexte lobby.
+
+- `ouverte` ou `en_preparation` avec `id_table` → `/tables/{id_table}` ;
+- `en_cours` avec `id_partie` → `/parties/{id_partie}` ;
+- contexte vide ou table terminée → `/lobby`.
+
 ---
 
 ## 8. Fin de partie
@@ -256,7 +328,10 @@ UI fait :
 navigate("/lobby")
 ```
 
-Le polling *ne rebascule plus* vers la partie.
+Pour une partie terminée, le polling ne rebascule plus vers la partie. En
+revanche, “retour au lobby” ne signifie pas rester au lobby si le joueur est
+encore attaché côté lobby à une table ou partie active : la reprise de contexte
+peut alors reprojeter automatiquement vers la destination active.
 
 ---
 
@@ -278,6 +353,26 @@ Le service renvoie la situation exacte :
 ### 9.2. Déconnexion — aucun impact moteur
 
 La partie continue sans lui.
+
+La session lobby est jetable. Si le joueur cesse d’envoyer des heartbeats,
+sa session passe à `expiree` et les appels protégés doivent être refusés.
+Cette expiration ne retire pas le joueur de sa table : le siège reste lié à
+`id_joueur`. Après reconnexion, le lobby renvoie le contexte de reprise pour
+retourner à la table ou à la partie active si elle existe encore.
+
+---
+
+## Reprise après expiration de session
+
+À la connexion, le front reçoit `jeton_session` et le conserve pour les appels
+protégés. Il envoie automatiquement un heartbeat périodique au lobby.
+
+Si la session expire, le front force la reconnexion. Après reconnexion,
+`contexte_reprise` peut rediriger le joueur vers sa table ou sa partie active.
+Le siège reste réservé côté lobby tant que la table existe.
+
+Règle d’or : Une session expirée invalide l’accès technique, mais ne détruit
+pas le contexte métier du joueur.
 
 ---
 
@@ -326,4 +421,3 @@ Ce flux est la spécification officielle pour :
 - le développement d’extensions (mobile, TUI, multi-plateforme).
 
 Ce document doit être utilisé comme référence centrale pour toute évolution du jeu Cabinet.
-

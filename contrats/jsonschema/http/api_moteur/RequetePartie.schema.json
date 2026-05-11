@@ -44,6 +44,9 @@
       "title": "Skin Jeu",
       "default": "minimal"
     },
+    "configuration_partie": {
+      "$ref": "./ConfigurationPartie.schema.json"
+    },
     "options": {
       "additionalProperties": true,
       "type": "object",

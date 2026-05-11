@@ -31,6 +31,9 @@
         }
       ],
       "title": "Skin Jeu"
+    },
+    "politique_timeout_partie": {
+      "$ref": "./PolitiqueTimeoutPartie.schema.json"
     }
   },
   "type": "object",
@@ -39,7 +42,8 @@
     "nom_table",
     "nb_sieges",
     "id_hote",
-    "statut"
+    "statut",
+    "politique_timeout_partie"
   ],
   "title": "ReponseTable"
 }
