@@ -1,15 +1,7 @@
-# Socle commun applicatif.
-# Les ports hote, domaines publics/LAN et routes Traefik d'environnement
-# sont declares dans les overlays docker-compose.*.yml.
-# TODO production: pinner toutes les images avant gel d'environnement.
-
-x-stack-labels: &stack-labels
-  - "cabinet.stack=${STACK_ID}"
-
 services:
   traefik:
-    restart: unless-stopped
     image: traefik:3.5.4
+    restart: unless-stopped
     user: "0:134"
     command:
       - "--providers.docker=true"
@@ -30,11 +22,12 @@ services:
       interval: 10s
       timeout: 3s
       retries: 10
-    labels: *stack-labels
+    labels:
+      cabinet.stack: "${STACK_ID}"
 
   postgres:
-    restart: unless-stopped
     image: postgres:16
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -54,11 +47,12 @@ services:
       interval: 10s
       timeout: 3s
       retries: 10
-    labels: *stack-labels
+    labels:
+      cabinet.stack: "${STACK_ID}"
 
   kafka:
-    restart: unless-stopped
     image: confluentinc/cp-kafka:7.6.1
+    restart: unless-stopped
     environment:
       KAFKA_PROCESS_ROLES: "broker,controller"
       KAFKA_NODE_ID: "${KAFKA_BROKER_ID}"
@@ -74,7 +68,8 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "${KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR}"
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "${KAFKA_TRANSACTION_STATE_LOG_MIN_ISR}"
       KAFKA_LOG_DIRS: "/var/lib/kafka/data"
-    networks: [stack]
+    networks:
+      - stack
     volumes:
       - kafka_data:/var/lib/kafka
     healthcheck:
@@ -82,11 +77,30 @@ services:
       interval: 10s
       timeout: 5s
       retries: 20
-    labels: *stack-labels
+    labels:
+      cabinet.stack: "${STACK_ID}"
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.6.1
+    restart: "no"
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["sleep 10 && /scripts/bootstrap-topics.sh"]
+    environment:
+      BOOTSTRAP: kafka:9092
+      TOPICS: ${TOPICS}
+    networks:
+      - stack
+    volumes:
+      - ./scripts/bootstrap-topics.sh:/scripts/bootstrap-topics.sh:ro
+    depends_on:
+      kafka:
+        condition: service_healthy
+    labels:
+      cabinet.stack: "${STACK_ID}"
 
   kafka-ui:
-    restart: unless-stopped
     image: provectuslabs/kafka-ui:latest
+    restart: unless-stopped
     environment:
       KAFKA_CLUSTERS_0_NAME: cabinet
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
@@ -101,11 +115,12 @@ services:
       interval: 10s
       timeout: 3s
       retries: 10
-    labels: *stack-labels
+    labels:
+      cabinet.stack: "${STACK_ID}"
 
   apicurio-registry:
-    restart: unless-stopped
     image: apicurio/apicurio-registry-kafkasql:2.6.13.Final
+    restart: unless-stopped
     environment:
       REGISTRY_LOG_LEVEL: ${REGISTRY_LOG_LEVEL:-INFO}
       REGISTRY_STORAGE: kafkasql
@@ -113,6 +128,8 @@ services:
       REGISTRY_KAFKASQL_TOPIC: apicurio-registry-storage
       QUARKUS_HTTP_ACCESS_LOG_ENABLED: "true"
       QUARKUS_HTTP_PORT: 8080
+    networks:
+      - stack
     depends_on:
       kafka:
         condition: service_healthy
@@ -122,8 +139,8 @@ services:
       timeout: 3s
       retries: 20
       start_period: 20s
-    networks: [stack]
-    labels: *stack-labels
+    labels:
+      cabinet.stack: "${STACK_ID}"
 
   rules-service:
     restart: unless-stopped
@@ -134,7 +151,8 @@ services:
       QUARKUS_HTTP_HOST: "0.0.0.0"
       QUARKUS_HTTP_PORT: 8081
       CAB_RULES_ENGINE: "v1"
-    networks: [stack]
+    networks:
+      - stack
     depends_on:
       kafka:
         condition: service_healthy
@@ -143,7 +161,8 @@ services:
       interval: 10s
       timeout: 3s
       retries: 15
-    labels: *stack-labels
+    labels:
+      cabinet.stack: "${STACK_ID}"
 
   api-moteur:
     restart: unless-stopped
@@ -151,24 +170,28 @@ services:
       context: .
       dockerfile: services/api_moteur/Dockerfile
     depends_on:
-      - kafka
-      - apicurio-registry
-      - rules-service
+      kafka:
+        condition: service_started
+      apicurio-registry:
+        condition: service_started
+      rules-service:
+        condition: service_started
     environment:
       TOPIC_EVENEMENTS: cab.events
-      CAB_RULES_BRE_URL: http://rules-service:8081
+      CAB_RULES_BRE_URL: ${CAB_RULES_BRE_URL:-http://rules-service:8081}
       KAFKA_BOOTSTRAP: kafka:9092
       DISABLE_KAFKA: 0
       APICURIO_URL: http://apicurio-registry:8080
-      CORS_ORIGINS: "${CORS_ORIGINS}"
+      CORS_ORIGINS: ${CORS_ORIGINS}
+    networks:
+      - stack
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:8080/health').read())"]
       interval: 10s
       timeout: 3s
       retries: 10
-    networks:
-      - stack
-    labels: *stack-labels
+    labels:
+      cabinet.stack: "${STACK_ID}"
 
   lobby:
     restart: unless-stopped
@@ -181,19 +204,22 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      - LOBBY_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-      - LOBBY_NOM_SERVICE=lobby
-      - LOBBY_KAFKA_TOPIC_EVENEMENTS_JOUEURS=cabinet.joueurs.evenements
-      - LOBBY_KAFKA_TOPIC_EVENEMENTS_TABLES=cabinet.tables.evenements
-      - LOBBY_KAFKA_TOPIC_EVENEMENTS_PARTIES=cabinet.parties.evenements
-      - CORS_ORIGINS=${CORS_ORIGINS}
-      - LOBBY_PERSISTENCE_BACKEND=${LOBBY_PERSISTENCE_BACKEND:-postgres}
-      - LOBBY_POSTGRES_DSN=${LOBBY_POSTGRES_DSN:-postgresql://${JEU_DB_USER}:${JEU_DB_PASSWORD}@postgres:5432/${JEU_DB}}
-      - LOBBY_ID_MODE=${LOBBY_ID_MODE:-uuid}
-      - LOBBY_KAFKA_ACTIF=${LOBBY_KAFKA_ACTIF:-true}
+      LOBBY_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      LOBBY_NOM_SERVICE: lobby
+      LOBBY_KAFKA_TOPIC_EVENEMENTS_JOUEURS: cabinet.joueurs.evenements
+      LOBBY_KAFKA_TOPIC_EVENEMENTS_TABLES: cabinet.tables.evenements
+      LOBBY_KAFKA_TOPIC_EVENEMENTS_PARTIES: cabinet.parties.evenements
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      LOBBY_PERSISTENCE_BACKEND: ${LOBBY_PERSISTENCE_BACKEND:-postgres}
+      LOBBY_POSTGRES_DSN: ${LOBBY_POSTGRES_DSN:-postgresql://${JEU_DB_USER}:${JEU_DB_PASSWORD}@postgres:5432/${JEU_DB}}
+      LOBBY_ID_MODE: ${LOBBY_ID_MODE:-uuid}
+      LOBBY_KAFKA_ACTIF: ${LOBBY_KAFKA_ACTIF:-true}
+      LOBBY_TIMEOUT_PARTIE_ACTIF: ${LOBBY_TIMEOUT_PARTIE_ACTIF:-true}
+      LOBBY_TIMEOUT_PARTIE_DELAI_INACTIVITE_SECONDES: ${LOBBY_TIMEOUT_PARTIE_DELAI_INACTIVITE_SECONDES:-3600}
     networks:
       - stack
-    labels: *stack-labels
+    labels:
+      cabinet.stack: "${STACK_ID}"
 
   moteur-commands:
     restart: unless-stopped
@@ -201,52 +227,38 @@ services:
       context: .
       dockerfile: services/commande_moteur/Dockerfile
     depends_on:
-      kafka:
-        condition: service_healthy
       api-moteur:
         condition: service_started
+      kafka:
+        condition: service_healthy
     environment:
+      API_MOTEUR_URL: http://api-moteur:8080
       KAFKA_BOOTSTRAP: kafka:9092
+      KAFKA_GROUP_ID: cabinet-moteur-commands
       KAFKA_TOPIC_COMMANDS: cab.commands
       KAFKA_TOPIC_EVENTS: cab.events
-      KAFKA_GROUP_ID: cabinet-moteur-commands
-      API_MOTEUR_URL: http://api-moteur:8080
     networks:
       - stack
-    labels: *stack-labels
+    labels:
+      cabinet.stack: "${STACK_ID}"
 
   adapter-evenements:
     restart: unless-stopped
-    build: ./services/adapter-evenements
-    environment:
-      - ADAPTER_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-      - ADAPTER_TOPIC_ENTREE=cabinet.parties.evenements
-      - ADAPTER_TOPIC_SORTIE=cab.commands
-      - ADAPTER_CONSUMER_GROUP=adapter-evenements
-    networks:
-      - stack
+    build:
+      context: ./services/adapter-evenements
+      dockerfile: Dockerfile
     depends_on:
       kafka:
         condition: service_healthy
-    labels: *stack-labels
-
-  kafka-init:
-    image: confluentinc/cp-kafka:7.6.1
-    depends_on:
-      kafka:
-        condition: service_healthy
-    entrypoint: ["/bin/sh", "-c"]
-    command: >
-      "sleep 10 &&
-      /scripts/bootstrap-topics.sh"
     environment:
-      BOOTSTRAP: kafka:9092
-    volumes:
-      - ./scripts/bootstrap-topics.sh:/scripts/bootstrap-topics.sh:ro
+      ADAPTER_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      ADAPTER_CONSUMER_GROUP: adapter-evenements
+      ADAPTER_TOPIC_ENTREE: cabinet.parties.evenements
+      ADAPTER_TOPIC_SORTIE: cab.commands
     networks:
       - stack
-    restart: "no"
-    labels: *stack-labels
+    labels:
+      cabinet.stack: "${STACK_ID}"
 
   ui-etat-joueur:
     restart: unless-stopped
@@ -257,12 +269,12 @@ services:
       kafka:
         condition: service_healthy
     environment:
-      - UI_ETAT_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-      - UI_ETAT_KAFKA_GROUP_ID=cabinet-ui-etat-v1
-      - UI_ETAT_TOPIC_EVENEMENTS_MOTEUR=cab.events
-      - UI_ETAT_TOPICS_LOBBY=cabinet.joueurs.evenements,cabinet.tables.evenements,cabinet.parties.evenements
-      - UI_ETAT_HTTP_PORT=8080
-      - CORS_ORIGINS=${CORS_ORIGINS}
+      UI_ETAT_HTTP_PORT: 8080
+      UI_ETAT_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      UI_ETAT_KAFKA_GROUP_ID: cabinet-ui-etat-v1
+      UI_ETAT_TOPIC_EVENEMENTS_MOTEUR: cab.events
+      UI_ETAT_TOPICS_LOBBY: cabinet.joueurs.evenements,cabinet.tables.evenements,cabinet.parties.evenements
+      CORS_ORIGINS: ${CORS_ORIGINS}
     networks:
       - stack
     healthcheck:
@@ -270,7 +282,8 @@ services:
       interval: 10s
       timeout: 3s
       retries: 10
-    labels: *stack-labels
+    labels:
+      cabinet.stack: "${STACK_ID}"
 
   ui-web:
     restart: unless-stopped
@@ -278,12 +291,16 @@ services:
       context: .
       dockerfile: services/ui-web/Dockerfile
     depends_on:
-      - api-moteur
-      - lobby
-      - ui-etat-joueur
+      api-moteur:
+        condition: service_started
+      lobby:
+        condition: service_started
+      ui-etat-joueur:
+        condition: service_started
     networks:
       - stack
-    labels: *stack-labels
+    labels:
+      cabinet.stack: "${STACK_ID}"
 
 networks:
   stack:

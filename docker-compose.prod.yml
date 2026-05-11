@@ -1,4 +1,4 @@
-# Production publique future.
+# Production publique MaisonNeuve.
 # Exposition stricte: Traefik seulement, pas de ports directs infrastructure.
 
 services:
@@ -22,7 +22,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=${STACK_NETWORK}"
-      - "traefik.http.routers.${STACK_ID}-api-moteur.rule=Host(`${PUBLIC_HOST}`) && PathPrefix(`/api/moteur`)"
+      - "traefik.http.routers.${STACK_ID}-api-moteur.rule=(${PUBLIC_HOSTS_RULE}) && PathPrefix(`/api/moteur`)"
       - "traefik.http.routers.${STACK_ID}-api-moteur.entrypoints=websecure"
       - "traefik.http.routers.${STACK_ID}-api-moteur.tls=true"
       - "traefik.http.routers.${STACK_ID}-api-moteur.priority=55"
@@ -35,7 +35,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=${STACK_NETWORK}"
-      - "traefik.http.routers.${STACK_ID}-lobby.rule=Host(`${PUBLIC_HOST}`) && PathPrefix(`/api/lobby`)"
+      - "traefik.http.routers.${STACK_ID}-lobby.rule=(${PUBLIC_HOSTS_RULE}) && PathPrefix(`/api/lobby`)"
       - "traefik.http.routers.${STACK_ID}-lobby.entrypoints=websecure"
       - "traefik.http.routers.${STACK_ID}-lobby.tls=true"
       - "traefik.http.routers.${STACK_ID}-lobby.priority=60"
@@ -48,7 +48,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=${STACK_NETWORK}"
-      - "traefik.http.routers.${STACK_ID}-ui-etat.rule=Host(`${PUBLIC_HOST}`) && PathPrefix(`/api/ui-etat`)"
+      - "traefik.http.routers.${STACK_ID}-ui-etat.rule=(${PUBLIC_HOSTS_RULE}) && PathPrefix(`/api/ui-etat`)"
       - "traefik.http.routers.${STACK_ID}-ui-etat.entrypoints=websecure"
       - "traefik.http.routers.${STACK_ID}-ui-etat.tls=true"
       - "traefik.http.routers.${STACK_ID}-ui-etat.priority=55"
@@ -61,8 +61,9 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=${STACK_NETWORK}"
-      - "traefik.http.routers.${STACK_ID}-ui-web.rule=Host(`${PUBLIC_HOST}`) && PathPrefix(`/`) && !PathPrefix(`/api`)"
+      - "traefik.http.routers.${STACK_ID}-ui-web.rule=(${PUBLIC_HOSTS_RULE}) && PathPrefix(`/`) && !PathPrefix(`/api`)"
       - "traefik.http.routers.${STACK_ID}-ui-web.entrypoints=websecure"
       - "traefik.http.routers.${STACK_ID}-ui-web.tls=true"
+      - "traefik.http.routers.${STACK_ID}-ui-web.priority=10"
       - "traefik.http.routers.${STACK_ID}-ui-web.service=${STACK_ID}-ui-web"
       - "traefik.http.services.${STACK_ID}-ui-web.loadbalancer.server.port=80"
