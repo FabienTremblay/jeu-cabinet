@@ -5,8 +5,8 @@ from functools import lru_cache
 import logging
 
 from .ids import GenerateurIds
-from .repositories import JoueurRepository, TableRepository
-from .repositories_sql import Db, JoueurRepositorySQL, TableRepositorySQL
+from .repositories import JoueurRepository, SessionRepository, TableRepository
+from .repositories_sql import Db, JoueurRepositorySQL, SessionRepositorySQL, TableRepositorySQL
 from .kafka_producteur import (
     ProducteurEvenements,
     ProducteurEvenementsLog,
@@ -50,6 +50,16 @@ def get_table_repository():
 
 
 @lru_cache
+def get_session_repository():
+    backend = (settings.persistence_backend or "memory").lower().strip()
+    if backend == "postgres":
+        return SessionRepositorySQL(db=get_db())
+    if backend == "memory":
+        return SessionRepository()
+    raise ValueError(f"persistence_backend_invalide: {settings.persistence_backend}")
+
+
+@lru_cache
 def get_producteur_evenements() -> ProducteurEvenements:
     """
     Retourne un producteur Kafka si disponible.
@@ -78,5 +88,6 @@ def get_service_lobby():
         settings=settings,
         joueurs=get_joueur_repository(),
         tables=get_table_repository(),
+        sessions=get_session_repository(),
         producteur=get_producteur_evenements(),
     )

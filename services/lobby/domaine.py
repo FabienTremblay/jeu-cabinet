@@ -19,12 +19,22 @@ class Joueur(BaseModel):
     mot_de_passe_hache: str
 
 
+class StatutSession(str, Enum):
+    """Statut de présence d'une session joueur jetable."""
+
+    ACTIVE = "active"
+    ABSENTE = "absente"
+    EXPIREE = "expiree"
+
+
 class SessionJoueur(BaseModel):
     """Session d'un joueur connecté au lobby."""
 
+    id_session: str
     id_joueur: str
-    jeton_session: str
-    expire_le: float  # timestamp epoch pour garder simple ici
+    statut: StatutSession = StatutSession.ACTIVE
+    dernier_heartbeat: float
+    expire_le: float
 
 
 class StatutTable(str, Enum):

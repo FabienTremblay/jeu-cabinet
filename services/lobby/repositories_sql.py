@@ -11,7 +11,7 @@ from typing import Iterable, Optional, Literal
 
 import psycopg
 
-from .domaine import Joueur, PolitiqueTimeoutPartie, Table, StatutTable
+from .domaine import Joueur, PolitiqueTimeoutPartie, SessionJoueur, StatutSession, Table, StatutTable
 from .ids import GenerateurIds
 
 
@@ -154,6 +154,123 @@ class JoueurRepositorySQL:
                     courriel=row[3],
                     mot_de_passe_hache=row[4],
                 )
+
+
+class SessionRepositorySQL:
+    def __init__(self, db: Db) -> None:
+        self._db = db
+
+    def ajouter(self, session: SessionJoueur) -> None:
+        self.sauvegarder(session)
+
+    def sauvegarder(self, session: SessionJoueur) -> None:
+        with self._db.connect() as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                insert into lobby_sessions(
+                  id_session,
+                  id_joueur,
+                  statut,
+                  dernier_heartbeat,
+                  expire_le
+                )
+                values (%s, %s, %s, to_timestamp(%s), to_timestamp(%s))
+                on conflict (id_session) do update set
+                  id_joueur = excluded.id_joueur,
+                  statut = excluded.statut,
+                  dernier_heartbeat = excluded.dernier_heartbeat,
+                  expire_le = excluded.expire_le,
+                  maj_le = now()
+                """,
+                (
+                    session.id_session,
+                    session.id_joueur,
+                    session.statut.value if hasattr(session.statut, "value") else str(session.statut),
+                    session.dernier_heartbeat,
+                    session.expire_le,
+                ),
+            )
+            conn.commit()
+
+    def trouver_par_id(self, id_session: str) -> Optional[SessionJoueur]:
+        with self._db.connect() as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                select id_session, id_joueur, statut,
+                       extract(epoch from dernier_heartbeat),
+                       extract(epoch from expire_le)
+                from lobby_sessions
+                where id_session = %s
+                """,
+                (id_session,),
+            )
+            row = cur.fetchone()
+            if not row:
+                return None
+            return SessionJoueur(
+                id_session=row[0],
+                id_joueur=row[1],
+                statut=StatutSession(row[2]),
+                dernier_heartbeat=float(row[3]),
+                expire_le=float(row[4]),
+            )
+
+    def trouver_active_par_joueur(self, id_joueur: str) -> Optional[SessionJoueur]:
+        with self._db.connect() as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                select id_session
+                from lobby_sessions
+                where id_joueur = %s
+                  and statut = any(%s)
+                order by cree_le desc
+                limit 1
+                """,
+                (id_joueur, [StatutSession.ACTIVE.value, StatutSession.ABSENTE.value]),
+            )
+            row = cur.fetchone()
+            if not row:
+                return None
+            return self.trouver_par_id(row[0])
+
+    def invalider_sessions_remplacables(self, id_joueur: str) -> None:
+        with self._db.connect() as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                update lobby_sessions
+                set statut = %s,
+                    maj_le = now()
+                where id_joueur = %s
+                  and statut = any(%s)
+                """,
+                (
+                    StatutSession.EXPIREE.value,
+                    id_joueur,
+                    [StatutSession.ACTIVE.value, StatutSession.ABSENTE.value],
+                ),
+            )
+            conn.commit()
+
+    def lister(self) -> Iterable[SessionJoueur]:
+        with self._db.connect() as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                select id_session, id_joueur, statut,
+                       extract(epoch from dernier_heartbeat),
+                       extract(epoch from expire_le)
+                from lobby_sessions
+                order by cree_le asc
+                """
+            )
+            rows = cur.fetchall()
+        for row in rows:
+            yield SessionJoueur(
+                id_session=row[0],
+                id_joueur=row[1],
+                statut=StatutSession(row[2]),
+                dernier_heartbeat=float(row[3]),
+                expire_le=float(row[4]),
+            )
 
 
 class TableRepositorySQL:

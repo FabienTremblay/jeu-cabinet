@@ -34,6 +34,29 @@ Le frontend est réactif :
 
 Le moteur et les règles restent propriétaires de la logique métier.
 
+## 2.1. Session Joueur
+
+La connexion lobby crée une session jetable :
+
+```http
+POST /api/sessions
+```
+
+La réponse contient `jeton_session`, utilisé comme identifiant de session côté UI.
+La connexion peut aussi renvoyer `contexte_reprise` si le joueur est déjà lié à
+une table ou une partie active.
+
+L’UI maintient la présence par heartbeat périodique :
+
+```http
+POST /api/sessions/{id_session}/heartbeat
+```
+
+Une session peut être `active`, `absente` ou `expiree`. Si le heartbeat ou un
+appel protégé reçoit une erreur d’authentification de session, l’UI doit oublier
+la session locale et forcer une reconnexion. L’expiration de session ne libère
+pas le siège : la table reste liée à `id_joueur`, jamais à `id_session`.
+
 ## 3. Situation Joueur
 
 L’UI consomme principalement :

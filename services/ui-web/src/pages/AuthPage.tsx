@@ -5,7 +5,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Button from "../components/shared/Button";
 import { inscription, connexion } from "../api/lobbyApi";
 import { useSession } from "../context/SessionContext";
-import { resoudreDestinationJoueur } from "../utils/navigationJoueur";
+import {
+  destinationDepuisContexteLobby,
+  resoudreDestinationJoueur,
+} from "../utils/navigationJoueur";
 
 const AuthPage: React.FC = () => {
   const location = useLocation();
@@ -51,9 +54,13 @@ const AuthPage: React.FC = () => {
 
       if (mode === "signup") {
         // --- Création d’un nouveau joueur ---
-        joueur = await inscription({
+        await inscription({
           nom,
           alias,
+          courriel,
+          mot_de_passe: motDePasse,
+        });
+        joueur = await connexion({
           courriel,
           mot_de_passe: motDePasse,
         });
@@ -68,7 +75,13 @@ const AuthPage: React.FC = () => {
       // 1) On mémorise la session côté front (dans sessionStorage via le contexte)
       setJoueur(joueur);
 
-      const destination = await resoudreDestinationJoueur(joueur.id_joueur);
+      const destinationConnexion = joueur.contexte_reprise
+        ? destinationDepuisContexteLobby(joueur.contexte_reprise)
+        : null;
+      const destination =
+        destinationConnexion && destinationConnexion !== "/lobby"
+          ? destinationConnexion
+          : await resoudreDestinationJoueur(joueur.id_joueur);
       navigate(destination);
 
     } catch (err) {

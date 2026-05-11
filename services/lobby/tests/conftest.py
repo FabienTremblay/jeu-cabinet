@@ -11,7 +11,7 @@ import httpx
 import pytest
 
 from services.lobby.settings import Settings
-from services.lobby.repositories import JoueurRepository, TableRepository
+from services.lobby.repositories import JoueurRepository, SessionRepository, TableRepository
 from services.lobby.services_lobby import ServiceLobby
 from services.lobby.kafka_producteur import ProducteurEvenements
 from services.lobby.events import Evenement
@@ -71,6 +71,11 @@ def table_repo() -> TableRepository:
 
 
 @pytest.fixture
+def session_repo() -> SessionRepository:
+    return SessionRepository()
+
+
+@pytest.fixture
 def producteur() -> ProducteurEvenementsMemoire:
     return ProducteurEvenementsMemoire()
 
@@ -80,12 +85,14 @@ def service_lobby(
     settings: Settings,
     joueur_repo: JoueurRepository,
     table_repo: TableRepository,
+    session_repo: SessionRepository,
     producteur: ProducteurEvenementsMemoire,
 ) -> ServiceLobby:
     return ServiceLobby(
         settings=settings,
         joueurs=joueur_repo,
         tables=table_repo,
+        sessions=session_repo,
         producteur=producteur,
     )
 

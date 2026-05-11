@@ -17,6 +17,7 @@ export interface ReponseConnexion {
   id_partie?: string | null;
   statut_table?: string | null;
   skin_jeu?: string | null;
+  contexte_reprise?: ReponseContexteReprise | null;
 }
 
 // Ce qu'on garde en session côté front
@@ -26,6 +27,7 @@ export interface JoueurSession {
   alias: string;
   courriel: string;
   jeton_session?: string; // présent après connexion
+  contexte_reprise?: ReponseContexteReprise | null;
 }
 
 export interface ReponseJoueur {
@@ -103,4 +105,11 @@ export interface ReponseContexteReprise {
   id_partie?: string | null;
   statut_table?: string | null;
   skin_jeu?: string | null;
+}
+
+export interface ReponseHeartbeatSession {
+  id_session: string;
+  id_joueur: string;
+  statut: "active" | "absente" | "expiree";
+  expire_le: number;
 }

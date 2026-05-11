@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import Literal, List, Optional
 from pydantic import BaseModel, EmailStr, Field
 
-from .domaine import PolitiqueTimeoutPartie, Table, StatutTable
+from .domaine import PolitiqueTimeoutPartie, StatutSession, Table, StatutTable
 
 
 # --- joueurs ---
@@ -33,6 +33,18 @@ class DemandeConnexion(BaseModel):
     mot_de_passe: str
 
 
+class ReponseContexteReprise(BaseModel):
+    """
+    Contexte minimal permettant au front de reprendre une partie si le joueur
+    est déjà impliqué dans une table active.
+    """
+    id_joueur: str
+    id_table: Optional[str] = None
+    id_partie: Optional[str] = None
+    statut_table: Optional[str] = None
+    skin_jeu: Optional[str] = None
+
+
 class ReponseConnexion(BaseModel):
     id_joueur: str
     nom: str
@@ -44,18 +56,14 @@ class ReponseConnexion(BaseModel):
     id_partie: Optional[str] = None
     statut_table: Optional[str] = None
     skin_jeu: Optional[str] = None
+    contexte_reprise: Optional[ReponseContexteReprise] = None
 
 
-class ReponseContexteReprise(BaseModel):
-    """
-    Contexte minimal permettant au front de reprendre une partie si le joueur
-    est déjà impliqué dans une table active.
-    """
+class ReponseHeartbeatSession(BaseModel):
+    id_session: str
     id_joueur: str
-    id_table: Optional[str] = None
-    id_partie: Optional[str] = None
-    statut_table: Optional[str] = None
-    skin_jeu: Optional[str] = None
+    statut: StatutSession
+    expire_le: float
 
 
 class JoueurPublic(BaseModel):

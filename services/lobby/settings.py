@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     timeout_partie_actif: bool = True
     timeout_partie_delai_inactivite_secondes: int = 3600
 
+    # présence/session joueur côté lobby.
+    session_absence_secondes: int = 30
+    session_expiration_secondes: int = 90
+
     # persistance
     # - memory : comportement actuel (tests/essais rapides)
     # - postgres : persistance durable

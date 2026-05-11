@@ -15,7 +15,7 @@ from services.lobby.schemas import (
     DemandeConfigurationTable,
     DemandePriseSiege,
 )
-from services.lobby.domaine import StatutTable
+from services.lobby.domaine import StatutSession, StatutTable
 from services.lobby.events import (
     EvenementJoueurCree,
     EvenementJoueurIntroduit,
@@ -65,6 +65,97 @@ def test_inscription_et_connexion_produisent_evenements(
         assert EvenementJoueurCree in types
         assert EvenementJoueurIntroduit in types
         assert EvenementJoueurConnecte in types
+
+    asyncio.run(scenario())
+
+
+def test_connexion_remplace_session_active_et_expiration_ne_retire_pas_le_siege(
+    joueur_repo,
+    table_repo,
+    session_repo,
+    producteur: ProducteurEvenements,
+):
+    service = ServiceLobby(
+        settings=Settings(
+            session_absence_secondes=5,
+            session_expiration_secondes=10,
+        ),
+        joueurs=joueur_repo,
+        tables=table_repo,
+        sessions=session_repo,
+        producteur=producteur,
+    )
+
+    async def scenario():
+        joueur = await service.inscrire_joueur(
+            DemandeInscription(
+                nom="Joueur Session",
+                alias="JS",
+                courriel="session@example.com",
+                mot_de_passe="secret",
+            )
+        )
+        connexion1 = await service.connecter_joueur(
+            DemandeConnexion(courriel="session@example.com", mot_de_passe="secret")
+        )
+        await service.creer_table(
+            DemandeCreationTable(
+                id_hote=joueur.id_joueur,
+                nom_table="Table session",
+                nb_sieges=2,
+            )
+        )
+
+        ancienne = session_repo.trouver_par_id(connexion1.jeton_session)
+        assert ancienne is not None
+        assert ancienne.statut == StatutSession.ACTIVE
+
+        connexion2 = await service.connecter_joueur(
+            DemandeConnexion(courriel="session@example.com", mot_de_passe="secret")
+        )
+        ancienne = session_repo.trouver_par_id(connexion1.jeton_session)
+        nouvelle = session_repo.trouver_par_id(connexion2.jeton_session)
+        assert ancienne is not None
+        assert ancienne.statut == StatutSession.EXPIREE
+        assert nouvelle is not None
+        assert nouvelle.statut == StatutSession.ACTIVE
+        assert connexion2.contexte_reprise is not None
+        assert connexion2.contexte_reprise.id_table is not None
+
+        service.expirer_sessions_inactives(maintenant=nouvelle.expire_le + 1)
+        nouvelle = session_repo.trouver_par_id(connexion2.jeton_session)
+        assert nouvelle is not None
+        assert nouvelle.statut == StatutSession.EXPIREE
+
+        table = table_repo.trouver_table_active_du_joueur(joueur.id_joueur)
+        assert table is not None
+        assert table.id_hote == joueur.id_joueur
+
+    asyncio.run(scenario())
+
+
+def test_heartbeat_reactive_session_absente(service_lobby: ServiceLobby, session_repo):
+    async def scenario():
+        await service_lobby.inscrire_joueur(
+            DemandeInscription(
+                nom="Joueur Heartbeat",
+                alias="HB",
+                courriel="heartbeat@example.com",
+                mot_de_passe="secret",
+            )
+        )
+        connexion = await service_lobby.connecter_joueur(
+            DemandeConnexion(courriel="heartbeat@example.com", mot_de_passe="secret")
+        )
+        session = session_repo.trouver_par_id(connexion.jeton_session)
+        assert session is not None
+        session.statut = StatutSession.ABSENTE
+        session_repo.sauvegarder(session)
+
+        reponse = await service_lobby.heartbeat_session(connexion.jeton_session)
+
+        assert reponse.statut == StatutSession.ACTIVE
+        assert session_repo.trouver_par_id(connexion.jeton_session).statut == StatutSession.ACTIVE
 
     asyncio.run(scenario())
 
@@ -134,6 +225,7 @@ def test_table_reste_ouverte_jusqua_plein_service(
 def test_creer_table_applique_politique_timeout_depuis_settings(
     joueur_repo,
     table_repo,
+    session_repo,
     producteur: ProducteurEvenements,
 ):
     service = ServiceLobby(
@@ -143,6 +235,7 @@ def test_creer_table_applique_politique_timeout_depuis_settings(
         ),
         joueurs=joueur_repo,
         tables=table_repo,
+        sessions=session_repo,
         producteur=producteur,
     )
 

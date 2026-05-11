@@ -7,17 +7,19 @@ from __future__ import annotations
 
 import hashlib
 import secrets
+import time
 from typing import List, Optional, Literal
 
 from fastapi import HTTPException, status
 
-from .domaine import Joueur, PolitiqueTimeoutPartie, Table, StatutTable
-from .repositories import JoueurRepository, TableRepository
+from .domaine import Joueur, PolitiqueTimeoutPartie, SessionJoueur, StatutSession, Table, StatutTable
+from .repositories import JoueurRepository, SessionRepository, TableRepository
 from .schemas import (
     DemandeInscription,
     ReponseInscription,
     DemandeConnexion,
     ReponseConnexion,
+    ReponseHeartbeatSession,
     DemandeCreationTable,
     DemandeConfigurationTable,
     ReponseTable,
@@ -98,11 +100,13 @@ class ServiceLobby:
         settings: Settings,
         joueurs: JoueurRepository,
         tables: TableRepository,
+        sessions: SessionRepository,
         producteur: ProducteurEvenements,
     ) -> None:
         self.settings = settings
         self.joueurs = joueurs
         self.tables = tables
+        self.sessions = sessions
         self.producteur = producteur
 
     # -------------------------------------------------------------------------
@@ -165,7 +169,19 @@ class ServiceLobby:
                 detail="mot_de_passe_invalide",
             )
 
-        jeton_session = secrets.token_urlsafe(32)
+        self.expirer_sessions_inactives()
+        self.sessions.invalider_sessions_remplacables(joueur.id_joueur)
+
+        id_session = secrets.token_urlsafe(32)
+        maintenant = time.time()
+        session = SessionJoueur(
+            id_session=id_session,
+            id_joueur=joueur.id_joueur,
+            statut=StatutSession.ACTIVE,
+            dernier_heartbeat=maintenant,
+            expire_le=maintenant + self.settings.session_expiration_secondes,
+        )
+        self.sessions.ajouter(session)
 
         # contexte de reprise : table active du joueur (si elle existe)
         table_active = self.tables.trouver_table_active_du_joueur(joueur.id_joueur)
@@ -175,6 +191,13 @@ class ServiceLobby:
             table_active.statut.value if table_active is not None and hasattr(table_active.statut, "value") else None
         )
         skin_jeu = table_active.skin_jeu if table_active is not None else None
+        contexte_reprise = ReponseContexteReprise(
+            id_joueur=joueur.id_joueur,
+            id_table=id_table,
+            id_partie=id_partie,
+            statut_table=statut_table,
+            skin_jeu=skin_jeu,
+        )
 
         evt_connecte = EvenementJoueurConnecte(
             id_joueur=joueur.id_joueur,
@@ -187,12 +210,76 @@ class ServiceLobby:
             nom=joueur.nom,
             alias=joueur.alias,
             courriel=joueur.courriel,
-            jeton_session=jeton_session,
+            jeton_session=id_session,
             id_table=id_table,
             id_partie=id_partie,
             statut_table=statut_table,
             skin_jeu=skin_jeu,
+            contexte_reprise=contexte_reprise,
         )
+
+    def expirer_sessions_inactives(self, maintenant: float | None = None) -> list[SessionJoueur]:
+        maintenant = time.time() if maintenant is None else maintenant
+        expirees: list[SessionJoueur] = []
+        for session in self.sessions.lister():
+            if session.statut == StatutSession.EXPIREE:
+                continue
+            age = maintenant - session.dernier_heartbeat
+            if maintenant >= session.expire_le:
+                session.statut = StatutSession.EXPIREE
+                expirees.append(session)
+            elif age >= self.settings.session_absence_secondes:
+                session.statut = StatutSession.ABSENTE
+            else:
+                session.statut = StatutSession.ACTIVE
+            self.sessions.sauvegarder(session)
+        return expirees
+
+    async def heartbeat_session(self, id_session: str) -> ReponseHeartbeatSession:
+        self.expirer_sessions_inactives()
+        session = self.sessions.trouver_par_id(id_session)
+        if session is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="session_introuvable",
+            )
+        if session.statut == StatutSession.EXPIREE:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="session_expiree",
+            )
+
+        maintenant = time.time()
+        session.statut = StatutSession.ACTIVE
+        session.dernier_heartbeat = maintenant
+        session.expire_le = maintenant + self.settings.session_expiration_secondes
+        self.sessions.sauvegarder(session)
+        return ReponseHeartbeatSession(
+            id_session=session.id_session,
+            id_joueur=session.id_joueur,
+            statut=session.statut,
+            expire_le=session.expire_le,
+        )
+
+    def verifier_session_active(self, id_session: str, id_joueur: str) -> SessionJoueur:
+        self.expirer_sessions_inactives()
+        session = self.sessions.trouver_par_id(id_session)
+        if session is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="session_introuvable",
+            )
+        if session.id_joueur != id_joueur:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="session_joueur_incoherente",
+            )
+        if session.statut == StatutSession.EXPIREE:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="session_expiree",
+            )
+        return session
 
     async def contexte_reprise(self, id_joueur: str) -> ReponseContexteReprise:
         """

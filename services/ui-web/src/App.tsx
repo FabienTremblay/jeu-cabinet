@@ -3,6 +3,12 @@ import React from "react";
 import { BrowserRouter } from "react-router-dom";
 import PageLayout from "./components/layout/PageLayout";
 import AppRoutes from "./router";
+import { useSessionHeartbeat } from "./hooks/useSessionHeartbeat";
+
+const SessionHeartbeat: React.FC = () => {
+  useSessionHeartbeat();
+  return null;
+};
 
 /**
  * Racine de l'application : met en place le router et le layout global.
@@ -10,6 +16,7 @@ import AppRoutes from "./router";
 const App: React.FC = () => {
   return (
     <BrowserRouter>
+      <SessionHeartbeat />
       <PageLayout>
         <AppRoutes />
       </PageLayout>
@@ -18,4 +25,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-

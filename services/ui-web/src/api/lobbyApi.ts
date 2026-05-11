@@ -12,7 +12,8 @@ import type {
   SkinInfo,
   ReponseJoueur,
   PolitiqueTimeoutPartieModifiable,
-  ReponseContexteReprise
+  ReponseContexteReprise,
+  ReponseHeartbeatSession
 } from "../types/lobby";
 
 // même logique que ton TUI : base par défaut = http://lobby.cabinet.localhost
@@ -67,9 +68,19 @@ export async function connexion(params: {
     nom: data.nom,
     alias: data.alias,
     courriel: data.courriel,
-    jeton_session: data.jeton_session
+    jeton_session: data.jeton_session,
+    contexte_reprise: data.contexte_reprise ?? null
   };
   return session;
+}
+
+export async function envoyerHeartbeatSession(
+  id_session: string
+): Promise<ReponseHeartbeatSession> {
+  return postJson<ReponseHeartbeatSession, Record<string, never>>(
+    `/api/sessions/${encodeURIComponent(id_session)}/heartbeat`,
+    {}
+  );
 }
 
 // ---------------------------------------------------------------------------

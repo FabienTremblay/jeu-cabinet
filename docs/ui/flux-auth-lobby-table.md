@@ -323,6 +323,12 @@ Le service renvoie la situation exacte :
 
 La partie continue sans lui.
 
+La session lobby est jetable. Si le joueur cesse d’envoyer des heartbeats,
+sa session passe à `expiree` et les appels protégés doivent être refusés.
+Cette expiration ne retire pas le joueur de sa table : le siège reste lié à
+`id_joueur`. Après reconnexion, le lobby renvoie le contexte de reprise pour
+retourner à la table ou à la partie active si elle existe encore.
+
 ---
 
 ### 9.3. Fin forcée
