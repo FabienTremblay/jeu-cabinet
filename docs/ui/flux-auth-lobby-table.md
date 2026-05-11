@@ -362,6 +362,20 @@ retourner à la table ou à la partie active si elle existe encore.
 
 ---
 
+## Reprise après expiration de session
+
+À la connexion, le front reçoit `jeton_session` et le conserve pour les appels
+protégés. Il envoie automatiquement un heartbeat périodique au lobby.
+
+Si la session expire, le front force la reconnexion. Après reconnexion,
+`contexte_reprise` peut rediriger le joueur vers sa table ou sa partie active.
+Le siège reste réservé côté lobby tant que la table existe.
+
+Règle d’or : Une session expirée invalide l’accès technique, mais ne détruit
+pas le contexte métier du joueur.
+
+---
+
 ### 9.3. Fin forcée
 
 Le moteur peut forcer la fin :
