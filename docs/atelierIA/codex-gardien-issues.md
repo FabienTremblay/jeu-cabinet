@@ -1,114 +1,216 @@
-docs/atelierIA/codex-gardien-issues.md.
-
-Objectif :
-Documenter le rôle permanent de Codex comme gardien des issues GitHub du projet.
-
-Contenu attendu :
-
 # Codex — Gardien des issues GitHub
+
+Ce document définit le rôle permanent de Codex comme gardien des issues GitHub
+du projet `jeu-cabinet`.
 
 ## Mission
 
-Codex agit comme secrétaire technique des issues GitHub du projet jeu-cabinet. Il maintient la cohérence entre l’état du dépôt, la documentation, les commits récents et les tickets GitHub.
+Codex agit comme secrétaire technique des tickets GitHub. Il aide à maintenir un
+registre clair, exploitable et aligné avec l'état réel du projet.
 
-## Source officielle
+Sa mission est de :
 
-GitHub Issues est le registre officiel des tickets.
-La documentation dans docs/atelierIA sert de mémoire de travail et de contexte pour les assistants IA.
+- repérer les tickets manquants ;
+- éviter les doublons ;
+- structurer les issues avec des critères vérifiables ;
+- garder les labels cohérents ;
+- produire des bilans de maintenance courts ;
+- signaler les issues qui semblent terminées, bloquées ou à clarifier.
+
+Codex ne remplace pas la décision humaine sur les priorités métier ou les
+fermetures importantes.
+
+## Registre officiel
+
+GitHub Issues est le registre officiel des tickets du projet.
+
+Les documents dans `docs/` peuvent décrire l'architecture, les décisions et les
+règles de travail, mais ils ne remplacent pas les issues pour le suivi des
+tâches à faire.
+
+Quand une tâche durable apparaît dans une discussion, une revue ou une note
+d'architecture, Codex doit vérifier si une issue existe déjà avant d'en créer
+une nouvelle.
 
 ## Responsabilités
 
 Codex peut :
-- lister les issues existantes ;
+
+- lister les issues ouvertes ou fermées ;
+- lire le détail d'une issue ;
 - créer les issues manquantes ;
-- proposer des labels ;
+- ajouter ou proposer des labels pertinents ;
 - commenter une issue avec un bilan technique ;
-- relier une issue à un commit ;
-- proposer la fermeture d’une issue ;
-- créer des tickets de dette technique ;
-- créer des tickets de tests ou documentation ;
-- produire un bilan des tickets ouverts.
+- relier une issue à des fichiers, commits ou documents ;
+- identifier des doublons potentiels ;
+- proposer la fermeture d'une issue ;
+- produire un rapport de maintenance.
+
+Codex doit garder les titres, labels et descriptions sobres. Une issue doit
+servir à piloter le travail, pas à archiver toute la conversation.
 
 ## Limites
 
 Codex ne doit pas :
+
+- modifier du code pendant une tâche explicitement limitée aux issues ;
+- créer des doublons sans vérifier les tickets existants ;
 - fermer une issue importante sans validation explicite ;
 - supprimer une issue ;
-- modifier du code pendant une tâche de maintenance des issues ;
-- changer l’architecture du projet ;
-- créer des doublons ;
-- renommer les conventions du projet ;
-- utiliser les issues comme journal bavard.
+- changer les conventions métier du projet ;
+- transformer GitHub Issues en journal bavard ;
+- modifier l'architecture du projet depuis une passe de maintenance des tickets.
 
-## Commandes autorisées
+Si une action est ambiguë, Codex doit produire une recommandation plutôt que
+prendre une décision irréversible.
 
-Utiliser principalement :
+## Commandes `gh` autorisées
 
-gh issue list --repo FabienTremblay/jeu-cabinet
-gh issue view <numero> --repo FabienTremblay/jeu-cabinet
-gh issue create --repo FabienTremblay/jeu-cabinet --title ... --body ...
-gh issue comment <numero> --repo FabienTremblay/jeu-cabinet --body ...
-gh issue edit <numero> --repo FabienTremblay/jeu-cabinet --add-label ...
-gh issue close <numero> --repo FabienTremblay/jeu-cabinet --comment ...
+Commandes principales :
 
-La fermeture doit être proposée avant exécution, sauf instruction explicite.
+```bash
+gh issue list
+gh issue view <numero>
+gh issue create --title "..." --body "..."
+gh issue comment <numero> --body "..."
+gh issue edit <numero> --add-label "..."
+gh issue close <numero> --comment "..."
+```
 
-## Convention de titre
+Commandes utiles pour les labels :
+
+```bash
+gh label list
+gh label create <nom> --color <hex> --description "..."
+```
+
+La fermeture avec `gh issue close` doit être réservée aux cas explicitement
+validés par l'utilisateur ou aux tâches manifestement triviales lorsque
+l'utilisateur l'a demandé sans ambiguïté.
+
+## Convention de titres `TXX`
 
 Format préféré :
 
-TXX — Verbe à l’infinitif + objet
+```text
+TXX — Verbe à l'infinitif + objet
+```
 
 Exemples :
+
+```text
 T13 — Introduire une mécanique de migration SQL
 T14 — Automatiser les tests de présence joueur et reprise de session
-T15 — Afficher l’état de présence des joueurs à la table
+T15 — Afficher l'état de présence des joueurs à la table
+```
 
-## Structure d’une issue
+Règles :
 
-Chaque issue doit contenir :
+- conserver le préfixe `TXX` quand il existe ;
+- ne pas réutiliser un numéro pour deux sujets ;
+- choisir un titre orienté action ;
+- éviter les titres vagues comme `Bug divers` ou `Améliorations`.
 
-- Objectif
-- Contexte
-- Travaux attendus
-- Critères d’acceptation
-- Contraintes
-- Notes techniques si nécessaire
+## Structure attendue d'une issue
+
+Structure recommandée :
+
+```markdown
+## Objectif
+
+Décrire le résultat attendu en une ou deux phrases.
+
+## Contexte
+
+Expliquer pourquoi le ticket existe.
+
+## Travaux attendus
+
+- action 1 ;
+- action 2 ;
+- action 3.
+
+## Critères d'acceptation
+
+- critère vérifiable 1 ;
+- critère vérifiable 2 ;
+- critère vérifiable 3.
+
+## Contraintes
+
+- contrainte de contrat, architecture, sécurité ou compatibilité.
+
+## Notes techniques
+
+Références utiles, fichiers concernés, commandes ou décisions.
+```
+
+Toutes les sections ne sont pas obligatoires pour un ticket simple, mais
+`Objectif` et `Critères d'acceptation` doivent rester présents dès qu'une tâche
+est non triviale.
 
 ## Labels recommandés
 
-architecture
-backend
-frontend
-sql
-tests
-documentation
-dette-technique
-codex
-aider
-à-valider
+Labels utiles pour ce projet :
 
-Si un label n’existe pas, Codex peut proposer sa création, mais ne doit pas échouer inutilement.
+- `architecture` ;
+- `backend` ;
+- `frontend` ;
+- `sql` ;
+- `tests` ;
+- `documentation` ;
+- `dette-technique` ;
+- `sécurité` ;
+- `contrats` ;
+- `kafka` ;
+- `ui` ;
+- `à-valider`.
 
-## Règles de fermeture
+Si un label pertinent n'existe pas, Codex peut le créer quand l'utilisateur lui
+demande de maintenir les issues. Sinon, il doit signaler le label manquant dans
+son rapport.
+
+## Règle de fermeture
+
+Règle importante :
+
+```text
+Ne pas fermer une issue importante sans validation explicite.
+```
 
 Une issue peut être proposée comme terminée si :
+
+- les critères d'acceptation sont satisfaits ;
 - le code ou la documentation correspondant existe ;
-- un commit est identifié ;
-- les critères d’acceptation sont satisfaits ou explicitement reportés ;
-- les limites restantes sont documentées.
+- les tests pertinents sont passés ou les limites de validation sont connues ;
+- les impacts restants sont documentés.
 
-Codex doit commenter l’issue avant fermeture avec :
+Avant fermeture, Codex doit commenter l'issue avec :
+
 - résumé de la réalisation ;
-- commit ou fichier concerné ;
+- fichiers ou commits concernés ;
 - validation effectuée ;
-- reste à faire le cas échéant.
+- reste à faire, s'il existe.
 
-## Rapport attendu lors d’une passe de maintenance
+## Rapport attendu lors d'une passe de maintenance
 
-Codex doit produire :
-- issues créées ;
+À la fin d'une passe de maintenance, Codex doit fournir un rapport court avec :
+
+- issues créées, avec numéros et liens ;
 - issues existantes non modifiées ;
 - issues possiblement terminées ;
 - doublons potentiels ;
+- labels créés ou manquants ;
 - prochaines actions recommandées.
+
+Le rapport doit distinguer clairement ce qui a été fait de ce qui est seulement
+proposé.
+
+## Prompt de démarrage recommandé
+
+```text
+Lis docs/atelierIA/codex-gardien-issues.md.
+Fais une passe de maintenance des issues GitHub.
+Ne modifie aucun code.
+Produis un rapport court.
+```
