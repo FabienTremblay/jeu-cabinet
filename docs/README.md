@@ -6,6 +6,7 @@
 - exécution locale : `docs/execution-locale.md`
 - contrats : `contrats/README.md`
 - UI : `docs/ui/README.md`
+- procédure de fusion : `docs/atelierIA/procedure-fusion-branche.md`
 
 ## fonds de conception à conserver
 

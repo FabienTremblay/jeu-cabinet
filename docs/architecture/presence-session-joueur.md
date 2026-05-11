@@ -146,8 +146,8 @@ Le système ne fait pas encore les choses suivantes :
 - pas de websocket ;
 - pas d'expulsion automatique du siège à l'expiration de session ;
 - pas de politique avancée de libération de siège ;
-- pas de migration SQL formelle pour cette table, seulement l'init SQL et une
-  intervention manuelle si un volume existant doit être migré.
+- une mécanique maison de migration SQL existe, mais elle reste volontairement
+  simple et doit être appliquée explicitement sur les volumes existants.
 
 Ces limites sont volontaires pour ce lot. La présence technique ne doit pas
 devenir une règle implicite d'abandon métier.

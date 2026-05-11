@@ -134,6 +134,124 @@ docker network create cabinet_maisonlinux_net
 docker compose --env-file .env.maisonlinux -p cabinet-maisonlinux -f docker-compose.yml -f docker-compose.maisonlinux.yml up -d --build
 ```
 
+## Migrations SQL Sur Base Existante
+
+Les scripts montes dans `/docker-entrypoint-initdb.d/` sont executes seulement
+lors de l'initialisation d'un volume Postgres vide. Ils servent a creer une base
+neuve. Les evolutions rejouables sur une base existante passent par la
+mecanique de migrations maison.
+
+La table applicative `schema_migrations` suit les migrations appliquees:
+
+- `version` : identifiant stable, par exemple `001` ;
+- `nom` : nom du fichier SQL applique ;
+- `applique_le` : date d'application.
+
+Les migrations vivent dans `sql/migrations/` et sont appliquees dans l'ordre
+lexicographique par `sql/apply-migrations.sh`. Chaque migration doit rester
+idempotente autant que possible (`create table if not exists`,
+`create index if not exists`, etc.).
+
+Sur une base neuve, le script d'init Postgres applique aussi les migrations
+apres `sql/01-init-jeu.sql`. Sur une base existante, relancer explicitement le
+script de migrations.
+
+Ne pas utiliser `docker compose down -v` pour forcer la relecture de
+`sql/01-init-jeu.sql`: cette commande supprime les volumes et detruit les
+donnees locales.
+
+### Application Sur MaisonLinux
+
+Verifier d'abord que la stack est demarree :
+
+```bash
+docker compose --env-file .env.maisonlinux -p cabinet-maisonlinux -f docker-compose.yml -f docker-compose.maisonlinux.yml ps
+```
+
+Appliquer les migrations :
+
+```bash
+docker compose --env-file .env.maisonlinux -p cabinet-maisonlinux -f docker-compose.yml -f docker-compose.maisonlinux.yml exec postgres /opt/sql/apply-migrations.sh
+```
+
+Controler les migrations appliquees :
+
+```bash
+docker compose --env-file .env.maisonlinux -p cabinet-maisonlinux -f docker-compose.yml -f docker-compose.maisonlinux.yml exec postgres psql -U jeu -d jeu -c "select version, nom, applique_le from schema_migrations order by version"
+```
+
+### Application En Developpement Local
+
+Avec l'overlay de developpement :
+
+```bash
+docker compose --env-file .env.dev -p cabinet-dev -f docker-compose.yml -f docker-compose.dev.yml exec postgres /opt/sql/apply-migrations.sh
+```
+
+Equivalent Makefile :
+
+```bash
+make migrate-dev
+```
+
+Controler ensuite :
+
+```bash
+docker compose --env-file .env.dev -p cabinet-dev -f docker-compose.yml -f docker-compose.dev.yml exec postgres psql -U jeu -d jeu -c "select version, nom, applique_le from schema_migrations order by version"
+```
+
+### Exemple `lobby_sessions`
+
+La migration `sql/migrations/001_lobby_sessions.sql` cree la table
+`lobby_sessions` sur une base existante :
+
+```sql
+create table if not exists lobby_sessions (
+  id_session text primary key,
+  id_joueur text not null references lobby_joueurs(id_joueur),
+  statut text not null check (statut in ('active', 'absente', 'expiree')),
+  dernier_heartbeat timestamptz not null,
+  expire_le timestamptz not null,
+  cree_le timestamptz not null default now(),
+  maj_le timestamptz not null default now()
+);
+
+create index if not exists idx_lobby_sessions_id_joueur
+  on lobby_sessions(id_joueur);
+
+create index if not exists idx_lobby_sessions_statut_expire
+  on lobby_sessions(statut, expire_le);
+```
+
+Controler l'existence de la table :
+
+```bash
+docker compose --env-file .env.maisonlinux -p cabinet-maisonlinux -f docker-compose.yml -f docker-compose.maisonlinux.yml exec postgres psql -U jeu -d jeu -c "\\d lobby_sessions"
+```
+
+### Fusion De Branche Vers `main`
+
+Avant de fusionner une branche qui ajoute une migration SQL :
+
+1. verifier que le fichier `sql/migrations/<version>_<nom>.sql` est present ;
+2. verifier que `docker-compose.yml` monte `sql/apply-migrations.sh` et
+   `sql/migrations/` dans le conteneur Postgres ;
+3. appliquer les migrations sur un environnement de developpement ;
+4. rejouer le script une seconde fois pour valider l'idempotence ;
+5. documenter dans l'issue les commandes executees et le resultat.
+
+Apres fusion sur une base MaisonLinux existante, appliquer explicitement :
+
+```bash
+docker compose --env-file .env.maisonlinux -p cabinet-maisonlinux -f docker-compose.yml -f docker-compose.maisonlinux.yml exec postgres /opt/sql/apply-migrations.sh
+```
+
+Equivalent Makefile :
+
+```bash
+make migrate-maisonlinux
+```
+
 ## Production Publique Future
 
 La production publique future est plus stricte:
