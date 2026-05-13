@@ -1,0 +1,17 @@
+version: 1
+
+validation_cartes:
+  - id: engager_carte_cout_mandat_fragile
+    op: programme.engager_carte
+    conditions:
+      - champ: joueur.attention_dispo
+        operateur: ">="
+        valeur: 2
+      - champ: joueur.capital_politique
+        operateur: ">="
+        valeur: carte.cout_cp
+    cout:
+      - op: joueur.attention.delta
+        delta: -2
+      - op: joueur.capital.delta
+        delta: -carte.cout_cp

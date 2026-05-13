@@ -10,12 +10,14 @@ La démonstration BRE `poweruser skin` sépare progressivement trois niveaux :
 
 ## Découpage Actuel
 
-Pour `debut_mandat_bre` :
+Pour `debut_mandat_bre` et ses skins dérivées :
 
 - `analyse_skin` route vers la bonne famille de règles ;
 - `etat_min` expose les facts minimaux ;
 - `validation_cartes.yaml` décrit la validation et les coûts de carte ;
-- un mini-interpréteur Python applique cette règle pour T23.
+- un mini-interpréteur Python applique cette règle ;
+- `mandat_fragile` démontre qu'une skin peut remplacer ce YAML pour changer le
+  comportement sans changer l'UI, le noyau ou le Java.
 
 ## Frontières
 
@@ -28,7 +30,7 @@ commandes.
 Le Java n'est pas réécrit : la passe T23 évite volontairement Drools/Kogito et
 ne remplace pas l'architecture BRE.
 
-## Suite Prévue
+## Démonstration Poweruser
 
-BRE T24 doit démontrer une skin dérivée qui change une règle en modifiant la
-configuration, pas le noyau ni l'UI.
+`mandat_fragile` dérive de `debut_mandat_bre` et rend l'engagement d'une carte
+plus exigeant en attention via `regles/validation_cartes.yaml`.
