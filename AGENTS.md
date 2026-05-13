@@ -73,6 +73,16 @@ Avant modification importante :
 5. lister les impacts et contrats affectés ;
 6. lancer les tests pertinents ou signaler ceux non exécutés.
 
+Pour chaque issue GitHub traitée, publier un commentaire de synthèse avant de passer à l’issue suivante :
+
+- fichiers modifiés ;
+- contrat ou décision retenue ;
+- tests exécutés et résultat ;
+- tests non exécutés avec raison ;
+- problèmes restants et suite recommandée.
+
+Ne pas fermer automatiquement une issue sans validation humaine explicite.
+
 Ne pas modifier les fichiers non liés à la tâche.
 
 Éviter les changements dans :
@@ -93,7 +103,7 @@ pytest -q
 ```
 
 ```bash
-cd rules-service && mvn test
+cd rules-service && ./mvnw test
 ```
 
 ```bash

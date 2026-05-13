@@ -10,14 +10,42 @@ Les tests Java du `rules-service` couvrent notamment :
 ## Prérequis
 
 - JDK 21 accessible via `JAVA_HOME`.
+- `javac` disponible dans le `PATH`.
 - Accès réseau au premier lancement du wrapper Maven, pour télécharger Maven
   Wrapper 3.3.2 et Apache Maven 3.9.9.
+
+Un JRE seul ne suffit pas : le service doit compiler du Java, donc il faut un
+JDK complet. Maven global n'est pas requis, car le dépôt fournit `./mvnw`.
 
 Le `pom.xml` cible explicitement Java 21 :
 
 ```xml
 <maven.compiler.release>21</maven.compiler.release>
 ```
+
+## Vérifier L'environnement
+
+```bash
+java -version
+javac -version
+echo "$JAVA_HOME"
+```
+
+Résultat attendu :
+
+- `java -version` indique une version 21 ;
+- `javac -version` indique une version 21 ;
+- `JAVA_HOME` pointe vers un JDK 21, pas vers un JRE.
+
+## Installation Indicative Ubuntu/Debian
+
+```bash
+sudo apt update
+sudo apt install openjdk-21-jdk
+```
+
+Après installation, vérifier que `JAVA_HOME` pointe vers le JDK 21 si plusieurs
+versions de Java coexistent.
 
 ## Commande
 
