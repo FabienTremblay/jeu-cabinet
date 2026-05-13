@@ -20,6 +20,7 @@ htmlcov/
 # --- java / maven ---
 target/
 *.class
+**/.mvn/wrapper/maven-wrapper.jar
 
 # --- ide ---
 .idea/
