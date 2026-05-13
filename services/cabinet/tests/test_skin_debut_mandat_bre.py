@@ -26,14 +26,25 @@ def test_etat_bre_adapter_utilise_les_champs_reels_du_joueur():
                 role="ministre",
                 attention_dispo=2,
                 capital_politique=3,
+                main=["MES_PLAN_SOCIAL"],
             )
+        },
+        cartes_def={
+            "MES_PLAN_SOCIAL": {
+                "id": "MES_PLAN_SOCIAL",
+                "type": "mesure",
+                "cout_attention": 1,
+                "cout_cp": 1,
+            }
         },
         attente=None,
     )
 
     facts = EtatBreAdapter.to_facts(etat)
 
-    joueur = facts["etat"]["joueurs"][0]
+    joueur = facts["joueurs"]["J1"]
     assert joueur["id"] == "J1"
     assert joueur["attention_dispo"] == 2
     assert joueur["capital_politique"] == 3
+    assert joueur["main"] == ["MES_PLAN_SOCIAL"]
+    assert facts["cartes_def"]["MES_PLAN_SOCIAL"]["cout_cp"] == 1

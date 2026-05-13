@@ -147,12 +147,13 @@ class ReglesBreProxy(ReglesInterface):
     # -----------------------------
     def _payload_base(self, etat: Any) -> Dict[str, Any]:
         # base stable, extensible (facts minimaux + état complet jsonable pour itérer vite)
+        etat_min = EtatBreAdapter.to_facts(etat)
         return {
             "source_fichier": "services/cabinet/bre/regles_bre_proxy.py",
             # contrat commun facts_envelope.schema.json
             "analyse_skin": {"skin": self.cfg.skin, "version": self.cfg.version_regles},
-            "joueurs": {},  # requis par le schéma commun (shape libre)
-            "etat_min": EtatBreAdapter.to_facts(etat),
+            "joueurs": etat_min.get("joueurs", {}),
+            "etat_min": etat_min,
             "axes": {},
             "trace": {},
         }

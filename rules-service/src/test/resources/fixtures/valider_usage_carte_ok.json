@@ -1,12 +1,26 @@
 {
   "analyse_skin": { "skin": "debut_mandat_bre", "version": "v1" },
   "cmd": { "op": "programme.engager_carte", "joueur_id": "J1", "carte_id": "C1" },
-  "joueurs": {
-    "J1": { "attention": 3, "capital_politique": 2 }
-  },
+  "joueurs": {},
   "etat_min": {
+    "phase": "tour",
+    "sous_phase": "conseil",
+    "tour": 1,
+    "joueurs": {
+      "J1": {
+        "id": "J1",
+        "attention_dispo": 3,
+        "capital_politique": 2,
+        "main": ["C1"]
+      }
+    },
     "cartes_def": {
-      "C1": { "cout_attention": 2, "cout_capital": 1 }
+      "C1": {
+        "id": "C1",
+        "type": "mesure",
+        "cout_attention": 2,
+        "cout_cp": 1
+      }
     }
   }
 }

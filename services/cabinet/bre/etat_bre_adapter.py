@@ -10,37 +10,45 @@ class EtatBreAdapter:
     """
 
     def etat_vers_facts(self, etat: Any) -> Dict[str, Any]:
-        attente = getattr(etat, "attente", None)
         joueurs = getattr(etat, "joueurs", {}) or {}
+        cartes_def = getattr(etat, "cartes_def", {}) or {}
 
         return {
-            "etat": {
-                "phase": getattr(etat, "phase", None),
-                "sous_phase": getattr(etat, "sous_phase", None),
-                "tour": getattr(etat, "tour", None),
-                "id_joueur_courant": getattr(etat, "id_joueur_courant", None),
-                "joueurs": [
-                    {
-                        "id": getattr(j, "id", None),
-                        "role": getattr(j, "role", None),
-                        "actif": getattr(j, "actif", None),
-                        "pret": getattr(j, "pret", None),
-                        "attention_dispo": getattr(j, "attention_dispo", None),
-                        "capital_politique": getattr(j, "capital_politique", None),
-                        "prestige": getattr(j, "prestige", None),
-                    }
-                    for j in joueurs.values()
-                ],
-                "attente": None
-                if not attente
-                else {
-                    "statut": getattr(attente, "statut", None),
-                    "type": getattr(attente, "type", None),
-                    "joueurs": list(getattr(attente, "joueurs", []) or []),
-                    "recus": list(getattr(attente, "recus", []) or []),
-                    "meta": getattr(attente, "meta", None),
-                },
+            "phase": getattr(etat, "phase", None),
+            "sous_phase": getattr(etat, "sous_phase", None),
+            "tour": getattr(etat, "tour", None),
+            "joueurs": {
+                jid: self._joueur_vers_fact(j)
+                for jid, j in joueurs.items()
+            },
+            "cartes_def": {
+                cid: self._carte_vers_fact(cid, carte)
+                for cid, carte in cartes_def.items()
+            },
+        }
+
+    def _joueur_vers_fact(self, joueur: Any) -> Dict[str, Any]:
+        return {
+            "id": getattr(joueur, "id", None),
+            "attention_dispo": getattr(joueur, "attention_dispo", None),
+            "capital_politique": getattr(joueur, "capital_politique", None),
+            "main": list(getattr(joueur, "main", []) or []),
+        }
+
+    def _carte_vers_fact(self, carte_id: str, carte: Any) -> Dict[str, Any]:
+        if isinstance(carte, dict):
+            return {
+                "id": carte.get("id", carte_id),
+                "type": carte.get("type"),
+                "cout_attention": carte.get("cout_attention", 0),
+                "cout_cp": carte.get("cout_cp", 0),
             }
+
+        return {
+            "id": getattr(carte, "id", carte_id),
+            "type": getattr(carte, "type", None),
+            "cout_attention": getattr(carte, "cout_attention", 0),
+            "cout_cp": getattr(carte, "cout_cp", 0),
         }
 
     @staticmethod

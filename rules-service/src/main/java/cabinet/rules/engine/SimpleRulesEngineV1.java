@@ -52,35 +52,40 @@ public class SimpleRulesEngineV1 implements RulesEngine {
       return mk(false, List.of("cmd_incomplete"), List.of());
     }
 
-    Map<String, Object> joueurs = (req.joueurs != null ? req.joueurs : Collections.emptyMap());
+    Map<String, Object> etatMin = (req.etat_min != null ? req.etat_min : Collections.emptyMap());
+    Map<String, Object> joueurs = mapFrom(etatMin.get("joueurs"));
+    if (joueurs.isEmpty()) {
+      joueurs = (req.joueurs != null ? req.joueurs : Collections.emptyMap());
+    }
+
     Object joueurObj = joueurs.get(joueurId);
     if (!(joueurObj instanceof Map)) {
-      return mk(false, List.of(), List.of());
+      return mk(false, List.of("joueur_introuvable"), List.of());
     }
     Map<String, Object> joueur = (Map<String, Object>) joueurObj;
 
-    // === Contexte DMN: analyse_skin.cartes_def ===
-    // Le contrat v1 n’inclut pas analyse_skin.cartes_def,
-    // donc on le dérive de etat_min.cartes_def (si présent).
-    Map<String, Object> etatMin = (req.etat_min != null ? req.etat_min : Collections.emptyMap());
-    Map<String, Object> cartesDef = Collections.emptyMap();
-    if (etatMin.get("cartes_def") instanceof Map) {
-      cartesDef = (Map<String, Object>) etatMin.get("cartes_def");
+    Object mainObj = joueur.get("main");
+    if (mainObj instanceof List && !((List<?>) mainObj).contains(carteId)) {
+      return mk(false, List.of("carte_absente_main"), List.of());
     }
 
+    Map<String, Object> cartesDef = mapFrom(etatMin.get("cartes_def"));
     Object defCarteObj = cartesDef.get(carteId);
     if (!(defCarteObj instanceof Map)) {
-      return mk(false, List.of(), List.of());
+      return mk(false, List.of("carte_introuvable"), List.of());
     }
     Map<String, Object> defCarte = (Map<String, Object>) defCarteObj;
 
     int coutAtt = asInt(defCarte.get("cout_attention"), 0);
-    int coutCp  = asInt(defCarte.get("cout_capital"), 0);
-    int attDispo = asInt(joueur.get("attention"), 0);
+    int coutCp  = asInt(defCarte.get("cout_cp"), 0);
+    int attDispo = asInt(joueur.get("attention_dispo"), 0);
     int cpDispo  = asInt(joueur.get("capital_politique"), 0);
 
-    if (attDispo < coutAtt || cpDispo < coutCp) {
-      return mk(false, List.of(), List.of());
+    if (attDispo < coutAtt) {
+      return mk(false, List.of("attention_insuffisante"), List.of());
+    }
+    if (cpDispo < coutCp) {
+      return mk(false, List.of("capital_politique_insuffisant"), List.of());
     }
 
     List<Map<String, Object>> cmds = new ArrayList<>();
@@ -112,5 +117,11 @@ public class SimpleRulesEngineV1 implements RulesEngine {
     try { return Integer.parseInt(String.valueOf(v)); } catch (Exception e) { return def; }
   }
 
-}
+  private static Map<String, Object> mapFrom(Object v) {
+    if (v instanceof Map) {
+      return (Map<String, Object>) v;
+    }
+    return Collections.emptyMap();
+  }
 
+}
