@@ -1,18 +1,16 @@
-import responses
 import pytest
 from services.cabinet.bre.regles_bre_proxy import ReglesBreProxy, BreIndisponible
 
-@responses.activate
-def test_regle_sous_phase_appelle_bre():
-    # Mock de la réponse du BRE
-    responses.add(
-        responses.POST,
-        "http://rules-service:8081/rules/eval/sous-phase",
-        json={"commands": [{"op": "signal.programme_ouvert"}]},
-        status=200,
-    )
 
-    # Création du proxy
+def test_regle_sous_phase_appelle_bre(monkeypatch):
+    appels = []
+
+    def fake_post_json(self, path, payload):
+        appels.append((path, payload))
+        return {"commands": [{"op": "signal.programme_ouvert"}]}
+
+    monkeypatch.setattr(ReglesBreProxy, "_post_json", fake_post_json)
+
     proxy = ReglesBreProxy(
         rules_url="http://rules-service:8081",
         skin="debut_mandat_bre",
@@ -20,23 +18,23 @@ def test_regle_sous_phase_appelle_bre():
         timeout_s=1.0,
     )
 
-    # Appel de la méthode
     etat = object()  # Mock ou objet Etat minimal
     commandes = proxy.regle_sous_phase(etat, "signal.init_tour")
 
-    # Validation
     assert commandes == [{"op": "signal.programme_ouvert"}]
-    assert len(responses.calls) == 1
-    assert responses.calls[0].request.url == "http://rules-service:8081/rules/eval/sous-phase"
+    assert appels[0][0] == "/rules/eval/sous-phase"
+    assert appels[0][1]["analyse_skin"] == {
+        "skin": "debut_mandat_bre",
+        "version": "v1",
+    }
+    assert "version_regles" not in appels[0][1]
 
-@responses.activate
-def test_bre_indisponible():
-    # Simule une indisponibilité du BRE
-    responses.add(
-        responses.POST,
-        "http://rules-service:8081/rules/eval/sous-phase",
-        body=Exception("Timeout"),
-    )
+
+def test_bre_indisponible(monkeypatch):
+    def fake_post_json(self, path, payload):
+        raise BreIndisponible("Timeout")
+
+    monkeypatch.setattr(ReglesBreProxy, "_post_json", fake_post_json)
 
     proxy = ReglesBreProxy(
         rules_url="http://rules-service:8081",
@@ -47,4 +45,3 @@ def test_bre_indisponible():
 
     with pytest.raises(BreIndisponible):
         proxy.regle_sous_phase(object(), "signal.init_tour")
-

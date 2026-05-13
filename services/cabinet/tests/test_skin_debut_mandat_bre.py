@@ -10,6 +10,7 @@ def test_skin_debut_mandat_bre_est_chargeable():
 
     assert cfg["id"] == "debut_mandat_bre"
     assert cfg["moteur_regles"]["type"] == "bre"
+    assert cfg["moteur_regles"]["version_regles"] == "v1"
     assert isinstance(regles, ReglesBreProxy)
 
 

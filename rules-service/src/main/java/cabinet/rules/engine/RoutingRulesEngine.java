@@ -18,8 +18,7 @@ public class RoutingRulesEngine implements RulesEngine {
 
     @Override
     public CommandsResponse evalSousPhase(EvalSousPhaseRequest req) {
-        // choix par skin via version_regles (issu de config.py côté moteur)
-        if (req != null && req.version_regles != null && req.version_regles.endsWith(".v1")) {
+        if (routeVersDebutMandatBreV1(req != null ? req.analyseSkin : null)) {
             return v1.evalSousPhase(req);
         }
         return mock.evalSousPhase(req);
@@ -27,7 +26,7 @@ public class RoutingRulesEngine implements RulesEngine {
 
     @Override
     public CommandsResponse evalAttenteTerminee(EvalAttenteTermineeRequest req) {
-        if (req != null && req.version_regles != null && req.version_regles.endsWith(".v1")) {
+        if (routeVersDebutMandatBreV1(req != null ? req.analyseSkin : null)) {
             return v1.evalAttenteTerminee(req);
         }
         return mock.evalAttenteTerminee(req);
@@ -35,12 +34,15 @@ public class RoutingRulesEngine implements RulesEngine {
 
     @Override
     public ValidationResponse validerUsageCarte(ValiderUsageCarteRequest req) {
-        if (req != null && req.analyseSkin != null
-                && "debut_mandat".equals(req.analyseSkin.skin)
-                && "v1".equals(req.analyseSkin.version)) {
+        if (routeVersDebutMandatBreV1(req != null ? req.analyseSkin : null)) {
             return v1.validerUsageCarte(req);
         }
         return mock.validerUsageCarte(req);
     }
-}
 
+    private boolean routeVersDebutMandatBreV1(AnalyseSkinDto analyseSkin) {
+        return analyseSkin != null
+                && "debut_mandat_bre".equals(analyseSkin.skin)
+                && "v1".equals(analyseSkin.version);
+    }
+}

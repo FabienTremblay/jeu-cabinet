@@ -17,5 +17,5 @@ SKIN_CONFIG["description"] = (
 # déclaration locale au skin (pas de variable globale CAB_RULES_VERSION)
 SKIN_CONFIG["moteur_regles"] = {
     "type": "bre",
-    "version_regles": "debut_mandat_bre.v1",
+    "version_regles": "v1",
 }

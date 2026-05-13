@@ -23,9 +23,9 @@ public class RulesResource {
     @POST
     @Path("/eval/sous-phase")
     public CommandsResponse evalSousPhase(EvalSousPhaseRequest req) {
-        LOG.infof("evalSousPhase skin=%s version=%s signal=%s",
-                (req != null ? req.skin : null),
-                (req != null ? req.version_regles : null),
+        LOG.infof("evalSousPhase analyse_skin.skin=%s analyse_skin.version=%s signal=%s",
+                (req != null && req.analyseSkin != null ? req.analyseSkin.skin : null),
+                (req != null && req.analyseSkin != null ? req.analyseSkin.version : null),
                 (req != null ? req.signal : null));
         return engine.evalSousPhase(req);
     }
@@ -33,9 +33,9 @@ public class RulesResource {
     @POST
     @Path("/eval/attente-terminee")
     public CommandsResponse evalAttenteTerminee(EvalAttenteTermineeRequest req) {
-        LOG.infof("evalAttenteTerminee skin=%s version=%s type_attente=%s",
-                (req != null ? req.skin : null),
-                (req != null ? req.version_regles : null),
+        LOG.infof("evalAttenteTerminee analyse_skin.skin=%s analyse_skin.version=%s type_attente=%s",
+                (req != null && req.analyseSkin != null ? req.analyseSkin.skin : null),
+                (req != null && req.analyseSkin != null ? req.analyseSkin.version : null),
                 (req != null ? req.type_attente : null));
         return engine.evalAttenteTerminee(req);
     }

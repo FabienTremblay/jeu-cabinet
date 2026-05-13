@@ -33,11 +33,11 @@ def get_regles() -> ReglesInterface:
 
     Variables attendues :
       - CAB_RULES_BRE_URL (ex: http://rules-service:8081)
-      - CAB_RULES_VERSION (ex: debut_mandat_bre.v1) [optionnel]
+      - CAB_RULES_VERSION (ex: v1) [optionnel]
       - CAB_RULES_TIMEOUT_S [optionnel]
     """
     rules_url = os.getenv("CAB_RULES_BRE_URL", "").strip() or "http://rules-service:8081"
-    version = os.getenv("CAB_RULES_VERSION", "").strip() or "debut_mandat_bre.v1"
+    version = os.getenv("CAB_RULES_VERSION", "").strip() or "v1"
     timeout_s = float(os.getenv("CAB_RULES_TIMEOUT_S", "2.0"))
 
     return ReglesBreProxy(

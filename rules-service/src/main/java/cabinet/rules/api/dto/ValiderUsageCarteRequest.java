@@ -13,7 +13,7 @@ public class ValiderUsageCarteRequest {
 
     /** Requis par facts_envelope.schema.json */
     @JsonProperty("analyse_skin")
-    public AnalyseSkin analyseSkin;
+    public AnalyseSkinDto analyseSkin;
 
     /** Requis par facts_envelope.schema.json */
     public Map<String, Object> cmd;
@@ -38,9 +38,4 @@ public class ValiderUsageCarteRequest {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public Map<String, Object> meta;
 
-    public static class AnalyseSkin {
-        public String skin;
-        public String version;
-    }
 }
-

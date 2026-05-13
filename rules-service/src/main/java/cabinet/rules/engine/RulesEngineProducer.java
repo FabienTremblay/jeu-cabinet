@@ -8,7 +8,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 @ApplicationScoped
 public class RulesEngineProducer {
 
-    @ConfigProperty(name = "cab.rules.engine", defaultValue = "mock")
+    @ConfigProperty(name = "cab.rules.engine", defaultValue = "routing")
     String engine;
 
     @Produces
@@ -18,7 +18,7 @@ public class RulesEngineProducer {
         RulesEngine v1   = new SimpleRulesEngineV1(mock);
 
         // Stratégie recommandée :
-        // - "routing" : choix par skin via req.version_regles / req.analyseSkin
+        // - "routing" : choix par analyse_skin.skin / analyse_skin.version
         // - "v1"      : force v1 (utile pour tests d’intégration en environnement)
         // - "mock"    : fallback total
         return switch (engine) {

@@ -1,11 +1,18 @@
 // source_fichier: rules-service/src/main/java/cabinet/rules/api/dto/EvalSousPhaseRequest.java
 package cabinet.rules.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Map;
 
 public class EvalSousPhaseRequest {
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public String skin;
-    public String version_regles; // conforme à ta payload Python
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public String version_regles;
+
     public String signal;
     public Map<String, Object> etat_min;
     public Map<String, Object> axes;
@@ -13,7 +20,9 @@ public class EvalSousPhaseRequest {
     public Object attente;
     public Object programme;
     public Object opposition;
-    public Object analyse_skin;
+
+    @JsonProperty("analyse_skin")
+    public AnalyseSkinDto analyseSkin;
 
     // Snapshot complet (au début): utile pour itérations
     public Object etat;
