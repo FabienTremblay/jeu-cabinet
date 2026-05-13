@@ -59,6 +59,6 @@ Le payload complet garde aussi :
 
 - Seule l'action `programme.engager_carte` est couverte.
 - Les effets métier détaillés des cartes ne sont pas interprétés ici.
-- La règle reste codée dans le moteur v1 Java ; la configuration déclarative
-  arrive dans BRE T23.
+- BRE T23 ajoute une première règle déclarative YAML pour la validation et les
+  coûts de carte du skin `debut_mandat_bre`.
 - Le contrat reste minimal et ne remplace pas les contrats publics HTTP/Kafka.

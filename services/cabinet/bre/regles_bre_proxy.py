@@ -10,6 +10,7 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from .etat_bre_adapter import EtatBreAdapter
+from .regles_declaratives_cartes import ReglesDeclarativesCartes
 
 from ..moteur.regles_interfaces import ReglesInterface, Command
 
@@ -53,6 +54,7 @@ class BreConfig:
     timeout_s: float = 2.0
     verify_tls: bool = True
     trace_enabled: bool = False
+    validation_cartes_path: Optional[str] = None
 
 
 class ReglesBreProxy(ReglesInterface):
@@ -72,6 +74,7 @@ class ReglesBreProxy(ReglesInterface):
         timeout_s: float = 2.0,
         verify_tls: bool = True,
         trace_enabled: bool = False,
+        validation_cartes_path: Optional[str] = None,
         fallback: Optional[ReglesInterface] = None,
         fallback_sur_erreur: bool = False,
     ) -> None:
@@ -82,9 +85,15 @@ class ReglesBreProxy(ReglesInterface):
             timeout_s=float(timeout_s),
             verify_tls=verify_tls,
             trace_enabled=trace_enabled,
+            validation_cartes_path=validation_cartes_path,
         )
         self.fallback = fallback
         self.fallback_sur_erreur = bool(fallback_sur_erreur)
+        self.regles_cartes = (
+            ReglesDeclarativesCartes.depuis_fichier(validation_cartes_path)
+            if validation_cartes_path
+            else None
+        )
 
     # -----------------------------
     # API ReglesInterface
@@ -120,6 +129,12 @@ class ReglesBreProxy(ReglesInterface):
     def valider_usage_carte(self, etat: Any, cmd: Command) -> Tuple[bool, List[Command]]:
         payload = self._payload_base(etat)
         payload["cmd"] = _jsonable(cmd)
+
+        if self.regles_cartes is not None:
+            resultat = self.regles_cartes.valider(etat_min=payload["etat_min"], cmd=payload["cmd"])
+            if resultat is not None:
+                return resultat.ok, resultat.cmd_cout
+
         try:
             rep = self._post_json("/rules/eval/valider-usage-carte", payload)
         except BreErreur as e:

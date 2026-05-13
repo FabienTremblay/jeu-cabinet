@@ -1,0 +1,17 @@
+version: 1
+
+validation_cartes:
+  - id: engager_carte_cout_standard
+    op: programme.engager_carte
+    conditions:
+      - champ: joueur.attention_dispo
+        operateur: ">="
+        valeur: carte.cout_attention
+      - champ: joueur.capital_politique
+        operateur: ">="
+        valeur: carte.cout_cp
+    cout:
+      - op: joueur.attention.delta
+        delta: -carte.cout_attention
+      - op: joueur.capital.delta
+        delta: -carte.cout_cp

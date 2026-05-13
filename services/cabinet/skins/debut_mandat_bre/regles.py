@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from typing import Any, List
 
 from ...bre.regles_bre_proxy import ReglesBreProxy
@@ -39,6 +40,9 @@ def get_regles() -> ReglesInterface:
     rules_url = os.getenv("CAB_RULES_BRE_URL", "").strip() or "http://rules-service:8081"
     version = os.getenv("CAB_RULES_VERSION", "").strip() or "v1"
     timeout_s = float(os.getenv("CAB_RULES_TIMEOUT_S", "2.0"))
+    validation_cartes_path = (
+        Path(__file__).parent / "regles" / "validation_cartes.yaml"
+    )
 
     return ReglesBreProxy(
         fallback=_ReglesPythonInterdites(),
@@ -46,5 +50,6 @@ def get_regles() -> ReglesInterface:
         skin="debut_mandat_bre",
         version_regles=version,
         timeout_s=timeout_s,
+        validation_cartes_path=str(validation_cartes_path),
         fallback_sur_erreur=False,
     )
