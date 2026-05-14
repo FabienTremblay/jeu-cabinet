@@ -8,6 +8,14 @@ Il décrit une direction d’architecture et de documentation. Ce modèle n’es
 
 État d’implémentation actuel : le dépôt sait maintenant lire un fichier `skin.yaml` minimal pour une skin overlay, reconnaître `skin.id`, `skin.herite_de`, `skin.nom`, `skin.version` et `skin.difficulte`, puis produire un diagnostic lisible des champs déclarés et des familles héritées. Cette étape ne remplace pas encore `config.py`, ne supprime pas `regles.py` et n’implémente pas la fusion complète des familles de règles, cartes, événements, phases ou procédures.
 
+Ce diagnostic est exposé par la commande :
+
+```bash
+python -m services.cabinet.outils.diagnostiquer_skin uat_mandat_austerite_overlay
+```
+
+La recette UAT Docker est documentée dans `docs/bre/uat-createur-skin.md`.
+
 Une skin n’est pas seulement un habillage visuel. Elle est un scénario jouable qui spécialise le moteur générique en définissant :
 
 - l’identité du scénario ;
