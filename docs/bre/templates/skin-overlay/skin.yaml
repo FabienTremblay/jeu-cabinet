@@ -1,0 +1,15 @@
+skin:
+  id: A_REMPLACER_ID_SKIN
+  herite_de: debut_mandat_bre
+  nom: A_REMPLACER_NOM_SKIN
+  version: v1
+  difficulte: debutant
+
+presentation:
+  pitch: >
+    A_REMPLACER_PITCH_DU_SCENARIO
+
+parametres:
+  # Exemples optionnels. Supprimer ou modifier selon le scénario.
+  nb_tours_max: 7
+  capital_politique_initial: 3

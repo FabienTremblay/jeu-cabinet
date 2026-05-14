@@ -15,6 +15,12 @@ L’exemple contrôlé du dépôt est :
 services/cabinet/skins/uat_mandat_austerite_overlay/skin.yaml
 ```
 
+Un gabarit minimal à copier est fourni dans :
+
+```text
+docs/bre/templates/skin-overlay/
+```
+
 ## Niveau 1 — Guide Général Du Scénario
 
 Au niveau 1, un créateur de skin peut personnaliser :
@@ -44,9 +50,26 @@ premier niveau, le fichier attendu est seulement :
 services/cabinet/skins/mon_scenario_overlay/skin.yaml
 ```
 
-## 2. Créer `skin.yaml`
+## 2. Copier Le Gabarit
 
-Exemple minimal :
+Copier le gabarit dans le nouveau dossier :
+
+```bash
+cp docs/bre/templates/skin-overlay/skin.yaml \
+  services/cabinet/skins/mon_scenario_overlay/skin.yaml
+```
+
+Le gabarit contient des marqueurs explicites à remplacer :
+
+```text
+A_REMPLACER_ID_SKIN
+A_REMPLACER_NOM_SKIN
+A_REMPLACER_PITCH_DU_SCENARIO
+```
+
+## 3. Adapter `skin.yaml`
+
+Exemple adapté :
 
 ```yaml
 skin:
@@ -75,7 +98,7 @@ Champs importants :
 - `presentation.pitch` : court texte d’intention ;
 - `parametres.*` : premiers paramètres simples déclarés par l’overlay.
 
-## 3. Diagnostiquer La Skin Dans Docker
+## 4. Diagnostiquer La Skin Dans Docker
 
 La commande doit respecter la stratégie d’environnements du projet :
 `--env-file`, nom de projet Compose et overlays Compose explicites.
@@ -86,7 +109,7 @@ En développement MaisonNeuve :
 docker compose --env-file .env.dev -p cabinet-dev \
   -f docker-compose.yml -f docker-compose.dev.yml \
   run --rm --no-deps api-moteur \
-  python -m services.cabinet.outils.diagnostiquer_skin uat_mandat_austerite_overlay
+  python -m services.cabinet.outils.diagnostiquer_skin mon_scenario_overlay
 ```
 
 Pour valider la documentation avec les fichiers versionnés :
@@ -98,13 +121,17 @@ docker compose --env-file .env.dev.example -p cabinet-dev-test \
   python -m services.cabinet.outils.diagnostiquer_skin uat_mandat_austerite_overlay
 ```
 
+Cette seconde commande utilise l’exemple contrôlé du dépôt. Pour votre propre
+skin, remplacer `uat_mandat_austerite_overlay` par l’identifiant déclaré dans
+`skin.id`.
+
 Variante locale développeur :
 
 ```bash
-.venv/bin/python -m services.cabinet.outils.diagnostiquer_skin uat_mandat_austerite_overlay
+.venv/bin/python -m services.cabinet.outils.diagnostiquer_skin mon_scenario_overlay
 ```
 
-## 4. Interpréter La Sortie
+## 5. Interpréter La Sortie
 
 Sortie attendue pour l’exemple contrôlé :
 
