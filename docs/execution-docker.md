@@ -316,3 +316,22 @@ Les details fonctionnels et la discipline par couche restent dans
 
 La separation Docker ne change pas les contrats OpenAPI et JSON Schema: elle
 porte sur l'orchestration, les ports hote, les domaines et le routage Traefik.
+
+## Diagnostic BRE Poweruser
+
+Le diagnostic UAT des skins poweruser utilise le service `api-moteur`, car son
+image contient le package Python `services`.
+
+La commande doit suivre la même stratégie d'environnement que les autres
+commandes Docker du projet : `--env-file`, `-p` et overlays Compose explicites.
+Exemple en développement MaisonNeuve :
+
+```bash
+docker compose --env-file .env.dev -p cabinet-dev \
+  -f docker-compose.yml -f docker-compose.dev.yml \
+  run --rm --no-deps api-moteur \
+  python -m services.cabinet.outils.diagnostiquer_skin uat_mandat_austerite_overlay
+```
+
+`--no-deps` évite de démarrer Kafka, Postgres ou `rules-service`. Le diagnostic
+lit seulement le fichier `skin.yaml` de l'overlay.

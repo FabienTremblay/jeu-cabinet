@@ -14,28 +14,62 @@ Le service Docker à utiliser est `api-moteur`, car son image contient le paquet
 Python `services`.
 
 Le diagnostic ne dépend pas de Kafka ni du `rules-service`. La commande
-recommandée évite donc de démarrer les dépendances.
+recommandée évite donc de démarrer les dépendances avec `--no-deps`.
 
-Dans l’environnement MaisonNeuve ou dans une stack locale déjà configurée, les
-variables Compose comme `STACK_NETWORK` et `STACK_ID` doivent être fournies par
-l’environnement de déploiement :
+La commande doit respecter le même choix d’environnement que le reste du projet :
+fichier env, nom de projet Compose et overlay Compose. Ne pas lancer une
+commande Docker Compose nue sur MaisonNeuve, car MaisonNeuve peut aussi héberger
+la production actuelle issue de `main`.
+
+### Développement MaisonNeuve
 
 ```bash
-docker compose run --rm --no-deps api-moteur \
+docker compose --env-file .env.dev -p cabinet-dev \
+  -f docker-compose.yml -f docker-compose.dev.yml \
+  run --rm --no-deps api-moteur \
   python -m services.cabinet.outils.diagnostiquer_skin uat_mandat_austerite_overlay
 ```
 
 Par chemin explicite :
 
 ```bash
-docker compose run --rm --no-deps api-moteur \
+docker compose --env-file .env.dev -p cabinet-dev \
+  -f docker-compose.yml -f docker-compose.dev.yml \
+  run --rm --no-deps api-moteur \
   python -m services.cabinet.outils.diagnostiquer_skin \
   --skin-yaml services/cabinet/skins/uat_mandat_austerite_overlay/skin.yaml
 ```
 
-Dans un environnement local nu, si Compose signale que `STACK_NETWORK` n’est pas
-défini, charger d’abord les variables habituelles de la stack ou les fournir
-explicitement avec un réseau Docker utilisateur existant.
+Préparation attendue si `.env.dev` n’existe pas encore :
+
+```bash
+cp .env.dev.example .env.dev
+docker network create cabinet_dev_net
+```
+
+Si le réseau existe déjà, Docker signale simplement qu’il est déjà présent.
+
+### MaisonLinux Ou UAT Stable
+
+Utiliser l’environnement MaisonLinux lorsque la validation doit être faite dans
+la stack LAN stable :
+
+```bash
+docker compose --env-file .env.maisonlinux -p cabinet-maisonlinux \
+  -f docker-compose.yml -f docker-compose.maisonlinux.yml \
+  run --rm --no-deps api-moteur \
+  python -m services.cabinet.outils.diagnostiquer_skin uat_mandat_austerite_overlay
+```
+
+La préparation de `.env.maisonlinux` et du réseau
+`cabinet_maisonlinux_net` est décrite dans `docs/execution-docker.md`.
+
+### Production MaisonNeuve
+
+La production actuelle MaisonNeuve roule depuis `main` avec son `.env`
+historique. Ne pas utiliser la branche de travail `feature/bre-poweruser-skin`
+pour lancer ce diagnostic contre la production, sauf procédure de déploiement
+explicite.
 
 ## Commande Locale Développeur
 
