@@ -21,6 +21,10 @@ Un gabarit minimal à copier est fourni dans :
 docs/bre/templates/skin-overlay/
 ```
 
+Ce gabarit est un point de départ de niveau 1. Il ne devient utilisable qu’après
+copie dans `services/cabinet/skins/<id_skin>/` et remplacement de tous les
+marqueurs `A_REMPLACER_*`.
+
 ## Niveau 1 — Guide Général Du Scénario
 
 Au niveau 1, un créateur de skin peut personnaliser :
