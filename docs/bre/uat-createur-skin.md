@@ -8,6 +8,9 @@ Ce parcours UAT permet à un créateur de skin de vérifier qu’un overlay
 Le diagnostic actuel ne modifie pas le jeu. Il affiche ce que la skin déclare
 et ce qui reste hérité.
 
+Pour créer une nouvelle skin overlay pas à pas, voir
+`docs/bre/creer-une-skin-bre.md`.
+
 ## Exécuter Le Diagnostic Dans Docker
 
 Le service Docker à utiliser est `api-moteur`, car son image contient le paquet

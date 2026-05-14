@@ -7,10 +7,19 @@ de jeu par configuration déclarative, sans changement spécifique dans l'UI, le
 noyau Cabinet, le Java ou le `rules-service`.
 
 Pour une démonstration pas à pas, voir `docs/bre/demo-poweruser-bre.md`.
+Pour créer une nouvelle skin overlay, voir `docs/bre/creer-une-skin-bre.md`.
 
 ## Créer Une Skin Dérivée
 
-Une skin poweruser suit la même structure qu'une skin Cabinet classique :
+L’approche cible est maintenant l’overlay déclaratif avec `skin.yaml`. La copie
+complète d’une skin existante reste utile seulement pour les expérimentations ou
+les UAT de transition.
+
+Le premier niveau de création est documenté dans
+`docs/bre/creer-une-skin-bre.md`.
+
+L’exemple historique `mandat_fragile` suit encore une structure de skin Cabinet
+classique :
 
 ```text
 services/cabinet/skins/mandat_fragile/
@@ -21,11 +30,13 @@ services/cabinet/skins/mandat_fragile/
     └── validation_cartes.yaml
 ```
 
-`config.py` peut dériver d'une skin existante et ajuster les paramètres
-déclaratifs du contexte de jeu, par exemple le capital politique initial.
+Dans cette forme historique, `config.py` peut dériver d'une skin existante et
+ajuster les paramètres du contexte de jeu, par exemple le capital politique
+initial.
 
 `regles/validation_cartes.yaml` porte les règles ajustables par un créateur de
-skin.
+skin. Pour une nouvelle création, préférer l’approche overlay documentée dans la
+recette T27.
 
 ## Exemple Mandat Fragile
 
@@ -59,7 +70,7 @@ La même action est donc refusée avec `attention_dispo = 1`, puis acceptée ave
 
 - les conditions dans `validation_cartes.yaml` ;
 - les coûts produits ;
-- les paramètres de skin dans `config.py` ;
+- les paramètres de skin dans `skin.yaml` pour l’approche overlay ;
 - les textes descriptifs de la skin.
 
 ## Ce Qui Ne Change Pas

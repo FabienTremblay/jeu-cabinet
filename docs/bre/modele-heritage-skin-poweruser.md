@@ -15,6 +15,8 @@ python -m services.cabinet.outils.diagnostiquer_skin uat_mandat_austerite_overla
 ```
 
 La recette UAT Docker est documentée dans `docs/bre/uat-createur-skin.md`.
+La recette pas-à-pas de création d’une skin overlay de niveau 1 est documentée
+dans `docs/bre/creer-une-skin-bre.md`.
 
 Une skin n’est pas seulement un habillage visuel. Elle est un scénario jouable qui spécialise le moteur générique en définissant :
 
