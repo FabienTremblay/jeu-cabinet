@@ -8,6 +8,9 @@
 Pour BRE T22, le périmètre stabilisé est volontairement limité à
 `programme.engager_carte`.
 
+Ce contrat alimente autant le moteur Java v1 que l'interpréteur YAML Python
+actuel. Il ne décrit pas une API publique UI.
+
 ## Champs Minimaux
 
 ```json

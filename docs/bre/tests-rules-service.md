@@ -7,6 +7,9 @@ Les tests Java du `rules-service` couvrent notamment :
 - le routage BRE par `analyse_skin.skin` et `analyse_skin.version` ;
 - la validation minimale de `programme.engager_carte` par le moteur v1.
 
+Ils ne couvrent pas encore l'interpréteur YAML Python. Celui-ci est validé par
+les tests Cabinet dans `services/cabinet/tests/`.
+
 ## Prérequis
 
 - JDK 21 accessible via `JAVA_HOME`.

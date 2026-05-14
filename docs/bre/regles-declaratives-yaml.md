@@ -17,6 +17,9 @@ Un créateur de skin peut ajuster les conditions et les coûts sans modifier :
 - le noyau `services/cabinet/moteur/` ;
 - le code Java du `rules-service`.
 
+Dans cette branche, l'interprétation YAML est faite côté Python par le proxy
+BRE. Le `rules-service` reste le routeur Java ; Drools/DMN n'est pas introduit.
+
 ## Exemple
 
 ```yaml
@@ -89,3 +92,7 @@ Il ne supporte pas encore :
 - priorités ;
 - messages configurables ;
 - effets de carte autres que les coûts.
+
+Une migration future vers le `rules-service` ou vers Drools/DMN devra préserver
+le contrat fonctionnel démontré ici : une skin modifie son comportement par
+configuration déclarative.

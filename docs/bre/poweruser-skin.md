@@ -6,6 +6,8 @@ La skin `mandat_fragile` démontre qu'un créateur de skin peut changer une règ
 de jeu par configuration déclarative, sans changement spécifique dans l'UI, le
 noyau Cabinet, le Java ou le `rules-service`.
 
+Pour une démonstration pas à pas, voir `docs/bre/demo-poweruser-bre.md`.
+
 ## Créer Une Skin Dérivée
 
 Une skin poweruser suit la même structure qu'une skin Cabinet classique :
@@ -74,3 +76,4 @@ Java spécifique à `mandat_fragile` n'est ajouté.
 
 La démonstration reste volontairement centrée sur `programme.engager_carte`.
 Le mini-interpréteur YAML ne remplace pas un moteur de règles complet.
+Drools/DMN reste une piste future, hors périmètre de cette branche.

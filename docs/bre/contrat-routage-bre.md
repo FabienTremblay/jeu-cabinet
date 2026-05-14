@@ -17,6 +17,10 @@ Ce bloc est la source principale de routage. Les champs historiques comme
 `skin` ou `version_regles` peuvent encore être lus par les DTO Java pour
 compatibilité, mais ils ne doivent pas choisir le moteur.
 
+Ce contrat concerne le point d'entrée BRE Java. Les règles déclaratives YAML de
+skin peuvent ensuite être appliquées par le proxy Python dans cette preuve de
+concept, sans changer le routage.
+
 ## Règle De Routage Actuelle
 
 `rules-service` route vers le moteur de démonstration v1 seulement si :
