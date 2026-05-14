@@ -1,0 +1,14 @@
+skin:
+  id: uat_mandat_austerite_overlay
+  herite_de: debut_mandat_bre
+  nom: Mandat d’austérité — overlay UAT
+  version: v1
+  difficulte: intermediaire
+
+presentation:
+  pitch: >
+    Le cabinet gouverne dans un contexte d’austérité.
+    Les mesures exigent davantage de capital politique.
+
+parametres:
+  capital_politique_initial: 3
