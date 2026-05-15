@@ -1,5 +1,8 @@
 # Diagnostic Créateur De Skin
 
+Point d’entrée recommandé de la documentation BRE :
+[`README.md`](README.md).
+
 ## Objectif
 
 Ce parcours permet à un créateur de skin de vérifier qu’un overlay

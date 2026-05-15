@@ -1,5 +1,8 @@
 # Couche 2 — contenu déclaratif des skins poweruser
 
+Point d’entrée recommandé de la documentation BRE :
+[`README.md`](README.md).
+
 ## 1. Intention
 
 Ce document explore la couche 2 du modèle de skins poweruser du jeu **Conseil des ministres**.

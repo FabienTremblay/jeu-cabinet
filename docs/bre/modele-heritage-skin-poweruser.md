@@ -1,5 +1,8 @@
 # Modèle d’héritage des skins poweruser
 
+Point d’entrée recommandé de la documentation BRE :
+[`README.md`](README.md).
+
 ## 1. Intention
 
 Ce document définit le modèle cible pour la création de skins poweruser dans le jeu **Conseil des ministres**.

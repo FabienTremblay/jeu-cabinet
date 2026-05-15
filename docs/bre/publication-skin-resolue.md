@@ -1,5 +1,8 @@
 # Publication Résolue D’une Skin
 
+Point d’entrée recommandé de la documentation BRE :
+[`README.md`](README.md).
+
 ## Objectif
 
 Ce document définit le processus cible de publication résolue d’une skin

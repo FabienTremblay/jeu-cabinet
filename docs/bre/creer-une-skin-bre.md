@@ -1,5 +1,8 @@
 # Créer Une Skin BRE Poweruser
 
+Point d’entrée recommandé de la documentation BRE :
+[`README.md`](README.md).
+
 ## Objectif
 
 Cette recette explique comment créer une skin BRE déclarative de niveau 1 :
