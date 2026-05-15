@@ -14,11 +14,25 @@ Ce diagnostic est exposé par la commande :
 python -m services.cabinet.outils.diagnostiquer_skin uat_mandat_austerite_overlay
 ```
 
-La recette UAT Docker est documentée dans `docs/bre/uat-createur-skin.md`.
+La recette de diagnostic Docker est documentée dans
+`docs/bre/uat-createur-skin.md`.
 La recette pas-à-pas de création d’une skin overlay de niveau 1 est documentée
 dans `docs/bre/creer-une-skin-bre.md`.
 Le gabarit minimal de skin overlay est fourni dans
 `docs/bre/templates/skin-overlay/`.
+
+Une skin poweruser peut exister dans trois états :
+
+- brouillon : répertoire externe ou espace de travail monté dans Docker, non
+  versionné, pour l’élaboration et le diagnostic créateur ;
+- candidate : branche dédiée ou espace de validation, testée, pour revue avant
+  intégration ;
+- publiée : `services/cabinet/skins/<skin_id>/` ou catalogue officiel futur,
+  versionnée, pour une skin intégrée au projet.
+
+`services/cabinet/skins/` est l’espace des skins intégrées. Ce n’est pas
+nécessairement l’espace de brouillon. Le diagnostic peut lire un `skin.yaml`
+externe avec `--skin-yaml`, notamment via un montage Docker.
 
 Une skin n’est pas seulement un habillage visuel. Elle est un scénario jouable qui spécialise le moteur générique en définissant :
 
@@ -166,7 +180,7 @@ services/cabinet/skins/mandat_austerite/
 
 Le reste serait hérité de la skin parente.
 
-Un exemple UAT minimal existe dans :
+Un exemple de diagnostic minimal existe dans :
 
 ```text
 services/cabinet/skins/uat_mandat_austerite_overlay/skin.yaml
@@ -620,13 +634,13 @@ Chaque document devrait contenir :
 - les fichiers concernés ;
 - ce qu’il ne faut pas changer ;
 - un exemple minimal ;
-- une commande de validation UAT ;
+- une commande de validation créateur ;
 - les pièges fréquents ;
 - les signes indiquant qu’il faut passer au niveau suivant.
 
 ## 17. Diagnostic attendu pour une skin héritée
 
-Un outil UAT ou diagnostic devrait pouvoir expliquer ce qui est hérité et ce qui est personnalisé.
+Un outil de diagnostic créateur devrait pouvoir expliquer ce qui est hérité et ce qui est personnalisé.
 
 Exemple de sortie cible :
 
@@ -654,7 +668,7 @@ Ce diagnostic est essentiel pour rendre l’héritage compréhensible.
 
 ## 18. Impact sur les tickets existants
 
-### T26 — parcours UAT accessible
+### T26 — parcours de diagnostic créateur accessible
 
 T26 ne doit pas seulement être une commande de test technique.
 
@@ -677,7 +691,7 @@ La recette ne doit pas seulement dire “copier une skin”.
 
 Elle doit présenter deux approches :
 
-- approche par copie, utile seulement pour les expérimentations ou les UAT de transition ;
+- approche par copie, utile seulement pour les expérimentations ou les essais créateur de transition ;
 - approche cible par héritage déclaratif.
 
 ### T28 — gabarit de skin

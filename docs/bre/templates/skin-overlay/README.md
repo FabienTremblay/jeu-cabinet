@@ -9,12 +9,15 @@ nom, version, difficulté, pitch et quelques paramètres simples.
 Ne pas placer ce dossier directement dans `services/cabinet/skins/` sans copie
 et personnalisation. Les marqueurs `A_REMPLACER_*` doivent tous être remplacés.
 
-## Usage
+## Utilisation Recommandée
 
-Copier le contenu de ce dossier dans une nouvelle skin :
+Pour un premier essai créateur, copier le gabarit dans un répertoire brouillon
+plutôt que directement dans `services/cabinet/skins/`.
+
+Exemple :
 
 ```text
-services/cabinet/skins/<id_de_la_skin>/
+../skins-brouillon/<id_skin>/
 ```
 
 Puis remplacer les marqueurs dans `skin.yaml` :
@@ -25,13 +28,17 @@ Puis remplacer les marqueurs dans `skin.yaml` :
 
 ## Après Copie
 
-1. Copier le dossier vers `services/cabinet/skins/<id_skin>/`.
+1. Copier le dossier vers un espace brouillon, par exemple
+   `../skins-brouillon/<id_skin>/`.
 2. Renommer le dossier avec l’identifiant technique de la skin.
 3. Remplacer `A_REMPLACER_ID_SKIN` par le même identifiant.
 4. Remplacer `A_REMPLACER_NOM_SKIN` par le nom lisible de la skin.
 5. Ajuster `A_REMPLACER_PITCH_DU_SCENARIO`.
 6. Supprimer ou ajuster les paramètres d’exemple.
 7. Lancer le diagnostic Docker.
+
+Copier dans `services/cabinet/skins/<id_skin>/` correspond plutôt au moment où
+la skin devient candidate ou publiée dans le projet.
 
 ## Héritage
 
@@ -73,8 +80,11 @@ En développement MaisonNeuve :
 ```bash
 docker compose --env-file .env.dev -p cabinet-dev \
   -f docker-compose.yml -f docker-compose.dev.yml \
-  run --rm --no-deps api-moteur \
-  python -m services.cabinet.outils.diagnostiquer_skin <id_skin>
+  run --rm --no-deps \
+  -v "$PWD/<chemin-vers-la-skin>:/skin-a-tester" \
+  api-moteur \
+  python -m services.cabinet.outils.diagnostiquer_skin \
+  --skin-yaml /skin-a-tester/skin.yaml
 ```
 
 Pour valider avec les fichiers versionnés :
@@ -82,8 +92,11 @@ Pour valider avec les fichiers versionnés :
 ```bash
 docker compose --env-file .env.dev.example -p cabinet-dev-test \
   -f docker-compose.yml -f docker-compose.dev.yml \
-  run --rm --no-deps api-moteur \
-  python -m services.cabinet.outils.diagnostiquer_skin <id_skin>
+  run --rm --no-deps \
+  -v "$PWD/<chemin-vers-la-skin>:/skin-a-tester" \
+  api-moteur \
+  python -m services.cabinet.outils.diagnostiquer_skin \
+  --skin-yaml /skin-a-tester/skin.yaml
 ```
 
 La sortie doit afficher la skin, son parent, les champs déclarés et les familles

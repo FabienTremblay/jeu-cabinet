@@ -22,8 +22,21 @@ docs/bre/templates/skin-overlay/
 ```
 
 Ce gabarit est un point de départ de niveau 1. Il ne devient utilisable qu’après
-copie dans `services/cabinet/skins/<id_skin>/` et remplacement de tous les
-marqueurs `A_REMPLACER_*`.
+copie dans un espace brouillon ou dans une branche candidate, puis remplacement
+de tous les marqueurs `A_REMPLACER_*`.
+
+## Processus Recommandé
+
+Une skin poweruser peut passer par trois états.
+
+| État | Emplacement recommandé | Statut | Objectif |
+| --- | --- | --- | --- |
+| Brouillon | Répertoire externe ou répertoire de travail monté dans Docker | Non versionné | Élaboration et diagnostic créateur |
+| Candidate | Branche dédiée ou espace de validation | Testée | Revue avant intégration |
+| Publiée | `services/cabinet/skins/<skin_id>/` ou catalogue officiel futur | Versionnée | Skin intégrée au projet |
+
+`services/cabinet/skins/` est l’espace des skins intégrées au projet. Ce n’est
+pas l’espace naturel de brouillon.
 
 ## Niveau 1 — Guide Général Du Scénario
 
@@ -39,19 +52,20 @@ Au niveau 1, un créateur de skin peut personnaliser :
 Le reste reste hérité de la skin parente. Pour le moment, la parente provisoire
 recommandée est `debut_mandat_bre`.
 
-## 1. Créer Le Dossier Overlay
+## 1. Créer Le Dossier Overlay Brouillon
 
-Créer un dossier dédié sous `services/cabinet/skins/` :
+Créer un dossier dédié dans un espace de travail. Par exemple, hors du dépôt :
 
 ```text
-services/cabinet/skins/mon_scenario_overlay/
+../skins-brouillon/mon_scenario_overlay/
 ```
 
-Le dossier ne doit pas contenir une copie complète de la skin parente. Pour ce
-premier niveau, le fichier attendu est seulement :
+Ou dans un espace non versionné de travail. Le dossier ne doit pas contenir une
+copie complète de la skin parente. Pour ce premier niveau, le fichier attendu
+est seulement :
 
 ```text
-services/cabinet/skins/mon_scenario_overlay/skin.yaml
+../skins-brouillon/mon_scenario_overlay/skin.yaml
 ```
 
 ## 2. Copier Le Gabarit
@@ -60,7 +74,7 @@ Copier le gabarit dans le nouveau dossier :
 
 ```bash
 cp docs/bre/templates/skin-overlay/skin.yaml \
-  services/cabinet/skins/mon_scenario_overlay/skin.yaml
+  ../skins-brouillon/mon_scenario_overlay/skin.yaml
 ```
 
 Le gabarit contient des marqueurs explicites à remplacer :
@@ -107,16 +121,34 @@ Champs importants :
 La commande doit respecter la stratégie d’environnements du projet :
 `--env-file`, nom de projet Compose et overlays Compose explicites.
 
-En développement MaisonNeuve :
+Pour une skin brouillon, monter explicitement le dossier dans Docker. Cette
+forme évite de reconstruire l’image `api-moteur` après chaque modification de
+`skin.yaml` :
 
 ```bash
 docker compose --env-file .env.dev -p cabinet-dev \
   -f docker-compose.yml -f docker-compose.dev.yml \
-  run --rm --no-deps api-moteur \
-  python -m services.cabinet.outils.diagnostiquer_skin mon_scenario_overlay
+  run --rm --no-deps \
+  -v "$PWD/../skins-brouillon/mon_scenario_overlay:/skin-a-tester" \
+  api-moteur \
+  python -m services.cabinet.outils.diagnostiquer_skin \
+  --skin-yaml /skin-a-tester/skin.yaml
 ```
 
 Pour valider la documentation avec les fichiers versionnés :
+
+```bash
+docker compose --env-file .env.dev.example -p cabinet-dev-test \
+  -f docker-compose.yml -f docker-compose.dev.yml \
+  run --rm --no-deps \
+  -v "$PWD/../skins-brouillon/mon_scenario_overlay:/skin-a-tester" \
+  api-moteur \
+  python -m services.cabinet.outils.diagnostiquer_skin \
+  --skin-yaml /skin-a-tester/skin.yaml
+```
+
+Pour une skin déjà présente dans l’image ou publiée dans
+`services/cabinet/skins/`, la commande par identifiant reste disponible :
 
 ```bash
 docker compose --env-file .env.dev.example -p cabinet-dev-test \
@@ -125,9 +157,10 @@ docker compose --env-file .env.dev.example -p cabinet-dev-test \
   python -m services.cabinet.outils.diagnostiquer_skin uat_mandat_austerite_overlay
 ```
 
-Cette seconde commande utilise l’exemple contrôlé du dépôt. Pour votre propre
+Cette commande utilise l’exemple contrôlé du dépôt. Pour votre propre
 skin, remplacer `uat_mandat_austerite_overlay` par l’identifiant déclaré dans
-`skin.id`.
+`skin.id` seulement lorsque la skin est déjà présente dans l’image ou publiée
+dans `services/cabinet/skins/`.
 
 Variante locale développeur :
 
@@ -211,12 +244,15 @@ avant d’assumer des règles plus complexes.
 - croire que l’héritage complet est déjà exécuté ;
 - modifier `config.py` trop tôt ;
 - modifier `regles.py` trop tôt ;
-- utiliser une commande Docker sans `--env-file` ni overlays Compose.
+- utiliser une commande Docker sans `--env-file` ni overlays Compose ;
+- diagnostiquer une skin brouillon par identifiant alors qu’elle n’est pas dans
+  l’image Docker.
 
 La copie complète d’une skin existante reste utile seulement pour des
-expérimentations ou des UAT de transition. Elle n’est pas l’expérience cible.
+expérimentations ou des essais créateur de transition. Elle n’est pas
+l’expérience cible.
 
-## Critères De Réussite UAT
+## Critères De Réussite Du Diagnostic Créateur
 
 La recette est réussie si :
 
@@ -228,6 +264,7 @@ La recette est réussie si :
 
 ## Suite
 
-Après validation du niveau 1, le prochain incrément naturel est le gabarit de
-skin overlay de T28. Il doit réduire les erreurs de copie en montrant les champs
-à remplacer plutôt qu’en dupliquant une skin complète.
+Après validation du niveau 1, le passage en candidate peut se faire dans une
+branche dédiée ou un espace de revue. L’intégration dans
+`services/cabinet/skins/` vient seulement au moment de publier la skin dans le
+projet.

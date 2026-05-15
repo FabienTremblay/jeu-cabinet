@@ -13,7 +13,7 @@ Pour créer une nouvelle skin overlay, voir `docs/bre/creer-une-skin-bre.md`.
 
 L’approche cible est maintenant l’overlay déclaratif avec `skin.yaml`. La copie
 complète d’une skin existante reste utile seulement pour les expérimentations ou
-les UAT de transition.
+les essais créateur de transition.
 
 Le premier niveau de création est documenté dans
 `docs/bre/creer-une-skin-bre.md`.

@@ -1,8 +1,8 @@
-# UAT Créateur De Skin
+# Diagnostic Créateur De Skin
 
 ## Objectif
 
-Ce parcours UAT permet à un créateur de skin de vérifier qu’un overlay
+Ce parcours permet à un créateur de skin de vérifier qu’un overlay
 `skin.yaml` est lisible et compréhensible sans écrire de test Python.
 
 Le diagnostic actuel ne modifie pas le jeu. Il affiche ce que la skin déclare
@@ -23,6 +23,31 @@ La commande doit respecter le même choix d’environnement que le reste du proj
 fichier env, nom de projet Compose et overlay Compose. Ne pas lancer une
 commande Docker Compose nue sur MaisonNeuve, car MaisonNeuve peut aussi héberger
 la production actuelle issue de `main`.
+
+### Diagnostiquer Une Skin Brouillon Montée
+
+Pour une skin en brouillon, ne pas reconstruire l’image Docker à chaque
+modification. Monter explicitement le dossier de travail dans le conteneur et
+lire le fichier `skin.yaml` par `--skin-yaml` :
+
+```bash
+docker compose --env-file .env.dev.example -p cabinet-dev-test \
+  -f docker-compose.yml -f docker-compose.dev.yml \
+  run --rm --no-deps \
+  -v "$PWD/<chemin-vers-la-skin>:/skin-a-tester" \
+  api-moteur \
+  python -m services.cabinet.outils.diagnostiquer_skin \
+  --skin-yaml /skin-a-tester/skin.yaml
+```
+
+Cette forme est recommandée pour l’essai créateur : la skin peut vivre dans un
+répertoire externe, dans un espace de travail non versionné ou dans une branche
+de validation. Le conteneur lit le fichier monté sans dépendre du contenu copié
+dans l’image lors du build.
+
+La commande par identifiant de skin reste pertinente pour les skins déjà
+présentes dans l’image, notamment les skins publiées dans
+`services/cabinet/skins/`.
 
 ### Développement MaisonNeuve
 
@@ -52,7 +77,7 @@ docker network create cabinet_dev_net
 
 Si le réseau existe déjà, Docker signale simplement qu’il est déjà présent.
 
-### MaisonLinux Ou UAT Stable
+### MaisonLinux Ou Validation Stable
 
 Utiliser l’environnement MaisonLinux lorsque la validation doit être faite dans
 la stack LAN stable :

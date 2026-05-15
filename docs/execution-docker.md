@@ -319,7 +319,7 @@ porte sur l'orchestration, les ports hote, les domaines et le routage Traefik.
 
 ## Diagnostic BRE Poweruser
 
-Le diagnostic UAT des skins poweruser utilise le service `api-moteur`, car son
+Le diagnostic créateur des skins poweruser utilise le service `api-moteur`, car son
 image contient le package Python `services`.
 
 La commande doit suivre la même stratégie d'environnement que les autres
@@ -335,3 +335,16 @@ docker compose --env-file .env.dev -p cabinet-dev \
 
 `--no-deps` évite de démarrer Kafka, Postgres ou `rules-service`. Le diagnostic
 lit seulement le fichier `skin.yaml` de l'overlay.
+
+Pour une skin en brouillon qui n’est pas encore copiée dans l’image
+`api-moteur`, monter explicitement le dossier et utiliser `--skin-yaml` :
+
+```bash
+docker compose --env-file .env.dev -p cabinet-dev \
+  -f docker-compose.yml -f docker-compose.dev.yml \
+  run --rm --no-deps \
+  -v "$PWD/<chemin-vers-la-skin>:/skin-a-tester" \
+  api-moteur \
+  python -m services.cabinet.outils.diagnostiquer_skin \
+  --skin-yaml /skin-a-tester/skin.yaml
+```
