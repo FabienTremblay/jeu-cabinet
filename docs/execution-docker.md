@@ -330,11 +330,15 @@ Exemple en développement MaisonNeuve :
 docker compose --env-file .env.dev -p cabinet-dev \
   -f docker-compose.yml -f docker-compose.dev.yml \
   run --rm --no-deps api-moteur \
-  python -m services.cabinet.outils.diagnostiquer_skin uat_mandat_austerite_overlay
+  python -m services.cabinet.outils.diagnostiquer_skin exemple_mandat_austerite_overlay
 ```
 
 `--no-deps` évite de démarrer Kafka, Postgres ou `rules-service`. Le diagnostic
 lit seulement le fichier `skin.yaml` de l'overlay.
+
+La commande par identifiant lit les skins copiées dans l'image `api-moteur`.
+Après ajout ou renommage d'une skin dans `services/cabinet/skins/`, reconstruire
+donc `api-moteur` avant de diagnostiquer cette skin par identifiant.
 
 Pour une skin en brouillon qui n’est pas encore copiée dans l’image
 `api-moteur`, monter explicitement le dossier et utiliser `--skin-yaml` :

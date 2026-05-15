@@ -11,7 +11,7 @@ from services.cabinet.bre.skin_yaml import (
 CHEMIN_OVERLAY = (
     Path(__file__).parents[1]
     / "skins"
-    / "uat_mandat_austerite_overlay"
+    / "exemple_mandat_austerite_overlay"
     / "skin.yaml"
 )
 
@@ -19,9 +19,9 @@ CHEMIN_OVERLAY = (
 def test_lit_un_skin_yaml_overlay_valide():
     skin = charger_skin_yaml(CHEMIN_OVERLAY)
 
-    assert skin.skin_id == "uat_mandat_austerite_overlay"
+    assert skin.skin_id == "exemple_mandat_austerite_overlay"
     assert skin.herite_de == "debut_mandat_bre"
-    assert skin.nom == "Mandat d’austérité — overlay UAT"
+    assert skin.nom == "Mandat d’austérité — overlay exemple"
     assert skin.version == "v1"
     assert skin.difficulte == "intermediaire"
 
@@ -57,7 +57,7 @@ skin:
 def test_diagnostic_heritage_minimal():
     diagnostic = diagnostic_heritage_minimal(charger_skin_yaml(CHEMIN_OVERLAY))
 
-    assert diagnostic["skin_id"] == "uat_mandat_austerite_overlay"
+    assert diagnostic["skin_id"] == "exemple_mandat_austerite_overlay"
     assert diagnostic["herite_de"] == "debut_mandat_bre"
     assert diagnostic["declares"] == [
         "skin.id",

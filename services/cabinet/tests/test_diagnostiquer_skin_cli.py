@@ -11,7 +11,7 @@ from services.cabinet.bre.skin_yaml import charger_skin_yaml
 CHEMIN_OVERLAY = (
     Path(__file__).parents[1]
     / "skins"
-    / "uat_mandat_austerite_overlay"
+    / "exemple_mandat_austerite_overlay"
     / "skin.yaml"
 )
 
@@ -19,8 +19,8 @@ CHEMIN_OVERLAY = (
 def test_formate_un_diagnostic_lisible():
     sortie = formater_diagnostic_skin(charger_skin_yaml(CHEMIN_OVERLAY))
 
-    assert "Skin : uat_mandat_austerite_overlay" in sortie
-    assert "Nom : Mandat d’austérité — overlay UAT" in sortie
+    assert "Skin : exemple_mandat_austerite_overlay" in sortie
+    assert "Nom : Mandat d’austérité — overlay exemple" in sortie
     assert "Version : v1" in sortie
     assert "Difficulté : intermediaire" in sortie
     assert "Hérite de : debut_mandat_bre" in sortie
@@ -35,15 +35,15 @@ def test_cli_fonctionne_avec_exemple_overlay(capsys):
 
     assert code == 0
     sortie = capsys.readouterr().out
-    assert "Skin : uat_mandat_austerite_overlay" in sortie
+    assert "Skin : exemple_mandat_austerite_overlay" in sortie
     assert "Champs déclarés :" in sortie
     assert "Familles héritées :" in sortie
 
 
 def test_cli_fonctionne_avec_identifiant_de_skin(capsys):
-    assert chemin_skin_yaml("uat_mandat_austerite_overlay") == CHEMIN_OVERLAY
+    assert chemin_skin_yaml("exemple_mandat_austerite_overlay") == CHEMIN_OVERLAY
 
-    code = main(["uat_mandat_austerite_overlay"])
+    code = main(["exemple_mandat_austerite_overlay"])
 
     assert code == 0
     sortie = capsys.readouterr().out

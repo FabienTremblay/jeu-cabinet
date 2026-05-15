@@ -12,7 +12,7 @@ ce qui est déclaré et ce qui reste hérité.
 L’exemple contrôlé du dépôt est :
 
 ```text
-services/cabinet/skins/uat_mandat_austerite_overlay/skin.yaml
+services/cabinet/skins/exemple_mandat_austerite_overlay/skin.yaml
 ```
 
 Un gabarit minimal à copier est fourni dans :
@@ -154,11 +154,11 @@ Pour une skin déjà présente dans l’image ou publiée dans
 docker compose --env-file .env.dev.example -p cabinet-dev-test \
   -f docker-compose.yml -f docker-compose.dev.yml \
   run --rm --no-deps api-moteur \
-  python -m services.cabinet.outils.diagnostiquer_skin uat_mandat_austerite_overlay
+  python -m services.cabinet.outils.diagnostiquer_skin exemple_mandat_austerite_overlay
 ```
 
 Cette commande utilise l’exemple contrôlé du dépôt. Pour votre propre
-skin, remplacer `uat_mandat_austerite_overlay` par l’identifiant déclaré dans
+skin, remplacer `exemple_mandat_austerite_overlay` par l’identifiant déclaré dans
 `skin.id` seulement lorsque la skin est déjà présente dans l’image ou publiée
 dans `services/cabinet/skins/`.
 
@@ -173,8 +173,8 @@ Variante locale développeur :
 Sortie attendue pour l’exemple contrôlé :
 
 ```text
-Skin : uat_mandat_austerite_overlay
-Nom : Mandat d’austérité — overlay UAT
+Skin : exemple_mandat_austerite_overlay
+Nom : Mandat d’austérité — overlay exemple
 Version : v1
 Difficulté : intermediaire
 Hérite de : debut_mandat_bre

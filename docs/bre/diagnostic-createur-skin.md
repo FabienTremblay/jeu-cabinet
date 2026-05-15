@@ -49,13 +49,16 @@ La commande par identifiant de skin reste pertinente pour les skins déjà
 présentes dans l’image, notamment les skins publiées dans
 `services/cabinet/skins/`.
 
+Si une skin vient d’être ajoutée ou renommée dans `services/cabinet/skins/`,
+reconstruire l’image `api-moteur` avant de la diagnostiquer par identifiant.
+
 ### Développement MaisonNeuve
 
 ```bash
 docker compose --env-file .env.dev -p cabinet-dev \
   -f docker-compose.yml -f docker-compose.dev.yml \
   run --rm --no-deps api-moteur \
-  python -m services.cabinet.outils.diagnostiquer_skin uat_mandat_austerite_overlay
+  python -m services.cabinet.outils.diagnostiquer_skin exemple_mandat_austerite_overlay
 ```
 
 Par chemin explicite :
@@ -65,7 +68,7 @@ docker compose --env-file .env.dev -p cabinet-dev \
   -f docker-compose.yml -f docker-compose.dev.yml \
   run --rm --no-deps api-moteur \
   python -m services.cabinet.outils.diagnostiquer_skin \
-  --skin-yaml services/cabinet/skins/uat_mandat_austerite_overlay/skin.yaml
+  --skin-yaml services/cabinet/skins/exemple_mandat_austerite_overlay/skin.yaml
 ```
 
 Préparation attendue si `.env.dev` n’existe pas encore :
@@ -86,7 +89,7 @@ la stack LAN stable :
 docker compose --env-file .env.maisonlinux -p cabinet-maisonlinux \
   -f docker-compose.yml -f docker-compose.maisonlinux.yml \
   run --rm --no-deps api-moteur \
-  python -m services.cabinet.outils.diagnostiquer_skin uat_mandat_austerite_overlay
+  python -m services.cabinet.outils.diagnostiquer_skin exemple_mandat_austerite_overlay
 ```
 
 La préparation de `.env.maisonlinux` et du réseau
@@ -104,14 +107,14 @@ explicite.
 La même commande peut être lancée localement avec l’environnement virtuel :
 
 ```bash
-.venv/bin/python -m services.cabinet.outils.diagnostiquer_skin uat_mandat_austerite_overlay
+.venv/bin/python -m services.cabinet.outils.diagnostiquer_skin exemple_mandat_austerite_overlay
 ```
 
 ## Exemple De Sortie
 
 ```text
-Skin : uat_mandat_austerite_overlay
-Nom : Mandat d’austérité — overlay UAT
+Skin : exemple_mandat_austerite_overlay
+Nom : Mandat d’austérité — overlay exemple
 Version : v1
 Difficulté : intermediaire
 Hérite de : debut_mandat_bre

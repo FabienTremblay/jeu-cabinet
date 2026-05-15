@@ -1,7 +1,7 @@
 skin:
-  id: uat_mandat_austerite_overlay
+  id: exemple_mandat_austerite_overlay
   herite_de: debut_mandat_bre
-  nom: Mandat d’austérité — overlay UAT
+  nom: Mandat d’austérité — overlay exemple
   version: v1
   difficulte: intermediaire
 

@@ -11,11 +11,11 @@ Il décrit une direction d’architecture et de documentation. Ce modèle n’es
 Ce diagnostic est exposé par la commande :
 
 ```bash
-python -m services.cabinet.outils.diagnostiquer_skin uat_mandat_austerite_overlay
+python -m services.cabinet.outils.diagnostiquer_skin exemple_mandat_austerite_overlay
 ```
 
 La recette de diagnostic Docker est documentée dans
-`docs/bre/uat-createur-skin.md`.
+`docs/bre/diagnostic-createur-skin.md`.
 La recette pas-à-pas de création d’une skin overlay de niveau 1 est documentée
 dans `docs/bre/creer-une-skin-bre.md`.
 Le gabarit minimal de skin overlay est fourni dans
@@ -183,7 +183,7 @@ Le reste serait hérité de la skin parente.
 Un exemple de diagnostic minimal existe dans :
 
 ```text
-services/cabinet/skins/uat_mandat_austerite_overlay/skin.yaml
+services/cabinet/skins/exemple_mandat_austerite_overlay/skin.yaml
 ```
 
 Il sert à valider la lecture et le diagnostic d’un overlay. Il ne constitue pas encore une migration des skins existantes vers le modèle complet.
