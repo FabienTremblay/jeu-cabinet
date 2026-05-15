@@ -17,6 +17,8 @@ Pour créer une nouvelle skin overlay pas à pas, voir
 `docs/bre/creer-une-skin-bre.md`.
 Pour la suite du modèle, notamment le contenu déclaratif et la publication
 résolue, voir `docs/bre/couche-2-contenu-declaratif.md`.
+Pour vérifier qu’un overlay peut devenir une candidate publiable, voir
+`docs/bre/validation-skin-candidate.md`.
 
 ## Exécuter Le Diagnostic Dans Docker
 
@@ -197,3 +199,17 @@ Les tests automatisés restent nécessaires pour l’ingénierie :
 .venv/bin/python -m pytest services/cabinet/tests/test_skin_yaml.py -q
 .venv/bin/python -m pytest services/cabinet/tests -q
 ```
+
+## Étape Suivante : Validation Candidate
+
+Après le diagnostic créateur, la commande suivante vérifie les erreurs locales
+qui empêcheraient une publication fiable :
+
+```bash
+docker compose --env-file .env.dev.example -p cabinet-dev-test \
+  -f docker-compose.yml -f docker-compose.dev.yml \
+  run --rm --no-deps api-moteur \
+  python -m services.cabinet.outils.valider_skin_candidate exemple_mandat_climat_overlay
+```
+
+Cette validation ne publie pas la skin et ne résout pas l’héritage.

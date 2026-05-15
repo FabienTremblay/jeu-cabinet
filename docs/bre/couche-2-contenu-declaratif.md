@@ -29,6 +29,10 @@ overlay, puis affiche un résumé lisible des ajouts, remplacements, retraits et
 messages personnalisés. Ce diagnostic ne résout pas encore l’héritage et ne
 publie pas la skin.
 
+Deuxième incrément amorcé : la validation candidate vérifie les erreurs locales
+les plus fréquentes avant publication. Le contrat est décrit dans
+`docs/bre/validation-skin-candidate.md`.
+
 ---
 
 ## 2. Hypothèse structurante
@@ -747,6 +751,6 @@ Cette séparation permet :
 
 La prochaine étape logique sera de transformer cette exploration en incréments :
 diagnostic enrichi de contenu, validation de candidate, puis publication
-résolue. Le diagnostic enrichi de contenu est amorcé. Les étapes suivantes
-restent la validation de candidate, puis la conception et l’implémentation de la
-publication résolue.
+résolue. Le diagnostic enrichi de contenu et la première validation candidate
+sont amorcés. Les étapes suivantes restent la conception et l’implémentation de
+la publication résolue.

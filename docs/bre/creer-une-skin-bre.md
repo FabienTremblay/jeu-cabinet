@@ -282,3 +282,15 @@ Après validation du niveau 1, le passage en candidate peut se faire dans une
 branche dédiée ou un espace de revue. L’intégration dans
 `services/cabinet/skins/` vient seulement au moment de publier la skin dans le
 projet.
+
+Avant toute publication future, lancer la validation candidate :
+
+```bash
+docker compose --env-file .env.dev.example -p cabinet-dev-test \
+  -f docker-compose.yml -f docker-compose.dev.yml \
+  run --rm --no-deps api-moteur \
+  python -m services.cabinet.outils.valider_skin_candidate exemple_mandat_climat_overlay
+```
+
+Le contrat de cette validation est documenté dans
+`docs/bre/validation-skin-candidate.md`.
