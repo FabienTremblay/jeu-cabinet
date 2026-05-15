@@ -19,6 +19,8 @@ Pour la suite du modèle, notamment le contenu déclaratif et la publication
 résolue, voir `docs/bre/couche-2-contenu-declaratif.md`.
 Pour vérifier qu’un overlay peut devenir une candidate publiable, voir
 `docs/bre/validation-skin-candidate.md`.
+Pour le modèle cible de publication résolue, voir
+`docs/bre/publication-skin-resolue.md`.
 
 ## Exécuter Le Diagnostic Dans Docker
 

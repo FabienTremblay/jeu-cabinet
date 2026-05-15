@@ -22,6 +22,8 @@ Le gabarit minimal de skin overlay est fourni dans
 `docs/bre/templates/skin-overlay/`.
 La couche 2, centrée sur les cartes, événements, messages et la publication
 résolue, est explorée dans `docs/bre/couche-2-contenu-declaratif.md`.
+Le processus cible de publication résolue est défini dans
+`docs/bre/publication-skin-resolue.md`.
 
 Une skin poweruser peut exister dans trois états :
 
@@ -795,6 +797,9 @@ Première capacité livrée : lecture de `skin.yaml` et diagnostic minimal d’u
 - cartes ;
 - événements ;
 - messages.
+
+Incréments livrés ou conçus : diagnostic des contenus de couche 2, validation
+candidate non destructive et conception de la publication résolue.
 
 ### Phase E — règles d’action enrichies
 

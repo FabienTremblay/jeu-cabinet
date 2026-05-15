@@ -16,6 +16,9 @@ La validation candidate répond à une question différente du diagnostic créat
 | Validation candidate | Quelles erreurs empêchent une publication fiable ? |
 | Publication résolue | Quel artefact versionné et autonome sera produit ? |
 
+Le processus cible de publication résolue est décrit dans
+`docs/bre/publication-skin-resolue.md`.
+
 ## Commande
 
 Pour une skin déjà présente dans l’image `api-moteur` :
@@ -145,3 +148,6 @@ Une candidate peut passer à l’étape de conception de publication lorsque :
 Cette étape ne garantit pas encore que la skin publiée sera jouable. Elle
 garantit seulement que l’overlay ne contient pas les erreurs locales les plus
 fréquentes.
+
+L’étape suivante consiste à publier une skin résolue, versionnée et autonome
+selon `docs/bre/publication-skin-resolue.md`.

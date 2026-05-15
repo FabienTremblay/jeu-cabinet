@@ -33,6 +33,9 @@ Deuxième incrément amorcé : la validation candidate vérifie les erreurs loca
 les plus fréquentes avant publication. Le contrat est décrit dans
 `docs/bre/validation-skin-candidate.md`.
 
+Le processus cible de publication résolue est détaillé dans
+`docs/bre/publication-skin-resolue.md`.
+
 ---
 
 ## 2. Hypothèse structurante
@@ -78,6 +81,9 @@ Une skin peut exister dans trois états.
 `services/cabinet/skins/` n’est pas l’espace naturel de brouillon. C’est l’espace des skins intégrées ou publiées.
 
 La destination publiée ne devrait pas être choisie librement par le poweruser. Elle devrait être dérivée par la commande de publication à partir de `skin.id` et de la politique du projet.
+
+Les règles de destination, de refus de publication et le format cible de
+`publication.yaml` sont définis dans `docs/bre/publication-skin-resolue.md`.
 
 ---
 
@@ -752,5 +758,5 @@ Cette séparation permet :
 La prochaine étape logique sera de transformer cette exploration en incréments :
 diagnostic enrichi de contenu, validation de candidate, puis publication
 résolue. Le diagnostic enrichi de contenu et la première validation candidate
-sont amorcés. Les étapes suivantes restent la conception et l’implémentation de
-la publication résolue.
+sont amorcés. La publication résolue est conçue dans
+`docs/bre/publication-skin-resolue.md`; son implémentation reste à découper.
