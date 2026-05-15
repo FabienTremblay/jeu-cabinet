@@ -15,7 +15,7 @@ ce qui est déclaré et ce qui reste hérité.
 L’exemple contrôlé du dépôt est :
 
 ```text
-services/cabinet/skins/exemple_mandat_austerite_overlay/skin.yaml
+donnees/cabinet/skins/exemples/exemple_mandat_austerite_overlay/skin.yaml
 ```
 
 Un gabarit minimal à copier est fourni dans :
@@ -36,10 +36,11 @@ Une skin poweruser peut passer par trois états.
 | --- | --- | --- | --- |
 | Brouillon | Répertoire externe ou répertoire de travail monté dans Docker | Non versionné | Élaboration et diagnostic créateur |
 | Candidate | Branche dédiée ou espace de validation | Testée | Revue avant intégration |
-| Publiée | `services/cabinet/skins/<skin_id>/` ou catalogue officiel futur | Versionnée | Skin intégrée au projet |
+| Publiée | `donnees/cabinet/skins/<skin_id>/` ou catalogue officiel futur | Versionnée | Skin intégrée au projet |
 
-`services/cabinet/skins/` est l’espace des skins intégrées au projet. Ce n’est
-pas l’espace naturel de brouillon.
+`services/cabinet/skins/` reste l’espace des skins Python ou hybrides
+historiques. Les artefacts déclaratifs de scénario et les overlays contrôlés
+vivent progressivement sous `donnees/cabinet/skins/`.
 
 ## Niveau 1 — Guide Général Du Scénario
 
@@ -150,8 +151,9 @@ docker compose --env-file .env.dev.example -p cabinet-dev-test \
   --skin-yaml /skin-a-tester/skin.yaml
 ```
 
-Pour une skin déjà présente dans l’image ou publiée dans
-`services/cabinet/skins/`, la commande par identifiant reste disponible :
+Pour une skin ou un overlay déjà référencé dans
+`donnees/cabinet/skins/catalogue.yaml`, la commande par identifiant reste
+disponible :
 
 ```bash
 docker compose --env-file .env.dev.example -p cabinet-dev-test \
@@ -162,8 +164,8 @@ docker compose --env-file .env.dev.example -p cabinet-dev-test \
 
 Cette commande utilise l’exemple contrôlé du dépôt. Pour votre propre
 skin, remplacer `exemple_mandat_austerite_overlay` par l’identifiant déclaré dans
-`skin.id` seulement lorsque la skin est déjà présente dans l’image ou publiée
-dans `services/cabinet/skins/`.
+`skin.id` seulement lorsque la skin est référencée dans le catalogue ou montée
+explicitement avec `--skin-yaml`.
 
 Un second exemple contrôlé, `exemple_mandat_climat_overlay`, montre le niveau 2
 avec `cartes.yaml`, `evenements.yaml` et `messages.yaml` :
@@ -283,8 +285,8 @@ La recette est réussie si :
 
 Après validation du niveau 1, le passage en candidate peut se faire dans une
 branche dédiée ou un espace de revue. L’intégration dans
-`services/cabinet/skins/` vient seulement au moment de publier la skin dans le
-projet.
+`donnees/cabinet/skins/` ou dans un catalogue officiel vient seulement au moment
+de publier la skin dans le projet.
 
 Avant toute publication future, lancer la validation candidate :
 

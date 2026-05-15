@@ -8,6 +8,7 @@ from typing import Any, Iterable, Optional
 
 import yaml
 
+from services.cabinet.bre.catalogue_skins import chemin_dossier_catalogue
 from services.cabinet.bre.skin_yaml import SkinYaml, charger_skin_yaml
 
 
@@ -44,6 +45,9 @@ class OptionsValidation:
 
 
 def chemin_skin_dir(skin_id: str) -> Path:
+    dossier_catalogue = chemin_dossier_catalogue(skin_id)
+    if dossier_catalogue is not None:
+        return dossier_catalogue
     racine = Path(__file__).resolve().parents[3]
     return racine / "services" / "cabinet" / "skins" / skin_id
 
@@ -121,7 +125,7 @@ def construire_parseur() -> argparse.ArgumentParser:
     parseur.add_argument(
         "skin_id",
         nargs="?",
-        help="Identifiant d’une skin sous services/cabinet/skins/",
+        help="Identifiant d’une skin ou overlay référencé par le catalogue.",
     )
     parseur.add_argument(
         "--skin-dir",

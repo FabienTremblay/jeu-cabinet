@@ -336,9 +336,10 @@ docker compose --env-file .env.dev -p cabinet-dev \
 `--no-deps` évite de démarrer Kafka, Postgres ou `rules-service`. Le diagnostic
 lit seulement le fichier `skin.yaml` de l'overlay.
 
-La commande par identifiant lit les skins copiées dans l'image `api-moteur`.
-Après ajout ou renommage d'une skin dans `services/cabinet/skins/`, reconstruire
-donc `api-moteur` avant de diagnostiquer cette skin par identifiant.
+La commande par identifiant consulte `donnees/cabinet/skins/catalogue.yaml`.
+Après ajout ou renommage d'une entrée de catalogue ou d'un overlay sous
+`donnees/cabinet/skins/`, reconstruire donc `api-moteur` avant de diagnostiquer
+cette skin par identifiant.
 
 Pour une skin en brouillon qui n’est pas encore copiée dans l’image
 `api-moteur`, monter explicitement le dossier et utiliser `--skin-yaml` :

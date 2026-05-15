@@ -43,8 +43,13 @@ docker compose --env-file .env.dev.example -p cabinet-dev-test \
 ```
 
 La commande est non destructive. Elle ne copie pas de fichiers, ne publie pas
-la skin, ne modifie pas `services/cabinet/skins/`, ne modifie pas de catalogue
-et ne résout pas l’héritage.
+la skin, ne modifie pas `services/cabinet/skins/`, ne modifie pas
+`donnees/cabinet/skins/catalogue.yaml` et ne résout pas l’héritage.
+
+Lorsqu’un identifiant de skin est fourni, la commande consulte d’abord
+`donnees/cabinet/skins/catalogue.yaml`. Les sources de type `dossier` sont
+résolues depuis la racine du dépôt. `--skin-dir` reste disponible pour les
+brouillons montés explicitement dans Docker.
 
 ## Erreurs Bloquantes Implémentées
 
@@ -115,7 +120,7 @@ Ces règles appartiennent à la transition candidate vers publication résolue.
 
 ```text
 Validation skin candidate : exemple_mandat_climat_overlay
-Dossier : /app/services/cabinet/skins/exemple_mandat_climat_overlay
+Dossier : /app/donnees/cabinet/skins/exemples/exemple_mandat_climat_overlay
 Statut : valide
 
 Erreurs bloquantes :

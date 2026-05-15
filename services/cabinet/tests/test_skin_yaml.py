@@ -9,8 +9,11 @@ from services.cabinet.bre.skin_yaml import (
 
 
 CHEMIN_OVERLAY = (
-    Path(__file__).parents[1]
+    Path(__file__).parents[3]
+    / "donnees"
+    / "cabinet"
     / "skins"
+    / "exemples"
     / "exemple_mandat_austerite_overlay"
     / "skin.yaml"
 )

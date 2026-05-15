@@ -3,8 +3,9 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# On copie toute la hiérarchie "services" telle quelle
+# On copie les hiérarchies nécessaires au package Python et aux données déclaratives.
 COPY services /app/services
+COPY donnees /app/donnees
 
 RUN pip install --no-cache-dir \
       fastapi uvicorn[standard] httpx kafka-python pydantic pydantic-settings PyYAML==6.0.3

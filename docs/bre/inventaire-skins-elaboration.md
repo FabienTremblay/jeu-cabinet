@@ -1,20 +1,40 @@
 # Inventaire Des Skins Et Overlays D’élaboration
 
-Ce document classe les dossiers actuellement présents dans
-`services/cabinet/skins/` afin d’éviter de confondre skins publiées, fixtures de
-test, démonstrateurs et exemples contrôlés.
+Ce document classe les skins et overlays connus afin d’éviter de confondre
+skins Python, skins hybrides, skins publiées, fixtures de test, démonstrateurs
+et exemples contrôlés.
 
 Il s’agit d’un inventaire documentaire. Cette passe ne déplace et ne supprime
 aucune skin.
 
 ## Décision Générale
 
-`services/cabinet/skins/` contient aujourd’hui plusieurs catégories :
+Deux emplacements coexistent maintenant :
+
+- `services/cabinet/skins/` : code Python et skins Python/hybrides historiques ;
+- `donnees/cabinet/skins/` : catalogue et artefacts déclaratifs de scénario.
+
+`services/cabinet/skins/` contient encore plusieurs catégories :
 
 - skins historiques ou fonctionnelles du noyau Cabinet ;
 - fixtures utilisées par les tests ;
-- démonstrateurs BRE ;
-- overlays d’exemple pour le diagnostic poweruser.
+- démonstrateurs BRE Python ou hybrides.
+
+Les overlays déclaratifs récents ont été déplacés vers
+`donnees/cabinet/skins/exemples/`.
+
+Le catalogue minimal `donnees/cabinet/skins/catalogue.yaml` sert de source de
+gouvernance pour les outils de diagnostic et de validation. Il peut référencer :
+
+- une source `module_python` pour les skins Python ou hybrides ;
+- une source `dossier` pour les overlays déclaratifs, templates ou futures skins
+  résolues.
+
+`chargeable: true` signifie que l’entrée est exposée par le catalogue comme skin
+chargeable de référence. `chargeable: false` signifie que l’entrée est exposée
+pour diagnostic, validation, documentation ou démonstration, mais ne doit pas
+être interprétée comme skin publiée ou officiellement jouable, même si du code
+Python historique permet encore de l’importer.
 
 Aucune skin issue du parcours overlay n’est encore une skin publiée résolue. La
 publication résolue reste conçue dans
@@ -30,8 +50,8 @@ implémentée.
 | `Mandat_difficile` | démonstrateur historique à clarifier | variante ancienne, nom non normalisé | documenter puis décider plus tard |
 | `debut_mandat_bre` | référence provisoire BRE | base de démonstration BRE actuelle | conserver comme référence provisoire |
 | `mandat_fragile` | démonstrateur poweruser historique | prouve une différence par YAML | conserver tant que la preuve T24 sert |
-| `exemple_mandat_austerite_overlay` | exemple contrôlé niveau 1 | diagnostic `skin.yaml` | conserver comme exemple/test |
-| `exemple_mandat_climat_overlay` | exemple contrôlé couche 2 | diagnostic contenu + validation candidate | conserver comme exemple/test |
+| `exemple_mandat_austerite_overlay` | exemple contrôlé niveau 1 | diagnostic `skin.yaml` | déplacé vers `donnees/cabinet/skins/exemples/` |
+| `exemple_mandat_climat_overlay` | exemple contrôlé couche 2 | diagnostic contenu + validation candidate | déplacé vers `donnees/cabinet/skins/exemples/` |
 
 ## Détail Par Skin Ou Overlay
 
@@ -174,15 +194,16 @@ Utilisation par les tests : oui.
 
 Décision actuelle :
 
-- rester dans `services/cabinet/skins/` pour que la commande par identifiant
-  fonctionne dans Docker après build ;
+- vivre dans `donnees/cabinet/skins/exemples/` ;
+- être référencé par `donnees/cabinet/skins/catalogue.yaml` ;
+- rester accessible par identifiant via le catalogue ;
 - ne pas présenter comme skin publiée ou jouable ;
 - préciser qu’il s’agit d’un exemple contrôlé.
 
 Action future possible :
 
-- déplacer vers un espace `fixtures` ou `docs/bre/exemples` si le diagnostic
-  sait lire des exemples externes de façon standardisée.
+- décider si cet exemple reste un exemple contrôlé ou devient une fixture
+  dédiée aux tests.
 
 ### `exemple_mandat_climat_overlay`
 
@@ -199,8 +220,9 @@ Utilisation par les tests : oui.
 
 Décision actuelle :
 
-- rester dans `services/cabinet/skins/` pour soutenir les tests et les commandes
-  Docker documentées ;
+- vivre dans `donnees/cabinet/skins/exemples/` ;
+- être référencé par `donnees/cabinet/skins/catalogue.yaml` ;
+- rester accessible par identifiant via le catalogue ;
 - ne pas présenter comme skin publiée ou jouable ;
 - préciser que la publication résolue n’est pas encore exécutée.
 
@@ -212,18 +234,21 @@ Action future possible :
 
 ## Décisions De Déplacement Différées
 
-Aucun déplacement n’est fait maintenant.
+Les overlays déclaratifs récents ont été déplacés vers `donnees/`. Les skins
+Python ou hybrides restent dans `services/cabinet/skins/` tant que leur statut
+et leur dépendance au code Python ne sont pas clarifiés.
 
 Décisions à reprendre plus tard :
 
 - faut-il créer `services/cabinet/tests/fixtures/skins/` pour les overlays de
   tests ?
 - faut-il créer `docs/bre/exemples/` pour les exemples de créateur ?
-- faut-il conserver les exemples dans `services/cabinet/skins/` pour la
-  validation Docker par identifiant ?
 - faut-il archiver ou supprimer `Mandat_difficile` ?
 - faut-il définir un marqueur explicite pour distinguer une skin publiée d’un
   overlay d’exemple ?
+- faut-il aligner le runtime complet sur le catalogue ?
+- faut-il publier les futures skins résolues sous `donnees/cabinet/skins/` ou
+  les exposer via un catalogue externe ?
 
 ## Règle De Lecture
 

@@ -25,7 +25,7 @@ Une skin suit trois états.
 | --- | --- | --- |
 | Brouillon | élaboration par le créateur | dossier externe ou montage Docker |
 | Candidate | overlay validé et prêt pour revue | branche dédiée ou espace de validation |
-| Publiée | artefact autonome, résolu et versionné | `services/cabinet/skins/<skin_id>/` ou catalogue futur |
+| Publiée | artefact autonome, résolu et versionné | `donnees/cabinet/skins/<skin_id>/` ou catalogue futur |
 
 Le brouillon et la candidate expriment uniquement les personnalisations. La skin
 publiée contient le résultat complet attendu par le runtime.
@@ -62,8 +62,13 @@ Le créateur ne choisit pas librement la destination publiée.
 La destination est dérivée par le système. À court terme, elle peut être :
 
 ```text
-services/cabinet/skins/<skin_id>/
+donnees/cabinet/skins/<skin_id>/
 ```
+
+La décision plus récente est de privilégier `donnees/cabinet/skins/` pour les
+artefacts déclaratifs et les futures skins résolues. `services/cabinet/skins/`
+reste l’emplacement des skins Python ou hybrides tant que le runtime n’est pas
+aligné sur le catalogue.
 
 À plus long terme, elle peut être une entrée de catalogue officiel.
 
@@ -79,7 +84,7 @@ Ce principe évite :
 Exemple indicatif :
 
 ```text
-services/cabinet/skins/mandat_climat/
+donnees/cabinet/skins/mandat_climat/
   skin.yaml
   cartes.yaml
   evenements.yaml
@@ -142,7 +147,7 @@ publication:
 
   destination:
     type: dossier
-    chemin: services/cabinet/skins/mandat_climat
+    chemin: donnees/cabinet/skins/mandat_climat
 
   operations_appliquees:
     cartes:

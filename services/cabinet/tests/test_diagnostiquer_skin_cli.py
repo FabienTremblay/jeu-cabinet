@@ -10,14 +10,20 @@ from services.cabinet.bre.skin_yaml import charger_skin_yaml
 
 
 CHEMIN_OVERLAY = (
-    Path(__file__).parents[1]
+    Path(__file__).parents[3]
+    / "donnees"
+    / "cabinet"
     / "skins"
+    / "exemples"
     / "exemple_mandat_austerite_overlay"
     / "skin.yaml"
 )
 CHEMIN_OVERLAY_COUCHE_2 = (
-    Path(__file__).parents[1]
+    Path(__file__).parents[3]
+    / "donnees"
+    / "cabinet"
     / "skins"
+    / "exemples"
     / "exemple_mandat_climat_overlay"
     / "skin.yaml"
 )
@@ -166,6 +172,17 @@ def test_cli_fonctionne_avec_identifiant_de_skin(capsys):
     assert code == 0
     sortie = capsys.readouterr().out
     assert "Hérite de : debut_mandat_bre" in sortie
+
+
+def test_cli_resout_l_overlay_couche_2_via_catalogue(capsys):
+    assert chemin_skin_yaml("exemple_mandat_climat_overlay") == CHEMIN_OVERLAY_COUCHE_2
+
+    code = main(["exemple_mandat_climat_overlay"])
+
+    assert code == 0
+    sortie = capsys.readouterr().out
+    assert "Skin : exemple_mandat_climat_overlay" in sortie
+    assert "- cartes.yaml : présent" in sortie
 
 
 def test_cli_signale_un_skin_yaml_absent(capsys):

@@ -1,0 +1,63 @@
+skins:
+  - id: minimal
+    type: python
+    statut: fixture
+    chargeable: true
+    source:
+      type: module_python
+      module: services.cabinet.skins.minimal
+    description: Skin compacte utilisée par les tests du noyau Cabinet.
+
+  - id: debut_mandat
+    type: python
+    statut: demonstrateur
+    chargeable: true
+    source:
+      type: module_python
+      module: services.cabinet.skins.debut_mandat
+    description: Skin Python historique de début de mandat.
+
+  - id: Mandat_difficile
+    type: python
+    statut: a_deplacer
+    chargeable: false
+    source:
+      type: module_python
+      module: services.cabinet.skins.Mandat_difficile
+    description: Variante historique à clarifier, avec nom de dossier non normalisé.
+
+  - id: debut_mandat_bre
+    type: python_hybride
+    statut: reference_provisoire
+    chargeable: true
+    source:
+      type: module_python
+      module: services.cabinet.skins.debut_mandat_bre
+    description: Skin BRE de référence provisoire.
+
+  - id: mandat_fragile
+    type: python_hybride
+    statut: demonstrateur
+    chargeable: false
+    source:
+      type: module_python
+      module: services.cabinet.skins.mandat_fragile
+    description: Démonstrateur historique d’une surcharge YAML dans une skin Python.
+
+  - id: exemple_mandat_austerite_overlay
+    type: declarative_overlay
+    statut: exemple_controle
+    chargeable: false
+    source:
+      type: dossier
+      chemin: donnees/cabinet/skins/exemples/exemple_mandat_austerite_overlay
+    description: Exemple contrôlé de diagnostic overlay niveau 1.
+
+  - id: exemple_mandat_climat_overlay
+    type: declarative_overlay
+    statut: exemple_controle
+    chargeable: false
+    source:
+      type: dossier
+      chemin: donnees/cabinet/skins/exemples/exemple_mandat_climat_overlay
+    description: Exemple contrôlé de couche 2 avec cartes, événements et messages.

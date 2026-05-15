@@ -10,8 +10,11 @@ from services.cabinet.outils.valider_skin_candidate import (
 
 
 CHEMIN_OVERLAY_COUCHE_2 = (
-    Path(__file__).parents[1]
+    Path(__file__).parents[3]
+    / "donnees"
+    / "cabinet"
     / "skins"
+    / "exemples"
     / "exemple_mandat_climat_overlay"
 )
 

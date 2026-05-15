@@ -16,6 +16,10 @@ lorsqu’ils existent dans l’overlay : `cartes.yaml`, `evenements.yaml` et
 `messages.yaml`. Ce résumé reste un diagnostic : il ne publie pas la skin et ne
 rend pas l’overlay jouable.
 
+Lorsqu’un identifiant de skin est fourni, l’outil consulte d’abord
+`donnees/cabinet/skins/catalogue.yaml`. Les overlays déclaratifs contrôlés sont
+référencés par ce catalogue et vivent sous `donnees/cabinet/skins/exemples/`.
+
 Pour créer une nouvelle skin overlay pas à pas, voir
 `docs/bre/creer-une-skin-bre.md`.
 Pour la suite du modèle, notamment le contenu déclaratif et la publication
@@ -59,12 +63,13 @@ répertoire externe, dans un espace de travail non versionné ou dans une branch
 de validation. Le conteneur lit le fichier monté sans dépendre du contenu copié
 dans l’image lors du build.
 
-La commande par identifiant de skin reste pertinente pour les skins déjà
-présentes dans l’image, notamment les skins publiées dans
-`services/cabinet/skins/`.
+La commande par identifiant de skin reste pertinente pour les entrées référencées
+par `donnees/cabinet/skins/catalogue.yaml`, notamment les overlays d’exemple
+contrôlés et les skins Python/hybrides historiques.
 
-Si une skin vient d’être ajoutée ou renommée dans `services/cabinet/skins/`,
-reconstruire l’image `api-moteur` avant de la diagnostiquer par identifiant.
+Si une entrée de catalogue ou un dossier d’exemple versionné vient d’être ajouté
+ou renommé, reconstruire l’image `api-moteur` avant de la diagnostiquer par
+identifiant.
 
 ### Diagnostiquer L’exemple Couche 2 Intégré
 
@@ -97,7 +102,7 @@ docker compose --env-file .env.dev -p cabinet-dev \
   -f docker-compose.yml -f docker-compose.dev.yml \
   run --rm --no-deps api-moteur \
   python -m services.cabinet.outils.diagnostiquer_skin \
-  --skin-yaml services/cabinet/skins/exemple_mandat_austerite_overlay/skin.yaml
+  --skin-yaml donnees/cabinet/skins/exemples/exemple_mandat_austerite_overlay/skin.yaml
 ```
 
 Préparation attendue si `.env.dev` n’existe pas encore :

@@ -34,7 +34,7 @@ Une skin poweruser peut exister dans trois états :
   versionné, pour l’élaboration et le diagnostic créateur ;
 - candidate : branche dédiée ou espace de validation, testée, pour revue avant
   intégration ;
-- publiée : `services/cabinet/skins/<skin_id>/` ou catalogue officiel futur,
+- publiée : `donnees/cabinet/skins/<skin_id>/` ou catalogue officiel futur,
   versionnée, pour une skin intégrée au projet.
 
 `services/cabinet/skins/` est l’espace des skins intégrées. Ce n’est pas
@@ -150,7 +150,7 @@ Elle devrait plutôt produire ou configurer des décisions que le moteur sait ex
 Une skin complète pourrait prendre cette forme :
 
 ```text
-services/cabinet/skins/<skin_id>/
+donnees/cabinet/skins/<skin_id>/
   skin.yaml
   axes.yaml
   ressources.yaml
@@ -179,7 +179,7 @@ Une skin fille n’a pas besoin de fournir tous ces fichiers.
 Une skin fille minimale pourrait seulement contenir :
 
 ```text
-services/cabinet/skins/mandat_austerite/
+donnees/cabinet/skins/mandat_austerite/
   skin.yaml
   regles/
     validation_actions.yaml
@@ -190,7 +190,7 @@ Le reste serait hérité de la skin parente.
 Un exemple de diagnostic minimal existe dans :
 
 ```text
-services/cabinet/skins/exemple_mandat_austerite_overlay/skin.yaml
+donnees/cabinet/skins/exemples/exemple_mandat_austerite_overlay/skin.yaml
 ```
 
 Il sert à valider la lecture et le diagnostic d’un overlay. Il ne constitue pas encore une migration des skins existantes vers le modèle complet.

@@ -96,6 +96,8 @@ minimaux, les règles YAML actuelles et l’exécution des tests Java.
 - diagnostic des contenus déclaratifs de couche 2 :
   `cartes.yaml`, `evenements.yaml`, `messages.yaml` ;
 - validation non destructive d’une skin candidate ;
+- catalogue minimal `donnees/cabinet/skins/catalogue.yaml` pour exposer les
+  skins Python/hybrides et les overlays déclaratifs aux outils ;
 - règle YAML déclarative pour `programme.engager_carte` ;
 - comparaison démontrée entre skins par configuration YAML.
 
@@ -168,10 +170,12 @@ Parcours recommandé :
   des skins publiées sans indication explicite.
 - Le classement actuel des skins et overlays est documenté dans
   [`inventaire-skins-elaboration.md`](inventaire-skins-elaboration.md).
+- Les overlays déclaratifs contrôlés vivent maintenant sous
+  `donnees/cabinet/skins/exemples/`, pas sous `services/cabinet/skins/`.
 
 ## Réserves Techniques
 
 - Le rules-service Java doit encore être validé dans un environnement JDK 21.
 - La résolution complète d’héritage n’est pas implémentée.
 - Les validations dépendantes du parent restent à compléter.
-- Le futur ménage des skins d’élaboration doit être traité séparément.
+- Le runtime complet n’utilise pas encore le catalogue des skins.

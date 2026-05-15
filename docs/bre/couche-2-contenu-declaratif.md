@@ -79,7 +79,7 @@ Une skin peut exister dans trois états.
 |---|---|---|---|
 | Brouillon | dossier externe ou espace monté Docker | non versionné | élaboration et diagnostic créateur |
 | Candidate | branche dédiée ou espace de validation | testée | revue avant publication |
-| Publiée | `services/cabinet/skins/<skin_id>/` ou catalogue officiel futur | versionnée | skin intégrée au projet |
+| Publiée | `donnees/cabinet/skins/<skin_id>/` ou catalogue officiel futur | versionnée | skin intégrée au projet |
 
 `services/cabinet/skins/` n’est pas l’espace naturel de brouillon. C’est l’espace des skins intégrées ou publiées.
 
@@ -107,7 +107,7 @@ La couche 2 révèle les enjeux réels :
 
 Les cartes, événements et messages sont assez simples pour être compréhensibles, mais assez riches pour éprouver l’architecture.
 
-L’exemple contrôlé `services/cabinet/skins/exemple_mandat_climat_overlay/`
+L’exemple contrôlé `donnees/cabinet/skins/exemples/exemple_mandat_climat_overlay/`
 sert de support au diagnostic de couche 2. Il reste un overlay d’exemple, pas
 une skin publiée.
 
@@ -683,7 +683,11 @@ Les commandes futures pourraient être structurées ainsi :
 
 La destination de publication ne devrait pas être librement choisie par le poweruser. Elle devrait être dérivée de `skin.id` et de la politique de publication.
 
-À court terme, les skins publiées peuvent continuer d’être découvertes par packages ou dossiers. Un catalogue explicite n’est pas obligatoire maintenant.
+À court terme, les skins Python/hybrides peuvent continuer d’être découvertes
+par packages ou dossiers. Un catalogue minimal existe déjà dans
+`donnees/cabinet/skins/catalogue.yaml` pour exposer les overlays déclaratifs aux
+outils de diagnostic et validation. Le runtime complet n’est pas encore aligné
+sur ce catalogue.
 
 Toutefois, encapsuler la publication dans une commande permettra d’ajouter un catalogue plus tard sans changer le geste du créateur.
 
