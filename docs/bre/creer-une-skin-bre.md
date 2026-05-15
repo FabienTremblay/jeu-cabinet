@@ -224,6 +224,8 @@ Le diagnostic actuel ne fait pas encore ceci :
 
 Le modèle complet est décrit dans
 `docs/bre/modele-heritage-skin-poweruser.md`.
+La couche 2 sur le contenu déclaratif, les candidates et la publication résolue
+est décrite dans `docs/bre/couche-2-contenu-declaratif.md`.
 
 Résumé :
 

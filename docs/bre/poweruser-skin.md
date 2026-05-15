@@ -8,6 +8,8 @@ noyau Cabinet, le Java ou le `rules-service`.
 
 Pour une démonstration pas à pas, voir `docs/bre/demo-poweruser-bre.md`.
 Pour créer une nouvelle skin overlay, voir `docs/bre/creer-une-skin-bre.md`.
+Pour l’étape suivante sur les cartes, événements, messages et la publication
+résolue, voir `docs/bre/couche-2-contenu-declaratif.md`.
 
 ## Créer Une Skin Dérivée
 

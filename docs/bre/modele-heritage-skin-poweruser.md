@@ -20,6 +20,8 @@ La recette pas-à-pas de création d’une skin overlay de niveau 1 est document
 dans `docs/bre/creer-une-skin-bre.md`.
 Le gabarit minimal de skin overlay est fourni dans
 `docs/bre/templates/skin-overlay/`.
+La couche 2, centrée sur les cartes, événements, messages et la publication
+résolue, est explorée dans `docs/bre/couche-2-contenu-declaratif.md`.
 
 Une skin poweruser peut exister dans trois états :
 

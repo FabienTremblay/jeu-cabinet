@@ -10,6 +10,8 @@ et ce qui reste hérité.
 
 Pour créer une nouvelle skin overlay pas à pas, voir
 `docs/bre/creer-une-skin-bre.md`.
+Pour la suite du modèle, notamment le contenu déclaratif et la publication
+résolue, voir `docs/bre/couche-2-contenu-declaratif.md`.
 
 ## Exécuter Le Diagnostic Dans Docker
 
