@@ -1,0 +1,14 @@
+skin:
+  id: exemple_mandat_climat_overlay
+  herite_de: debut_mandat_bre
+  nom: Mandat climatique - overlay exemple
+  version: v1
+  difficulte: intermediaire
+
+presentation:
+  pitch: >
+    Le cabinet gouverne sous pression climatique.
+    Certaines mesures exigent davantage d'arbitrage politique.
+
+parametres:
+  capital_politique_initial: 3

@@ -162,6 +162,16 @@ skin, remplacer `exemple_mandat_austerite_overlay` par l’identifiant déclaré
 `skin.id` seulement lorsque la skin est déjà présente dans l’image ou publiée
 dans `services/cabinet/skins/`.
 
+Un second exemple contrôlé, `exemple_mandat_climat_overlay`, montre le niveau 2
+avec `cartes.yaml`, `evenements.yaml` et `messages.yaml` :
+
+```bash
+docker compose --env-file .env.dev.example -p cabinet-dev-test \
+  -f docker-compose.yml -f docker-compose.dev.yml \
+  run --rm --no-deps api-moteur \
+  python -m services.cabinet.outils.diagnostiquer_skin exemple_mandat_climat_overlay
+```
+
 Variante locale développeur :
 
 ```bash
@@ -211,6 +221,8 @@ Le diagnostic actuel :
 - lit `skin.yaml` ;
 - affiche les champs déclarés ;
 - affiche les familles héritées ;
+- résume les contenus déclaratifs de couche 2 si `cartes.yaml`,
+  `evenements.yaml` ou `messages.yaml` existent ;
 - indique clairement la limite de fusion.
 
 Le diagnostic actuel ne fait pas encore ceci :

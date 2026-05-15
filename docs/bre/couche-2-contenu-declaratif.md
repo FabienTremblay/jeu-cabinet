@@ -23,6 +23,12 @@ L’objectif n’est pas encore d’implémenter toute la mécanique. L’object
 
 Cette couche est un bon banc d’essai parce qu’elle force à traiter les vrais problèmes de composition : ajout, remplacement, retrait, conflit, diagnostic et publication résolue.
 
+Premier incrément implémenté : le diagnostic créateur détecte maintenant les
+fichiers optionnels `cartes.yaml`, `evenements.yaml` et `messages.yaml` dans un
+overlay, puis affiche un résumé lisible des ajouts, remplacements, retraits et
+messages personnalisés. Ce diagnostic ne résout pas encore l’héritage et ne
+publie pas la skin.
+
 ---
 
 ## 2. Hypothèse structurante
@@ -87,6 +93,10 @@ La couche 2 révèle les enjeux réels :
 - préparer la refactorisation si le parent évolue.
 
 Les cartes, événements et messages sont assez simples pour être compréhensibles, mais assez riches pour éprouver l’architecture.
+
+L’exemple contrôlé `services/cabinet/skins/exemple_mandat_climat_overlay/`
+sert de support au diagnostic de couche 2. Il reste un overlay d’exemple, pas
+une skin publiée.
 
 ---
 
@@ -735,4 +745,8 @@ Cette séparation permet :
 - une publication assistée ;
 - une future refactorisation accompagnée lorsque les parents évoluent.
 
-La prochaine étape logique sera de transformer cette exploration en incréments : diagnostic enrichi de contenu, validation de candidate, puis publication résolue.
+La prochaine étape logique sera de transformer cette exploration en incréments :
+diagnostic enrichi de contenu, validation de candidate, puis publication
+résolue. Le diagnostic enrichi de contenu est amorcé. Les étapes suivantes
+restent la validation de candidate, puis la conception et l’implémentation de la
+publication résolue.

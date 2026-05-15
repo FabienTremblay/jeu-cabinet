@@ -8,6 +8,11 @@ Ce parcours permet à un créateur de skin de vérifier qu’un overlay
 Le diagnostic actuel ne modifie pas le jeu. Il affiche ce que la skin déclare
 et ce qui reste hérité.
 
+Il sait aussi résumer les fichiers optionnels de contenu déclaratif de couche 2
+lorsqu’ils existent dans l’overlay : `cartes.yaml`, `evenements.yaml` et
+`messages.yaml`. Ce résumé reste un diagnostic : il ne publie pas la skin et ne
+rend pas l’overlay jouable.
+
 Pour créer une nouvelle skin overlay pas à pas, voir
 `docs/bre/creer-une-skin-bre.md`.
 Pour la suite du modèle, notamment le contenu déclaratif et la publication
@@ -53,6 +58,21 @@ présentes dans l’image, notamment les skins publiées dans
 
 Si une skin vient d’être ajoutée ou renommée dans `services/cabinet/skins/`,
 reconstruire l’image `api-moteur` avant de la diagnostiquer par identifiant.
+
+### Diagnostiquer L’exemple Couche 2 Intégré
+
+L’exemple contrôlé `exemple_mandat_climat_overlay` contient `skin.yaml`,
+`cartes.yaml`, `evenements.yaml` et `messages.yaml`.
+
+```bash
+docker compose --env-file .env.dev.example -p cabinet-dev-test \
+  -f docker-compose.yml -f docker-compose.dev.yml \
+  run --rm --no-deps api-moteur \
+  python -m services.cabinet.outils.diagnostiquer_skin exemple_mandat_climat_overlay
+```
+
+Cette commande sert à vérifier que le diagnostic affiche les contenus
+déclaratifs présents dans une skin intégrée à l’image.
 
 ### Développement MaisonNeuve
 
@@ -137,10 +157,20 @@ Familles héritées :
 - phases
 - procédures
 
+Contenus déclaratifs de couche 2 :
+- cartes.yaml : absent
+- evenements.yaml : absent
+- messages.yaml : absent
+
 Limite actuelle :
 Ce diagnostic lit l’overlay déclaratif.
 La fusion complète des familles héritées n’est pas encore implémentée.
+La publication résolue de la skin n’est pas encore implémentée.
 ```
+
+Pour `exemple_mandat_climat_overlay`, la même section affiche les fichiers
+présents, la valeur `heriter`, les cartes ou événements ajoutés, remplacés ou
+retirés, ainsi que les clés de messages personnalisées.
 
 ## Interpréter Le Résultat
 
@@ -150,8 +180,13 @@ La fusion complète des familles héritées n’est pas encore implémentée.
 `Familles héritées` indique les familles que l’overlay ne redéfinit pas encore
 et qui restent portées par la skin parente.
 
+`Contenus déclaratifs de couche 2` indique seulement ce que l’overlay déclare
+dans ses fichiers optionnels. Les opérations `ajouter`, `remplacer` et
+`retirer` ne sont pas encore résolues avec la skin parente.
+
 La fusion complète des familles héritées n’est pas exécutée dans cet incrément.
-`config.py` et `regles.py` restent en place.
+La publication résolue n’est pas encore implémentée. `config.py` et `regles.py`
+restent en place.
 
 ## Validation Développeur
 

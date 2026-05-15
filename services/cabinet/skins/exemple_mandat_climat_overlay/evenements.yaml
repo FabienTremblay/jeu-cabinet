@@ -1,0 +1,14 @@
+evenements:
+  heriter: true
+
+  ajouter:
+    - id: EVT_CANICULE_HISTORIQUE
+      nom: Canicule historique
+      description: Une vague de chaleur met la transition climatique au centre du mandat.
+
+  remplacer:
+    - id: EVT_CRITIQUE_OPPOSITION
+      description: L'opposition critique le cout politique de l'action climatique.
+
+  retirer:
+    - EVT_SONDAGE_FAVORABLE

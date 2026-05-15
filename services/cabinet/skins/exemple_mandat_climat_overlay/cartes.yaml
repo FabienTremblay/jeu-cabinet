@@ -1,0 +1,17 @@
+cartes:
+  heriter: true
+
+  ajouter:
+    - id: MES_TRANSITION_CLIMATIQUE
+      nom: Transition climatique
+      type: mesure
+      cout_attention: 2
+      cout_cp: 1
+
+  remplacer:
+    - id: MES_PLAN_SOCIAL
+      cout_attention: 1
+      cout_cp: 2
+
+  retirer:
+    - MES_BAISSE_IMPOTS
