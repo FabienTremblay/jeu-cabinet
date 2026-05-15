@@ -56,6 +56,16 @@ Lire dans cet ordre :
 Ces documents décrivent la direction cible. Ils ne sont pas tous des recettes
 directement utilisables par un créateur.
 
+### Je veux savoir quelles skins sont des exemples ou des prototypes
+
+Lire :
+
+- [`inventaire-skins-elaboration.md`](inventaire-skins-elaboration.md)
+
+Cet inventaire classe les dossiers sous `services/cabinet/skins/` et précise
+lesquels sont des références provisoires, démonstrateurs, fixtures ou exemples
+contrôlés.
+
 ### Je veux comprendre la publication future
 
 Lire :
@@ -156,6 +166,8 @@ Parcours recommandé :
 - Aucune CLI ne produit encore automatiquement une skin publiée.
 - Les exemples et overlays d’élaboration ne doivent pas être interprétés comme
   des skins publiées sans indication explicite.
+- Le classement actuel des skins et overlays est documenté dans
+  [`inventaire-skins-elaboration.md`](inventaire-skins-elaboration.md).
 
 ## Réserves Techniques
 
