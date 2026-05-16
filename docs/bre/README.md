@@ -61,10 +61,14 @@ directement utilisables par un créateur.
 Lire :
 
 - [`inventaire-skins-elaboration.md`](inventaire-skins-elaboration.md)
+- [`impacts-catalogue-runtime.md`](impacts-catalogue-runtime.md)
 
 Cet inventaire classe les dossiers sous `services/cabinet/skins/` et précise
 lesquels sont des références provisoires, démonstrateurs, fixtures ou exemples
 contrôlés.
+
+L’analyse d’impact explique ce que le catalogue change pour le runtime, le
+lobby, la création de table et les futures règles d’exposition des skins.
 
 ### Je veux comprendre la publication future
 
@@ -98,6 +102,7 @@ minimaux, les règles YAML actuelles et l’exécution des tests Java.
 - validation non destructive d’une skin candidate ;
 - catalogue minimal `donnees/cabinet/skins/catalogue.yaml` pour exposer les
   skins Python/hybrides et les overlays déclaratifs aux outils ;
+- analyse d’impact du catalogue sur le runtime et le lobby ;
 - règle YAML déclarative pour `programme.engager_carte` ;
 - comparaison démontrée entre skins par configuration YAML.
 

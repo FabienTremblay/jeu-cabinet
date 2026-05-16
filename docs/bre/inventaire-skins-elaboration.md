@@ -36,6 +36,11 @@ pour diagnostic, validation, documentation ou démonstration, mais ne doit pas
 être interprétée comme skin publiée ou officiellement jouable, même si du code
 Python historique permet encore de l’importer.
 
+Les impacts runtime et lobby de cette décision sont détaillés dans
+[`impacts-catalogue-runtime.md`](impacts-catalogue-runtime.md). À ce stade, le
+catalogue gouverne les outils de diagnostic et de validation, mais le lobby, la
+création de table et le moteur runtime ne l’appliquent pas encore.
+
 Aucune skin issue du parcours overlay n’est encore une skin publiée résolue. La
 publication résolue reste conçue dans
 [`publication-skin-resolue.md`](publication-skin-resolue.md), mais non
@@ -247,6 +252,9 @@ Décisions à reprendre plus tard :
 - faut-il définir un marqueur explicite pour distinguer une skin publiée d’un
   overlay d’exemple ?
 - faut-il aligner le runtime complet sur le catalogue ?
+- faut-il faire respecter `chargeable: true` par le lobby et la création de
+  table, comme proposé dans
+  [`impacts-catalogue-runtime.md`](impacts-catalogue-runtime.md) ?
 - faut-il publier les futures skins résolues sous `donnees/cabinet/skins/` ou
   les exposer via un catalogue externe ?
 
