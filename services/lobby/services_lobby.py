@@ -48,25 +48,18 @@ from .events import (
 )
 from .kafka_producteur import ProducteurEvenements
 from .settings import Settings
+from .catalogue_skins import lister_entrees_chargeables, trouver_entree_catalogue
 
-SKINS_DISPONIBLES = [
-    {
-        "id_skin": "debut_mandat",
-        "nom": "Début de mandat",
-        "description": "Skin de démarrage classique pour apprendre le jeu.",
-    },
-    {
-        "id_skin": "Mandat_difficile",
-        "nom": "Second mandat",
-        "description": "Il n'y en aura pas de facile pour remporter la prochaine élection",
-    },
-    {
-        "id_skin": "debut_mandat_bre",
-        "nom": "Test du BRE",
-        "description": "On essaie",
-    },
-    # ...
-]
+
+def _skin_infos_chargeables() -> list[dict[str, str]]:
+    return [
+        {
+            "id_skin": entree.skin_id,
+            "nom": entree.nom,
+            "description": entree.description,
+        }
+        for entree in lister_entrees_chargeables()
+    ]
 
 def hacher_mot_de_passe(mot: str) -> str:
     return hashlib.sha256(mot.encode("utf-8")).hexdigest()
@@ -316,13 +309,17 @@ class ServiceLobby:
                 detail="table_deja_active_pour_ce_joueur",
             )
 
-        # validation skin
         if demande.skin_jeu is not None:
-            ids_valides = {s["id_skin"] for s in SKINS_DISPONIBLES}
-            if demande.skin_jeu not in ids_valides:
+            entree = trouver_entree_catalogue(demande.skin_jeu)
+            if entree is None:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="skin_invalide",
+                    detail="skin_inconnue",
+                )
+            if not entree.chargeable:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="skin_non_chargeable",
                 )
 
         id_table = self.tables.prochain_id()
@@ -352,7 +349,7 @@ class ServiceLobby:
 
     async def lister_skins(self) -> ReponseListeSkins:
         return ReponseListeSkins(
-            skins=[SkinInfo(**data) for data in SKINS_DISPONIBLES]
+            skins=[SkinInfo(**data) for data in _skin_infos_chargeables()]
         )
 
     async def modifier_configuration_table(

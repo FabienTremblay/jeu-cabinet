@@ -12,6 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Code de l'application dans le package "lobby"
 COPY services/lobby /app/lobby
+COPY donnees /app/donnees
 
 EXPOSE 8080
 

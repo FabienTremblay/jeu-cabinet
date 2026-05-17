@@ -183,4 +183,6 @@ Parcours recommandé :
 - Le rules-service Java doit encore être validé dans un environnement JDK 21.
 - La résolution complète d’héritage n’est pas implémentée.
 - Les validations dépendantes du parent restent à compléter.
-- Le runtime complet n’utilise pas encore le catalogue des skins.
+- Le lobby, la création de table et l’entrée HTTP moteur utilisent maintenant
+  le catalogue pour refuser les skins non chargeables. Le chargeur interne
+  Cabinet reste un mécanisme Python historique.

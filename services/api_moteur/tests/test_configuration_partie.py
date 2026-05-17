@@ -4,6 +4,8 @@
 # statut      : actif
 from __future__ import annotations
 
+from fastapi import HTTPException
+
 import services.api_moteur.app as app_module
 from services.api_moteur.schemas import RequetePartie
 from services.cabinet.moteur.manager import PartieManager
@@ -53,3 +55,45 @@ def test_creer_partie_sans_configuration_reste_compatible(monkeypatch):
     )
 
     assert reponse["etat"]["configuration_partie"] == {}
+
+
+def test_creer_partie_refuse_une_skin_non_chargeable(monkeypatch):
+    _desactiver_publication(monkeypatch)
+
+    try:
+        app_module.creer_partie(
+            RequetePartie(
+                partie_id="P-SKIN-NON-CHARGEABLE",
+                nom="demo",
+                skin_jeu="exemple_mandat_climat_overlay",
+                joueurs={"J1": {"nom": "Alice"}},
+            ),
+            manager=PartieManager(),
+            correlation_id="test",
+        )
+    except HTTPException as exc:
+        assert exc.status_code == 400
+        assert exc.detail["code"] == "SKIN_NON_CHARGEABLE"
+    else:
+        raise AssertionError("creation acceptee pour une skin non chargeable")
+
+
+def test_creer_partie_refuse_une_skin_absente_du_catalogue(monkeypatch):
+    _desactiver_publication(monkeypatch)
+
+    try:
+        app_module.creer_partie(
+            RequetePartie(
+                partie_id="P-SKIN-INCONNUE",
+                nom="demo",
+                skin_jeu="skin_absente",
+                joueurs={"J1": {"nom": "Alice"}},
+            ),
+            manager=PartieManager(),
+            correlation_id="test",
+        )
+    except HTTPException as exc:
+        assert exc.status_code == 400
+        assert exc.detail["code"] == "SKIN_INCONNUE"
+    else:
+        raise AssertionError("creation acceptee pour une skin absente")

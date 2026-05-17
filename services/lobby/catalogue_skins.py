@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 
@@ -18,16 +18,16 @@ class EntreeCatalogueSkin:
     description: str
 
 
-def racine_depot() -> Path:
-    return Path(__file__).resolve().parents[3]
-
-
 def chemin_catalogue() -> Path:
-    return racine_depot() / "donnees" / "cabinet" / "skins" / "catalogue.yaml"
+    for parent in Path(__file__).resolve().parents:
+        candidat = parent / "donnees" / "cabinet" / "skins" / "catalogue.yaml"
+        if candidat.exists():
+            return candidat
+    return Path("/app/donnees/cabinet/skins/catalogue.yaml")
 
 
-def charger_catalogue(chemin: Optional[Path] = None) -> dict[str, EntreeCatalogueSkin]:
-    chemin = chemin or chemin_catalogue()
+def charger_catalogue() -> dict[str, EntreeCatalogueSkin]:
+    chemin = chemin_catalogue()
     if not chemin.exists():
         return {}
 
@@ -64,25 +64,8 @@ def lister_entrees_chargeables() -> list[EntreeCatalogueSkin]:
     return [entree for entree in charger_catalogue().values() if entree.chargeable]
 
 
-def trouver_entree_catalogue(skin_id: str) -> Optional[EntreeCatalogueSkin]:
+def trouver_entree_catalogue(skin_id: str) -> EntreeCatalogueSkin | None:
     return charger_catalogue().get(skin_id)
-
-
-def skin_est_chargeable(skin_id: str) -> bool:
-    entree = trouver_entree_catalogue(skin_id)
-    return entree is not None and entree.chargeable
-
-
-def chemin_dossier_catalogue(skin_id: str) -> Optional[Path]:
-    entree = trouver_entree_catalogue(skin_id)
-    if not entree:
-        return None
-    if entree.source.get("type") != "dossier":
-        return None
-    chemin = entree.source.get("chemin")
-    if not chemin:
-        return None
-    return racine_depot() / str(chemin)
 
 
 def _source(entree: dict[str, Any]) -> dict[str, Any]:

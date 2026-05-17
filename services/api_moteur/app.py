@@ -18,6 +18,7 @@ from .schemas import *
 from .events import publier_evenement, publier_evenements_domaine, _evt_to_payload
 
 from .rules_client import evaluer_decision
+from services.cabinet.bre.catalogue_skins import trouver_entree_catalogue
 
 
 logger = logging.getLogger(__name__)
@@ -87,9 +88,24 @@ def creer_partie(req: RequetePartie, manager=Depends(get_manager), correlation_i
            req.partie_id
         or str(uuid.uuid4())
     )
+    skin_jeu = req.skin_jeu or "minimal"
+    entree_skin = trouver_entree_catalogue(skin_jeu)
+    if entree_skin is None:
+        raise HTTPException(
+            status_code=400,
+            detail={"code": "SKIN_INCONNUE", "message": f"Skin inconnue: {skin_jeu}"},
+        )
+    if not entree_skin.chargeable:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "SKIN_NON_CHARGEABLE",
+                "message": f"Skin non chargeable: {skin_jeu}",
+            },
+        )
 
     etat = manager.creer(
-        skin=req.skin_jeu,
+        skin=skin_jeu,
         partie_id=partie_id,
         joueurs=req.joueurs,
         seed=req.seed,

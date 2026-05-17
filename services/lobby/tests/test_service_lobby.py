@@ -30,6 +30,103 @@ from services.lobby.kafka_producteur import ProducteurEvenements
 from services.lobby.settings import Settings
 
 
+def test_lister_skins_expose_seulement_les_skins_chargeables(service_lobby: ServiceLobby):
+    async def scenario():
+        reponse = await service_lobby.lister_skins()
+        ids = {skin.id_skin for skin in reponse.skins}
+
+        assert {"minimal", "debut_mandat", "debut_mandat_bre"} <= ids
+        assert "mandat_fragile" not in ids
+        assert "Mandat_difficile" not in ids
+        assert "exemple_mandat_austerite_overlay" not in ids
+        assert "exemple_mandat_climat_overlay" not in ids
+
+    asyncio.run(scenario())
+
+
+def test_creer_table_accepte_une_skin_chargeable(service_lobby: ServiceLobby):
+    async def scenario():
+        rep_hote = await service_lobby.inscrire_joueur(
+            DemandeInscription(
+                nom="Hote Skin",
+                alias="HoteSkin",
+                courriel="hote-skin@example.com",
+                mot_de_passe="secret",
+            )
+        )
+
+        rep_table = await service_lobby.creer_table(
+            DemandeCreationTable(
+                id_hote=rep_hote.id_joueur,
+                nom_table="Table skin chargeable",
+                nb_sieges=2,
+                skin_jeu="debut_mandat_bre",
+            )
+        )
+
+        assert rep_table.skin_jeu == "debut_mandat_bre"
+
+    asyncio.run(scenario())
+
+
+def test_creer_table_refuse_une_skin_non_chargeable(service_lobby: ServiceLobby):
+    async def scenario():
+        rep_hote = await service_lobby.inscrire_joueur(
+            DemandeInscription(
+                nom="Hote Overlay",
+                alias="HoteOverlay",
+                courriel="hote-overlay@example.com",
+                mot_de_passe="secret",
+            )
+        )
+
+        try:
+            await service_lobby.creer_table(
+                DemandeCreationTable(
+                    id_hote=rep_hote.id_joueur,
+                    nom_table="Table overlay",
+                    nb_sieges=2,
+                    skin_jeu="exemple_mandat_climat_overlay",
+                )
+            )
+        except HTTPException as exc:
+            assert exc.status_code == 400
+            assert exc.detail == "skin_non_chargeable"
+        else:
+            raise AssertionError("creation acceptee pour une skin non chargeable")
+
+    asyncio.run(scenario())
+
+
+def test_creer_table_refuse_une_skin_absente_du_catalogue(service_lobby: ServiceLobby):
+    async def scenario():
+        rep_hote = await service_lobby.inscrire_joueur(
+            DemandeInscription(
+                nom="Hote Inconnue",
+                alias="HoteInconnue",
+                courriel="hote-inconnue@example.com",
+                mot_de_passe="secret",
+            )
+        )
+
+        try:
+            await service_lobby.creer_table(
+                DemandeCreationTable(
+                    id_hote=rep_hote.id_joueur,
+                    nom_table="Table inconnue",
+                    nb_sieges=2,
+                    skin_jeu="skin_absente",
+                )
+            )
+        except HTTPException as exc:
+            assert exc.status_code == 400
+            assert exc.detail == "skin_inconnue"
+        else:
+            raise AssertionError("creation acceptee pour une skin absente")
+
+    asyncio.run(scenario())
+
+
 def test_inscription_et_connexion_produisent_evenements(
     service_lobby: ServiceLobby,
     producteur: ProducteurEvenements,

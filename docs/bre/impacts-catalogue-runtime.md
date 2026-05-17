@@ -3,8 +3,9 @@
 Ce document complète l’inventaire des skins d’élaboration après l’introduction
 du catalogue minimal `donnees/cabinet/skins/catalogue.yaml`.
 
-Il ne décrit pas une modification déjà appliquée au runtime. Il identifie les
-impacts probables et prépare un incrément futur.
+Depuis T34, le catalogue est appliqué par le lobby et par l’entrée HTTP directe
+de l’API moteur. Le moteur Cabinet interne conserve encore son chargeur Python
+historique.
 
 ## Fichiers Inspectés
 
@@ -15,6 +16,7 @@ impacts probables et prépare un incrément futur.
 - `services/api_moteur/app.py`
 - `services/api_moteur/schemas.py`
 - `services/lobby/services_lobby.py`
+- `services/lobby/catalogue_skins.py`
 - `services/lobby/schemas.py`
 - `services/adapter-evenements/adapter_evenements/worker_adapter.py`
 - `services/commande_moteur/worker_moteur.py`
@@ -27,7 +29,7 @@ impacts probables et prépare un incrément futur.
 
 ### Moteur Cabinet
 
-Le noyau Cabinet ne lit pas encore le catalogue.
+Le noyau Cabinet interne ne lit pas encore le catalogue.
 
 `services/cabinet/moteur/config_loader.py` charge une skin par import Python :
 
@@ -42,29 +44,39 @@ La skin doit fournir :
 
 `PartieManager.creer()` reçoit `skin`, appelle `construire_etat()`, puis le
 chargeur importe le module Python correspondant. Une entrée catalogue
-`source.type: dossier` n’est donc pas chargeable par le runtime actuel.
+`source.type: dossier` n’est donc pas chargeable par ce chargeur.
+
+La validation d’exposition est appliquée en amont, dans le lobby et dans l’API
+moteur.
 
 ### API Moteur
 
 `services/api_moteur/schemas.py` accepte `skin_jeu` dans `RequetePartie`, avec
 la valeur par défaut `minimal`.
 
-`services/api_moteur/app.py` transmet ce champ au `PartieManager`. L’API moteur
-ne valide pas encore `skin_jeu` contre le catalogue. Une valeur acceptée par le
-lobby mais non importable par le noyau peut donc échouer au moment de créer
-l’état initial.
+`services/api_moteur/app.py` valide maintenant `skin_jeu` contre le catalogue
+avant d’appeler le `PartieManager`.
+
+Comportement actuel :
+
+- skin absente du catalogue : refus `SKIN_INCONNUE` ;
+- skin présente mais `chargeable: false` : refus `SKIN_NON_CHARGEABLE` ;
+- skin `chargeable: true` : transmission au chargeur Python historique.
 
 ### Lobby Et Création De Table
 
-`services/lobby/services_lobby.py` contient encore une liste codée en dur
-`SKINS_DISPONIBLES`.
+`services/lobby/services_lobby.py` lit maintenant le catalogue par
+`services/lobby/catalogue_skins.py`.
 
-Cette liste sert à deux endroits :
+Le catalogue sert à deux endroits :
 
-- `GET /api/skins` retourne les skins affichées au créateur de table ;
-- `creer_table()` refuse une valeur `skin_jeu` absente de cette liste.
+- `GET /api/skins` retourne seulement les entrées `chargeable: true` ;
+- `creer_table()` refuse une valeur `skin_jeu` absente du catalogue ;
+- `creer_table()` refuse une valeur `skin_jeu` présente mais
+  `chargeable: false`.
 
-Le lobby ne lit pas encore `donnees/cabinet/skins/catalogue.yaml`.
+Le conteneur `lobby` copie aussi `donnees/` afin de disposer du catalogue au
+runtime.
 
 ### Propagation Kafka
 
@@ -96,13 +108,14 @@ Ils conservent aussi :
 - `--skin-yaml` pour diagnostiquer un fichier brouillon monté ;
 - `--skin-dir` pour valider un dossier brouillon monté.
 
-Cette utilisation du catalogue est volontairement limitée aux outils de
-créateur. Elle ne change pas encore le runtime.
+Cette utilisation du catalogue reste distincte du runtime jouable : elle permet
+de diagnostiquer ou valider des overlays non chargeables sans les rendre
+sélectionnables dans le lobby.
 
-## Comportement Cible Avec Catalogue
+## Comportement Appliqué Avec Catalogue
 
-Le catalogue doit devenir la source de gouvernance pour exposer ou refuser les
-skins côté lobby/runtime.
+Le catalogue est maintenant la source de gouvernance pour exposer ou refuser les
+skins côté lobby et entrée HTTP moteur.
 
 Règle cible :
 
@@ -111,12 +124,12 @@ Règle cible :
 
 Conséquences :
 
-- `GET /api/skins` devrait lister les entrées `chargeable: true` compatibles
-  avec le runtime courant ;
-- `POST /api/tables` devrait refuser une skin absente du catalogue ou marquée
+- `GET /api/skins` liste les entrées `chargeable: true` compatibles avec le
+  runtime courant ;
+- `POST /api/tables` refuse une skin absente du catalogue ou marquée
   `chargeable: false` ;
-- `POST /parties` devrait idéalement refuser explicitement une skin non
-  chargeable avant l’import Python ;
+- `POST /parties` refuse explicitement une skin absente ou non chargeable avant
+  l’import Python ;
 - les tests doivent couvrir la liste exposée et le refus d’une skin non
   chargeable.
 
@@ -193,18 +206,17 @@ Exemples :
 Le fait qu’une skin Python soit techniquement importable ne devrait plus suffire
 à la rendre visible au lobby. La décision d’exposition doit venir du catalogue.
 
-## Risques De Régression
+## Risques De Régression À Surveiller
 
-- Le lobby possède aujourd’hui une liste `SKINS_DISPONIBLES` codée en dur. La
-  remplacer par le catalogue peut changer l’ordre et le contenu de `GET
+- Le lobby ne possède plus la liste `SKINS_DISPONIBLES` codée en dur. La liste
+  vient du catalogue, ce qui peut changer l’ordre et le contenu de `GET
   /api/skins`.
 - L’UI choisit la première skin retournée par le lobby. Un changement d’ordre
   peut changer la skin par défaut.
 - Des tests peuvent dépendre de `minimal`, `debut_mandat`,
   `Mandat_difficile` ou `debut_mandat_bre` dans la liste actuelle.
-- L’API moteur accepte aujourd’hui `skin_jeu` sans consulter le catalogue. Si le
-  lobby et le moteur ne sont pas alignés, une création de partie peut échouer
-  tardivement.
+- L’API moteur consulte maintenant le catalogue. Une création de partie directe
+  avec une skin non chargeable est refusée plus tôt qu’avant.
 - Les contrats HTTP et Kafka transportent `skin_jeu` comme chaîne simple. Si
   `GET /api/skins` expose de nouveaux champs de catalogue, les contrats
   `SkinInfo` et `ReponseListeSkins` devront être revus explicitement.
@@ -213,23 +225,22 @@ Le fait qu’une skin Python soit techniquement importable ne devrait plus suffi
 
 ## Incrément Futur Recommandé
 
-Créer une issue :
+T34 couvre l’application minimale du catalogue par le lobby et la création de
+table. Les incréments suivants devraient plutôt porter sur :
 
 ```text
-BRE T34 — Faire respecter le catalogue par le lobby et la création de table
+Aligner le runtime interne Cabinet sur le catalogue de skins
 ```
 
 Objectif proposé :
 
-- exposer seulement les entrées `chargeable: true` dans `GET /api/skins` ;
-- refuser `POST /api/tables` avec une skin absente du catalogue ;
-- refuser `POST /api/tables` avec une skin `chargeable: false` ;
-- préserver la compatibilité avec les skins Python/hybrides chargeables ;
-- conserver `source.type: dossier` pour les outils de diagnostic/validation,
-  pas pour le runtime ;
-- décider si `POST /parties` doit aussi valider le catalogue pour éviter les
-  erreurs tardives ;
-- ajouter les tests lobby, API moteur et contrats nécessaires.
+- conserver la compatibilité des appels internes aux tests qui chargent encore
+  directement des skins Python/hybrides ;
+- décider si `charger_config_et_regles()` doit refuser les skins non
+  chargeables ou rester un outil bas niveau ;
+- préparer le futur chargeur des skins déclaratives résolues ;
+- préciser les impacts contrats si `SkinInfo` expose un jour des métadonnées de
+  catalogue supplémentaires.
 
 ## Non-Objectifs De Cette Passe
 
@@ -242,5 +253,5 @@ Cette analyse ne modifie pas :
 - le rules-service ;
 - les contrats HTTP ou Kafka.
 
-Elle documente l’impact du catalogue afin que l’alignement runtime soit traité
-dans un incrément explicite.
+Elle ne rend pas les overlays déclaratifs jouables et n’implémente pas la
+publication résolue.

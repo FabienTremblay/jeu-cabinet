@@ -1,5 +1,6 @@
 skins:
   - id: minimal
+    nom: Minimal
     type: python
     statut: fixture
     chargeable: true
@@ -9,6 +10,7 @@ skins:
     description: Skin compacte utilisée par les tests du noyau Cabinet.
 
   - id: debut_mandat
+    nom: Début de mandat
     type: python
     statut: demonstrateur
     chargeable: true
@@ -18,6 +20,7 @@ skins:
     description: Skin Python historique de début de mandat.
 
   - id: Mandat_difficile
+    nom: Second mandat
     type: python
     statut: a_deplacer
     chargeable: false
@@ -27,6 +30,7 @@ skins:
     description: Variante historique à clarifier, avec nom de dossier non normalisé.
 
   - id: debut_mandat_bre
+    nom: Début de mandat BRE
     type: python_hybride
     statut: reference_provisoire
     chargeable: true
@@ -36,6 +40,7 @@ skins:
     description: Skin BRE de référence provisoire.
 
   - id: mandat_fragile
+    nom: Mandat fragile
     type: python_hybride
     statut: demonstrateur
     chargeable: false
@@ -45,6 +50,7 @@ skins:
     description: Démonstrateur historique d’une surcharge YAML dans une skin Python.
 
   - id: exemple_mandat_austerite_overlay
+    nom: Exemple mandat d’austérité overlay
     type: declarative_overlay
     statut: exemple_controle
     chargeable: false
@@ -54,6 +60,7 @@ skins:
     description: Exemple contrôlé de diagnostic overlay niveau 1.
 
   - id: exemple_mandat_climat_overlay
+    nom: Exemple mandat climat overlay
     type: declarative_overlay
     statut: exemple_controle
     chargeable: false
