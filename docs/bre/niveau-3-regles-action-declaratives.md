@@ -1,4 +1,4 @@
-# Niveau 3 — Règles D’action Déclaratives
+# Niveau 3 — règles d’action déclaratives
 
 Point d’entrée recommandé de la documentation BRE :
 [`README.md`](README.md).
@@ -12,7 +12,7 @@ Il ne définit pas encore l’ensemble du contrat cible de
 `regles/validation_actions.yaml`. Cette passe inscrit seulement le principe
 directeur général qui devra guider la formalisation du niveau 3.
 
-## Principe Général À Respecter
+## Principe général à respecter
 
 Les règles d’action déclaratives devront respecter le principe général :
 [`Principe directeur — progression de complexité poweruser`](modele-heritage-skin-poweruser.md#principe-directeur--progression-de-complexité-poweruser).
@@ -22,7 +22,7 @@ complet, un script embarqué ou un moteur de règles généraliste. Il doit rest
 un dispositif déclaratif, compréhensible, diagnostiquable et validable par un
 créateur de skin qui progresse par paliers.
 
-## Limites De Cette Passe
+## Limites de cette passe
 
 Cette passe ne remplace pas `validation_cartes.yaml`, n’implémente pas
 `validation_actions.yaml`, ne modifie pas le runtime et ne touche pas au
