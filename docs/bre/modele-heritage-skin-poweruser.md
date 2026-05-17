@@ -61,6 +61,42 @@ Formule directrice :
 > Le moteur sait exécuter une partie.
 > La skin dit quelle partie on joue.
 
+## Principe directeur — progression de complexité poweruser
+
+Une skin poweruser doit pouvoir évoluer par paliers.
+
+Le créateur doit pouvoir commencer par personnaliser seulement le guide général
+du scénario, puis assumer progressivement :
+
+1. le scénario ;
+2. le contenu ;
+3. certaines règles d’action simples ;
+4. des règles plus conditionnelles ;
+5. la résolution politique ou la chorégraphie.
+
+Les dispositifs de création de skins ne doivent pas être conçus comme des
+langages complets que le créateur devrait maîtriser dès le départ. Ils doivent
+accompagner une progression graduelle de complexité.
+
+Ce principe s’applique à tous les dispositifs liés aux skins poweruser :
+
+- `skin.yaml` ;
+- fichiers de contenu comme `cartes.yaml`, `evenements.yaml`, `messages.yaml` ;
+- règles déclaratives comme `validation_cartes.yaml` ou le futur
+  `validation_actions.yaml` ;
+- diagnostics créateur ;
+- validations candidates ;
+- publication résolue ;
+- futurs mécanismes de résolution politique ou de chorégraphie.
+
+Chaque dispositif doit rester :
+
+- compréhensible ;
+- diagnostiquable ;
+- validable ;
+- progressif ;
+- utile sans exiger que le créateur maîtrise tout le modèle dès le départ.
+
 ---
 
 ## 2. Décision d’architecture

@@ -51,7 +51,8 @@ Lire dans cet ordre :
 1. [`modele-heritage-skin-poweruser.md`](modele-heritage-skin-poweruser.md)
 2. [`couche-2-contenu-declaratif.md`](couche-2-contenu-declaratif.md)
 3. [`publication-skin-resolue.md`](publication-skin-resolue.md)
-4. [`architecture-fonctionnelle-bre.md`](architecture-fonctionnelle-bre.md)
+4. [`niveau-3-regles-action-declaratives.md`](niveau-3-regles-action-declaratives.md)
+5. [`architecture-fonctionnelle-bre.md`](architecture-fonctionnelle-bre.md)
 
 Ces documents décrivent la direction cible. Ils ne sont pas tous des recettes
 directement utilisables par un créateur.
