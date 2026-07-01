@@ -1,6 +1,6 @@
 services:
   traefik:
-    image: traefik:3.5.4
+    image: traefik:3.7.6
     restart: unless-stopped
     user: "0:134"
     command:
